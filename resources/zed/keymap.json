@@ -126,6 +126,18 @@
     },
   },
   {
+    "context": "ProjectSearchBar",
+    "bindings": {
+      "escape": "project_search::ToggleFocus"
+    }
+  },
+  {
+    "context": "ProjectSearchView",
+    "bindings": {
+      "escape": "project_search::ToggleFocus"
+    }
+  },
+  {
     "context": "ProjectPanel && not_editing",
     "bindings": {
       "j": "menu::SelectNext",
@@ -136,6 +148,8 @@
 
       "enter": "project_panel::OpenPermanent",
       "space": "project_panel::Open",
+
+      "space e": "project_panel::Toggle",
 
       "s": "project_panel::OpenSplitVertical",
       "shift-s": "project_panel::OpenSplitHorizontal",
