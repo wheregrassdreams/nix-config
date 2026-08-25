@@ -108,6 +108,7 @@
   {
     "context": "EmptyPane || SharedScreen",
     "bindings": {
+      "space": null,
       "space space": "file_finder::Toggle",
       "space ,": "tab_switcher::Toggle",
       "space /": "project_search::ToggleFocus",
@@ -123,6 +124,60 @@
       "space x x": "diagnostics::Deploy",
       "space a a": "agent::ToggleFocus",
     },
+  },
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      "j": "menu::SelectNext",
+      "k": "menu::SelectPrevious",
+
+      "h": "project_panel::CollapseSelectedEntry",
+      "l": "project_panel::ExpandSelectedEntry",
+
+      "enter": "project_panel::OpenPermanent",
+      "space": "project_panel::Open",
+
+      "s": "project_panel::OpenSplitVertical",
+      "shift-s": "project_panel::OpenSplitHorizontal",
+
+      "a": "project_panel::NewFile",
+      "shift-a": "project_panel::NewDirectory",
+
+      "r": "project_panel::Rename",
+
+      "d": [
+        "project_panel::Trash",
+        {
+          "skip_prompt": false
+        }
+      ],
+
+      "x": "project_panel::Cut",
+      "y": "project_panel::Copy",
+      "p": "project_panel::Paste",
+
+      "shift-d": "project_panel::Duplicate",
+
+      "z": "project_panel::CollapseAllEntries",
+      "shift-z": "project_panel::ExpandAllEntries",
+
+      "shift-c": "project_panel::CollapseSelectedEntryAndChildren",
+      "shift-e": "project_panel::ExpandSelectedEntryAndChildren",
+
+      "/": "project_panel::NewSearchInDirectory",
+
+      "shift-h": "project_panel::ToggleHideHidden",
+
+      "u": "project_panel::Undo",
+      "ctrl-r": "project_panel::Redo",
+
+      "g y": "workspace::CopyPath",
+      "g shift-y": "workspace::CopyRelativePath",
+
+      "g r": "project_panel::RevealInFileManager",
+
+      "q": "project_panel::ToggleFocus"
+    }
   },
   {
     "context": "Terminal",
