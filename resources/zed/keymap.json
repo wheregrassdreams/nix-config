@@ -113,7 +113,7 @@
       "space ,": "tab_switcher::Toggle",
       "space /": "project_search::ToggleFocus",
       "space :": "command_palette::Toggle",
-      "space e": "project_panel::ToggleFocus",
+      "space e": "project_panel::Toggle",
       "space f f": "file_finder::Toggle",
       "space f n": "workspace::NewFile",
       "space f t": "terminal_panel::Toggle",
@@ -176,7 +176,7 @@
 
       "g r": "project_panel::RevealInFileManager",
 
-      "q": "project_panel::ToggleFocus"
+      "q": "project_panel::Toggle"
     }
   },
   {
