@@ -2,48 +2,49 @@
   {
     "context": "vim_mode == normal && !menu",
     "bindings": {
-      "ctrl-h": "workspace::ActivatePaneLeft",
-      "ctrl-j": "workspace::ActivatePaneDown",
-      "ctrl-k": "workspace::ActivatePaneUp",
-      "ctrl-l": "workspace::ActivatePaneRight",
       "shift-h": "pane::ActivatePreviousItem",
       "shift-l": "pane::ActivateNextItem",
+
       "[ b": "pane::ActivatePreviousItem",
       "] b": "pane::ActivateNextItem",
+
       "g r": "editor::FindAllReferences",
       "g k": "editor::ShowSignatureHelp",
+
       "] d": ["editor::GoToDiagnostic", { "severity": { "min": "hint", "max": "error" } }],
       "[ d": ["editor::GoToPreviousDiagnostic", { "severity": { "min": "hint", "max": "error" } }],
+
       "] e": ["editor::GoToDiagnostic", { "severity": { "min": "hint", "max": "error" } }],
       "[ e": ["editor::GoToPreviousDiagnostic", { "severity": { "min": "hint", "max": "error" } }],
+
       "ctrl-/": "terminal_panel::Toggle"
     }
   },
   {
-    "context": "vim_mode == normal && menu",
     "bindings": {
       "ctrl-h": "workspace::ActivatePaneLeft",
       "ctrl-j": "workspace::ActivatePaneDown",
       "ctrl-k": "workspace::ActivatePaneUp",
       "ctrl-l": "workspace::ActivatePaneRight",
-    }
+    },
   },
   {
     "context": "vim_mode == normal || vim_mode == visual",
     "bindings": {
-      "s": "vim::HelixJumpToWord"
-    }
+      "s": "vim::HelixJumpToWord",
+    },
   },
   {
     "context": "Editor && mode == full && !menu",
     "bindings": {
       "alt-j": "editor::MoveLineDown",
-      "alt-k": "editor::MoveLineUp"
-    }
+      "alt-k": "editor::MoveLineUp",
+    },
   },
   {
     "context": "VimControl && !menu",
     "bindings": {
+      "space": null,
       "space space": "file_finder::Toggle",
       "space ,": "tab_switcher::Toggle",
       "space /": "project_search::ToggleFocus",
@@ -67,7 +68,10 @@
       "space b i": ["pane::CloseCleanItems", { "close_pinned": false }],
       "space b j": "tab_switcher::Toggle",
       "space c a": "editor::ToggleCodeActions",
-      "space c d": ["editor::GoToDiagnostic", { "severity": { "min": "hint", "max": "error" } }],
+      "space c d": [
+        "editor::GoToDiagnostic",
+        { "severity": { "min": "hint", "max": "error" } },
+      ],
       "space c f": "editor::Format",
       "space c o": "editor::OrganizeImports",
       "space c r": "editor::Rename",
@@ -98,8 +102,8 @@
       "space tab d": ["pane::CloseActiveItem", { "close_pinned": false }],
       "space u b": "theme::ToggleMode",
       "space a a": "agent::ToggleFocus",
-      "space ?": "zed::OpenKeymap"
-    }
+      "space ?": "zed::OpenKeymap",
+    },
   },
   {
     "context": "EmptyPane || SharedScreen",
@@ -117,13 +121,13 @@
       "space s g": "project_search::ToggleFocus",
       "space s k": "zed::OpenKeymap",
       "space x x": "diagnostics::Deploy",
-      "space a a": "agent::ToggleFocus"
-    }
+      "space a a": "agent::ToggleFocus",
+    },
   },
   {
     "context": "Terminal",
     "bindings": {
-      "ctrl-/": "terminal_panel::Toggle"
-    }
-  }
+      "ctrl-/": "terminal_panel::Toggle",
+    },
+  },
 ]
