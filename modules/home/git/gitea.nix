@@ -7,14 +7,6 @@ in {
       # 不生效
       # credential."https://git.wheregrassdreams.top".helper = "!tea login helper";
     };
-    programs.ssh.matchBlocks."github.com" = {
-      hostname = "ssh.github.com";
-      port = 443;
-      user = "git";
-      identityFile = "~/.ssh/id_ed25519";
-      identitiesOnly = true;
-    };
-
   };
 
 }

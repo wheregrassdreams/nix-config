@@ -3,6 +3,7 @@ function main(config) {
   const groupName = "Tailnet";
   const tailnetDomain = __CLASH_VERGE_TAILNET_DOMAIN__;
   const tailnetCidr = __CLASH_VERGE_TAILNET_CIDR__;
+  const tailnetLanCidr = "192.168.3.0/24";
   const dnsUpstream = __CLASH_VERGE_DNS_UPSTREAM__;
 
   const tailscaleNode = {
@@ -54,6 +55,7 @@ function main(config) {
   const tailnetRules = [
     `DOMAIN-SUFFIX,${tailnetDomain},Tailnet`,
     `IP-CIDR,${tailnetCidr},Tailnet,no-resolve`,
+    `IP-CIDR,${tailnetLanCidr},Tailnet,no-resolve`,
     "DOMAIN-SUFFIX,ts.net,Tailnet",
   ];
 
@@ -78,8 +80,15 @@ function main(config) {
     ? config.dns["fake-ip-filter"]
     : [];
 
-  if (!config.dns["fake-ip-filter"].includes(`*.${tailnetDomain}`)) {
-    config.dns["fake-ip-filter"].push(`*.${tailnetDomain}`);
+  for (const pattern of [
+    tailnetDomain,
+    `+.${tailnetDomain}`,
+    `*.${tailnetDomain}`,
+    "*.ts.net",
+  ]) {
+    if (!config.dns["fake-ip-filter"].includes(pattern)) {
+      config.dns["fake-ip-filter"].push(pattern);
+    }
   }
 
   return config;
