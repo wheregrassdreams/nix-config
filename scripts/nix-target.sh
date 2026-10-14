@@ -55,7 +55,11 @@ build:darwin)
   exec darwin-rebuild build --flake "$system_ref"
   ;;
 switch:darwin)
-  exec darwin-rebuild switch --flake "$system_ref"
+  darwin_rebuild="$(command -v darwin-rebuild)"
+  if [[ $EUID -eq 0 ]]; then
+    exec "$darwin_rebuild" switch --flake "$system_ref"
+  fi
+  exec sudo "$darwin_rebuild" switch --flake "$system_ref"
   ;;
 test:darwin)
   die "test is only available for NixOS systems"
