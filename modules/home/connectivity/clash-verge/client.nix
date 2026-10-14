@@ -48,7 +48,7 @@ in
       ];
     }
     {
-      my.homebrew.casks = [ "clash-verge-rev" ];
+      my.homebrew.casks = lib.mkIf pkgs.stdenv.isDarwin [ "clash-verge-rev" ];
       home.file."Library/Application Support/io.github.clash-verge-rev.clash-verge-rev/profiles/Script.js".source =
         script;
     }

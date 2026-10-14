@@ -1,17 +1,32 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.my.services;
   modeOf = component: if component.mode != null then component.mode else cfg.defaultMode;
   isManual = component: component.enable && modeOf component == "local-manual";
   isDaemon = component: component.enable && modeOf component == "local-daemon";
-in {
-  imports = [ ../../home/services/options.nix ];
-
+in
+{
   config = {
-    assertions = map (name: {
-      assertion = let component = cfg.${name}; in component.enable || component.mode == null;
-      message = "my.services.${name}.mode requires my.services.${name}.enable";
-    }) [ "mysql" "postgres" "redis" ];
+    assertions =
+      map
+        (name: {
+          assertion =
+            let
+              component = cfg.${name};
+            in
+            component.enable || component.mode == null;
+          message = "my.services.${name}.mode requires my.services.${name}.enable";
+        })
+        [
+          "mysql"
+          "postgres"
+          "redis"
+        ];
 
     environment.systemPackages =
       lib.optionals (isManual cfg.mysql) [ pkgs.mysql84 ]

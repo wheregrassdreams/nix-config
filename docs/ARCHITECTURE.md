@@ -14,8 +14,10 @@ flake.nix -> flakes -> hosts -> package registries -> package configuration
 `host.nix`. The directory name becomes the output host name. There is no
 aggregate host registry and no profiles layer.
 
-- `hosts/<host>/host.nix` owns platform, host identity, machine facts, and
+- `hosts/<host>/host.nix` owns `outputType` (`darwin` or `nixos`), host identity, machine facts, and
   capability selection. Its presence registers that host with the flake.
+- The system architecture remains in `system`; `outputType` selects the flake
+  output and builder. `userName` is derived from `identity.username`.
 - `hosts/<host>/home.nix` and `system.nix` own host-local values
   and settings. This includes Home Manager username and locale.
 - `flakes/` owns flake output composition and input partitions. `flake.nix`
@@ -44,7 +46,7 @@ Registry keys preserve dotted paths, for example
 
 Within a package:
 
-- `default.nix` marks the package and is its main configuration module.
+- `default.nix` marks the package and assembles its configuration.
 - A package owns its public options. Importing the package selects the
   capability; `enable` is for optional subfeatures, not the package itself.
 - When present, `options.nix` is imported explicitly by `default.nix`.
@@ -114,8 +116,10 @@ automatically selected.
   skills assets. App-specific MCP activation and resource deployment are not
   yet a settled contract; a shared MCP inventory must not be mistaken for an
   active client configuration.
-- GUI applications declare their Homebrew casks through the stable Homebrew
-  interface. The host combines those packages with `homebrew` on macOS.
+- Darwin application packages declare Homebrew casks through the stable
+  Homebrew interface and depend on the full `homebrew` package. Their package
+  entry points include that dependency only on Darwin, so Linux hosts do not
+  receive Brewfile generation or synchronization behavior.
 - The Home Manager Homebrew package owns the generated Brewfile and
   user-level synchronization. The Darwin platform package owns the Homebrew
   installation substrate. Cleanup remains an explicit operation.

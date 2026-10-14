@@ -9,7 +9,7 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    my.homebrew = {
+    my.homebrew = lib.mkIf pkgs.stdenv.isDarwin {
       taps = [
         {
           name = "daipeihust/tap";

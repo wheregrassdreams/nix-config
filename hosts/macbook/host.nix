@@ -10,9 +10,8 @@ in
 {
   system = "aarch64-darwin";
   inherit identity;
-  userName = identity.username;
+  outputType = "darwin";
   hostName = "macbook";
-  isDarwin = true;
   systemModules = [
     self.darwinModules.platform
     ./system.nix
@@ -42,7 +41,6 @@ in
     home."connectivity.clash-verge"
     home."connectivity.tailscale"
     home.services
-    home.homebrew
     home.data
     ./home.nix
   ];

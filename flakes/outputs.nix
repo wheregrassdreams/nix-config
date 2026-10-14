@@ -31,12 +31,18 @@ let
 
   mkHostOutputs =
     name: host:
+    assert lib.elem host.outputType [
+      "darwin"
+      "nixos"
+    ];
     lib.recursiveUpdate
       (lib.setAttrByPath [
-        (if host.isDarwin or false then "darwinConfigurations" else "nixosConfigurations")
+        (if host.outputType == "darwin" then "darwinConfigurations" else "nixosConfigurations")
         name
       ] (repoLib.mkHost host))
-      (lib.setAttrByPath [ "homeConfigurations" "${host.userName}@${name}" ] (repoLib.mkHome host));
+      (
+        lib.setAttrByPath [ "homeConfigurations" "${host.identity.username}@${name}" ] (repoLib.mkHome host)
+      );
 
   hostOutputs = lib.foldl' lib.recursiveUpdate { } (lib.mapAttrsToList mkHostOutputs hosts);
 in

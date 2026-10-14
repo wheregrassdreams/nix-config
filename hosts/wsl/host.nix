@@ -10,7 +10,7 @@ in
 {
   system = "x86_64-linux";
   inherit identity;
-  userName = identity.username;
+  outputType = "nixos";
   hostName = "nixos";
   configRepoPath = "/home/zane/nix-config";
   isWsl = true;

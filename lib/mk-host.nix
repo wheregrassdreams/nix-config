@@ -7,18 +7,24 @@
 }:
 {
   system,
-  userName,
   identity,
+  outputType,
   hostName,
   configRepoPath ? (
-    if isDarwin then "/Users/${userName}/.dotfiles" else "/home/${userName}/.dotfiles"
+    if outputType == "darwin" then
+      "/Users/${identity.username}/.dotfiles"
+    else
+      "/home/${identity.username}/.dotfiles"
   ),
   stateVersion ? null,
-  isDarwin ? false,
   isWsl ? false,
   systemModules ? [ ],
   homeModules ? [ ],
 }:
+let
+  isDarwin = outputType == "darwin";
+  userName = identity.username;
+in
 let
   systemFunc = if isDarwin then inputs.nix-darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
   homeManagerModule =
@@ -56,7 +62,10 @@ systemFunc {
         { ... }:
         {
           imports = homeModules;
-          home.homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}";
+          home = {
+            username = userName;
+            homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}";
+          };
         };
       home-manager.sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
       home-manager.extraSpecialArgs = {

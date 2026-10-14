@@ -25,7 +25,7 @@ let
         [ ]
       else if isDirectory then
         collect path false
-      else if isModuleFile name then
+      else if entryType == "regular" && isModuleFile name then
         [ path ]
       else
         [ ]

@@ -58,7 +58,7 @@ must be followed by host-appropriate boot, service, and recovery verification.
 
 ## Package conventions
 
-- `default.nix` marks a package and is its main configuration module.
+- `default.nix` marks a package and assembles its configuration.
 - `options.nix` owns that package's public option interface when needed.
 - Keep small packages directly in their package directory. Use meaningful
   subdirectories such as `tmux/` or `zsh/` when they clarify ownership; do not

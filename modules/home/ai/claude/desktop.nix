@@ -1,6 +1,11 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   config = lib.mkIf config.my.ai.claude.desktop.enable {
-    my.homebrew.casks = [ "claude" ];
+    my.homebrew.casks = lib.mkIf pkgs.stdenv.isDarwin [ "claude" ];
   };
 }

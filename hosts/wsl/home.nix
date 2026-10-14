@@ -24,7 +24,6 @@ in
   home = {
     stateVersion = "25.11";
     enableNixpkgsReleaseCheck = false;
-    username = identity.username;
     sessionVariables = {
       LANG = "en_US.UTF-8";
       LC_ALL = "en_US.UTF-8";

@@ -12,8 +12,10 @@ in
   config = lib.mkMerge [
     {
       home.packages = [ pkgs.tailscale ];
-      my.homebrew.casks = lib.optionals pkgs.stdenv.isDarwin [ "tailscale-app" ];
     }
+    (lib.mkIf pkgs.stdenv.isDarwin {
+      my.homebrew.casks = [ "tailscale-app" ];
+    })
     (lib.mkIf (host != "") {
       home.file.".local/bin/tailscale-self-dns" = {
         executable = true;

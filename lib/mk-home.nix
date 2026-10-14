@@ -10,17 +10,23 @@
 }:
 {
   system,
-  userName,
   identity,
+  outputType,
   hostName,
   configRepoPath ? (
-    if isDarwin then "/Users/${userName}/.dotfiles" else "/home/${userName}/.dotfiles"
+    if outputType == "darwin" then
+      "/Users/${identity.username}/.dotfiles"
+    else
+      "/home/${identity.username}/.dotfiles"
   ),
-  isDarwin ? false,
   isWsl ? false,
   homeModules ? [ ],
   ...
 }:
+let
+  isDarwin = outputType == "darwin";
+  userName = identity.username;
+in
 inputs.home-manager.lib.homeManagerConfiguration {
   pkgs = import nixpkgs {
     inherit system;
@@ -44,7 +50,12 @@ inputs.home-manager.lib.homeManagerConfiguration {
   };
   modules = [
     inputs.sops-nix.homeManagerModules.sops
-    { home.homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}"; }
+    {
+      home = {
+        username = userName;
+        homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}";
+      };
+    }
   ]
   ++ homeModules;
 }
