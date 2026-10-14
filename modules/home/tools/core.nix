@@ -1,6 +1,21 @@
-{ pkgs, ... }: {
-  home.packages = with pkgs; [
-    gnumake just
-    curl wget p7zip unrar unzip rsync lsof
-  ];
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+{
+  config = lib.mkIf (config.my.tools.enable && config.my.tools.core) {
+    home.packages = with pkgs; [
+      gnumake
+      just
+      curl
+      wget
+      p7zip
+      unrar
+      unzip
+      rsync
+      lsof
+    ];
+  };
 }

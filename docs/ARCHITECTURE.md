@@ -48,6 +48,9 @@ Within a package:
   generic `module/` directory is not required.
 - A package entry point may collect configuration `.nix` files from its own
   directory tree, excluding its entry point, options declaration, and `lib/`.
+- Compose configuration with ordinary Nix module `imports`. Feature fragments
+  read their package options from `config` and gate their settings with
+  `lib.mkIf` rather than receiving ad hoc arguments from the package entry.
 - `lib/` contains concrete implementation helpers and is imported explicitly;
   it is never auto-collected as configuration.
 - Source comments should explain non-obvious behavior. Add a README only when

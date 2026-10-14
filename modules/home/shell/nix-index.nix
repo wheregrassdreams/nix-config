@@ -1,11 +1,13 @@
-{ ... }:
+{ config, lib, ... }:
 {
-  # command-not-found handler to suggest nix way of installing stuff.
-  # FIXME: This ought to show new nix cli commands though:
-  # https://github.com/nix-community/nix-index/issues/191
-  programs.nix-index = {
-    enable = true;
-    enableZshIntegration = true;
+  config = lib.mkIf (config.my.shell.enable && config.my.shell.integrations.nixIndex.enable) {
+    # command-not-found handler to suggest nix way of installing stuff.
+    # FIXME: This ought to show new nix cli commands though:
+    # https://github.com/nix-community/nix-index/issues/191
+    programs.nix-index = {
+      enable = true;
+      enableZshIntegration = true;
+    };
+    programs.nix-index-database.comma.enable = true;
   };
-  programs.nix-index-database.comma.enable = true;
 }

@@ -1,8 +1,15 @@
-{ pkgs, lib, ... }@args:
-lib.mkMerge [
-  (import ./fzf/base.nix args)
-  (import ./yazi/base.nix args)
-  {
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+{
+  imports = [
+    ./fzf/base.nix
+    ./yazi/base.nix
+  ];
+  config = lib.mkIf (config.my.tools.enable && config.my.tools.interactive) {
     programs = {
       bat = {
         enable = true;
@@ -33,5 +40,5 @@ lib.mkMerge [
       tokei
 
     ];
-  }
-]
+  };
+}

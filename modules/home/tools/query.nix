@@ -1,11 +1,30 @@
-{ pkgs, ... }: {
-  programs = {
-    ripgrep.enable = true;
-    jq.enable = true;
-    fd = {
-      enable = true;
-      ignores = [ ".git/" "node_modules/" "venv/" "site-packages/" ".DS_Store" ];
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+{
+  config = lib.mkIf (config.my.tools.enable && config.my.tools.query) {
+    programs = {
+      ripgrep.enable = true;
+      jq.enable = true;
+      fd = {
+        enable = true;
+        ignores = [
+          ".git/"
+          "node_modules/"
+          "venv/"
+          "site-packages/"
+          ".DS_Store"
+        ];
+      };
     };
+    home.packages = with pkgs; [
+      yq
+      grex
+      quicktype
+      csvkit
+    ];
   };
-  home.packages = with pkgs; [ yq grex quicktype csvkit];
 }
