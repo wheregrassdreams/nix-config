@@ -3,9 +3,9 @@
   perSystem =
     { pkgs, system, ... }:
     let
-      treefmt = inputs.treefmt-nix.lib.evalModule pkgs ../../treefmt.nix;
+      treefmt = inputs.treefmt-nix.lib.evalModule pkgs ../treefmt.nix;
       preCommit = inputs.pre-commit-hooks.lib.${system}.run {
-        src = ../../.;
+        src = ../.;
         hooks = {
           check-added-large-files.enable = true;
           check-merge-conflicts.enable = true;

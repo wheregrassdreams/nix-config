@@ -105,7 +105,7 @@
       ];
 
       imports = [
-        ./modules/flake-parts
+        ./flakes
       ];
     };
 }

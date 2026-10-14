@@ -2,7 +2,7 @@
 {
   imports = [
     inputs.flake-parts.flakeModules.partitions
-    ./base.nix
+    ./outputs.nix
   ];
 
   partitions.dev = {

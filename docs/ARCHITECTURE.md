@@ -2,25 +2,26 @@
 
 ## Composition
 
-The host registry is the single source for system and standalone Home outputs.
-Each host owns machine facts and chooses exported capability packages:
+Each host owns machine facts and chooses exported capability packages. The
+flake discovers hosts from their local descriptors and builds system plus
+standalone Home outputs:
 
 ```text
-flake outputs -> configurations/hosts -> package registries -> package configuration
+flake.nix -> flakes -> hosts -> package registries -> package configuration
 ```
 
-`configurations/hosts/default.nix` maps host names to descriptors. The flake
-uses that map to create the corresponding Darwin or NixOS output and standalone
-Home Manager output. Hosts are the composition roots; there is no profiles
-layer.
+`flakes/outputs.nix` scans direct child directories of `hosts/` for
+`host.nix`. The directory name becomes the output host name. There is no
+aggregate host registry and no profiles layer.
 
-- `configurations/hosts/<host>/default.nix` owns platform, host identity,
-  machine facts, and capability selection.
-- `configurations/hosts/<host>/home.nix` and `system.nix` own host-local values
+- `hosts/<host>/host.nix` owns platform, host identity, machine facts, and
+  capability selection. Its presence registers that host with the flake.
+- `hosts/<host>/home.nix` and `system.nix` own host-local values
   and settings. This includes Home Manager username and locale.
+- `flakes/` owns flake output composition and input partitions. `flake.nix`
+  declares the root inputs and imports this composition.
 - There is no `modules/home/base` package. Reusable path contracts belong to
   `modules/home/paths/` and are selected explicitly by hosts that use them.
-- `modules/flake-parts/` owns flake output composition and input partitions.
 
 ## Capability packages
 
@@ -152,8 +153,8 @@ not import Darwin or NixOS implementations.
 
 ## Flake partitions
 
-Development-only inputs stay in the `dev` partition under
-`modules/flake-parts/dev/`; they do not enter the base deployment input graph
+Development-only inputs stay in the `dev` partition under `flakes/dev/`; they
+do not enter the base deployment input graph
 without a current base-output consumer.
 
 ## Non-Nix assets and secrets

@@ -7,11 +7,12 @@ This is a Nix flake for the MacBook and NixOS WSL. Read
 The composition chain is:
 
 ```text
-flake output -> configurations/hosts -> exported capability packages
+flake output -> flakes -> discovered hosts -> exported capability packages
 ```
 
-- `configurations/hosts/default.nix` is the only host registry and drives
-  system plus standalone Home Manager outputs.
+- `hosts/<host>/host.nix` marks a host and owns its machine facts and selected
+  packages. `flakes/outputs.nix` discovers these files and drives system plus
+  standalone Home Manager outputs; there is no aggregate host registry.
 - Each host owns its machine facts, local settings, and selected capability
   packages. There is no profiles layer.
 - A package is discovered from its `default.nix`; groups such as `ai/`,
@@ -22,7 +23,8 @@ flake output -> configurations/hosts -> exported capability packages
   tree.
 - `modules/home/` is Home Manager-only. `modules/system/` owns Darwin/NixOS
   behavior. Neither imports the other's implementation.
-- `modules/flake-parts/` owns flake output composition and input partitions.
+- `flakes/` owns flake output composition and input partitions. Development-only
+  inputs live under `flakes/dev/`.
 - `resources/` holds versioned configuration deliberately deployed outside
   Nix. `resources/agents/` is the intended source for shared agent resources;
   `ai.agent-resources` manages the user-level `~/.agents/` directory. The
@@ -81,9 +83,9 @@ must be followed by host-appropriate boot, service, and recovery verification.
   `home.paths` package.
 - Keep direct package dependencies stable and one-way. Add an integration
   package when reusable cross-package coordination is concrete.
-- Keep development-only inputs in the `dev` partition under
-  `modules/flake-parts/dev/`; do not move optional inputs into the root graph
-  without a current base-output consumer.
+- Keep development-only inputs in the `dev` partition under `flakes/dev/`;
+  do not move optional inputs into the root graph without a current
+  base-output consumer.
 - `my.services` owns local processes and client tools only. It never owns
   durable service data, backups, or restoration.
 - State backup classification and tooling are not finalized. Do not add a
