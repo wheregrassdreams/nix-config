@@ -6,7 +6,6 @@
 }:
 {
   config = {
-    programs.k9s.enable = true;
     home = {
       packages = with pkgs; [
         neovim

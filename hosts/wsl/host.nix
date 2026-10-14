@@ -25,6 +25,7 @@ in
     home."terminal.tmux"
     home."terminal.tools"
     home."dev.langs"
+    home."dev.kubernetes"
     home."dev.ci"
     home.git
     home."connectivity.ssh"

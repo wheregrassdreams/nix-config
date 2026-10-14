@@ -2,10 +2,7 @@
   nixpkgs,
   inputs,
   self ? null,
-  overlays ? [
-    inputs.nur.overlays.default
-    inputs.llm-agents.overlays.default
-  ],
+  overlays ? [ self.overlays.default ],
   repoLib ? null,
 }:
 {

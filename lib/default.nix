@@ -7,6 +7,7 @@
 }:
 let
   repoLib = {
+    assertPlatform = import ./assert-platform.nix;
     discoverPackages = import ./discover-packages.nix { inherit lib; };
     importAll = import ./import-all.nix { inherit lib; };
     mkHost = import ./mk-host.nix {

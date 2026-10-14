@@ -22,6 +22,14 @@ aggregate host registry and no profiles layer.
   and settings. This includes Home Manager username and locale.
 - `flakes/` owns flake output composition and input partitions. `flake.nix`
   declares the root inputs and imports this composition.
+- `flakes/darwin/` and `flakes/nixos/` hold platform-only flake inputs. The
+  matching flake-parts partition builds only that platform's system outputs;
+  shared inputs and standalone Home outputs stay in the root graph.
+- `overlays/` owns shared package-set extensions. `overlays/default.nix`
+  discovers local overlay files and composes them with upstream overlays;
+  `pkgs.unstable` exposes rolling nixpkgs, while `pkgs.latestAgents` exposes
+  the daily-updated agent package set for explicit, per-application opt-in.
+  Platform-only system builders and inputs remain in their partitions.
 - There is no `modules/home/base` package. Reusable path contracts belong to
   `modules/home/paths/` and are selected explicitly by hosts that use them.
 
@@ -42,7 +50,8 @@ groups do not automatically become packages:
 
 Registry keys preserve dotted paths, for example
 `homeModules."ai.codex"`, `homeModules."connectivity.tailscale"`,
-`homeModules."desktop.browser"`, and `homeModules."dev.langs"`.
+`homeModules."desktop.browser"`, `homeModules."dev.langs"`, and
+`homeModules."dev.kubernetes"`.
 
 Within a package:
 
@@ -61,6 +70,9 @@ Within a package:
   discovered as configuration.
 - Feature fragments read their package options from `config` and gate optional
   behavior with `lib.mkIf`.
+- Packages limited to one OS import `repoLib.assertPlatform` in their entry
+  point. Selecting one from an incompatible host fails evaluation with the
+  package name and supported OS instead of silently producing a partial setup.
 - Keep small packages compact. Use source comments for non-obvious behavior;
   add a README when package boundaries or lifecycle rules need more context.
 
@@ -94,8 +106,17 @@ the user capability rather than a strict GUI/CLI split. `networking/` is named
 ### Development and paths
 
 `dev/` is an organizational group. Language support lives in `dev.langs` and
-local CI tools in `dev.ci`. `langs/` is the chosen implementation name for the
-language package; its current options use `my.dev.langs`.
+local CI tools in `dev.ci`. Kubernetes CLI tools live in `dev.kubernetes`;
+the full package includes kubectl, k9s, Helm, Kustomize, kubectx, stern, and
+Flux, while `my.dev.kubernetes.minimal` retains kubectl and k9s. `langs/` is
+the chosen implementation name for the language package; its current options
+use `my.dev.langs`.
+
+AI CLI packages expose a per-application `packageChannel` option. `stable`
+selects the matching package from the main nixpkgs set; `latest` selects the
+matching package from `pkgs.latestAgents`, backed by the agent package
+maintainer's rolling nixpkgs set. Generic fast-moving packages can use
+`pkgs.unstable` independently.
 
 `home.paths` owns the `my.paths` contract, generated `NIX_CONFIG_PATH_*`
 variables, and collision validation. Hosts provide host-specific path values.
@@ -157,9 +178,16 @@ not import Darwin or NixOS implementations.
 
 ## Flake partitions
 
-Development-only inputs stay in the `dev` partition under `flakes/dev/`; they
-do not enter the base deployment input graph
-without a current base-output consumer.
+Development-only inputs stay in the `dev` partition under `flakes/dev/`;
+Darwin system inputs stay in `flakes/darwin/`; and NixOS system inputs stay in
+`flakes/nixos/`. The `darwinConfigurations` and `nixosConfigurations` output
+attributes are evaluated in their matching partitions. Shared Home Manager
+outputs and reusable capability registries remain in the root graph. This
+keeps platform builders and their inputs out of the other platform's system
+output evaluation without reorganizing product packages by OS. Shared overlays
+are composed once and applied to both system and Home Manager package sets;
+Home packages with a real OS restriction also assert their supported platform
+when selected.
 
 ## Non-Nix assets and secrets
 

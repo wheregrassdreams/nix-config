@@ -18,7 +18,14 @@ let
   };
 in
 {
-  imports = [ ./options.nix ] ++ repoLib.importAll ./.;
+  imports = [
+    ./options.nix
+    (repoLib.assertPlatform {
+      package = "homebrew";
+      platforms = [ "darwin" ];
+    })
+  ]
+  ++ repoLib.importAll ./.;
 
   config = {
     xdg.configFile."homebrew/Brewfile".source = brewfile;

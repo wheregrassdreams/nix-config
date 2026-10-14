@@ -21,34 +21,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # nix-darwin：macOS 系统配置
-    nix-darwin = {
-      url = "github:lnl7/nix-darwin/nix-darwin-25.11?shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # NixOS on WSL 支持
-    nixos-wsl = {
-      url = "github:nix-community/NixOS-WSL/main?shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # nix-homebrew：在 nix-darwin 上管理 Homebrew
-    nix-homebrew.url = "github:zhaofengli/nix-homebrew?shallow=1";
-    # Apple 字体 / emoji（Linux 上使用）
-    apple-emoji-linux = {
-      url = "github:samuelngs/apple-emoji-linux?shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    # Reserved for a future Linux desktop font module (SF Pro/SF Mono).
-    # Disabled until that module has a consumer: its upstream sources include
-    # mutable Apple CDN artifacts, whose changed narHash currently prevents
-    # unrelated flake consumers such as direnv from resolving the lock graph.
-    # apple-fonts = {
-    #   url = "github:Lyndeno/apple-fonts.nix?shallow=1";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
-
     # Rust toolchain 管理（比 nixpkgs 自带的更新）
     fenix = {
       url = "github:nix-community/fenix?shallow=1";
@@ -64,7 +36,7 @@
     # LLM agents / AI tooling（作为工具使用）
     llm-agents = {
       url = "github:numtide/llm-agents.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # sops-nix：用于管理 secrets（系统模块型工具）
@@ -73,22 +45,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    agenix = {
-      url = "github:ryantm/agenix";
-      inputs = {
-        darwin.follows = "nix-darwin";
-        home-manager.follows = "home-manager";
-        nixpkgs.follows = "nixpkgs";
-      };
-    };
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    determinate = {
-      url = "https://flakehub.com/f/DeterminateSystems/determinate/3.8.6";
-    };
-
     nur = {
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -9,5 +9,11 @@
     ./options.nix
   ]
   ++ lib.optionals pkgs.stdenv.isDarwin [ ../../homebrew ]
-  ++ repoLib.importAll ./.;
+  ++ [
+    (repoLib.assertPlatform {
+      package = "connectivity.clash-verge";
+      platforms = [ "darwin" ];
+    })
+  ]
+  ++ lib.optionals pkgs.stdenv.isDarwin (repoLib.importAll ./.);
 }
