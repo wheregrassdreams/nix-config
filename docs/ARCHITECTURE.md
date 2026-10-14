@@ -112,11 +112,10 @@ Flux, while `my.dev.kubernetes.minimal` retains kubectl and k9s. `langs/` is
 the chosen implementation name for the language package; its current options
 use `my.dev.langs`.
 
-AI CLI packages expose a per-application `packageChannel` option. `stable`
-selects the matching package from the main nixpkgs set; `latest` selects the
-matching package from `pkgs.latestAgents`, backed by the agent package
-maintainer's rolling nixpkgs set. Generic fast-moving packages can use
-`pkgs.unstable` independently.
+AI CLI packages use `pkgs.latestAgents`, backed by the agent package
+maintainer's rolling nixpkgs set. The lock file pins that package source and
+`nix flake update llm-agents` advances the agent packages together. Generic
+fast-moving packages can use `pkgs.unstable` independently.
 
 `home.paths` owns the `my.paths` contract, generated `NIX_CONFIG_PATH_*`
 variables, and collision validation. Hosts provide host-specific path values.
