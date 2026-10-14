@@ -6,10 +6,27 @@
   overlays,
 }:
 let
-  dotfilesLib = {
+  repoLib = {
     discoverPackages = import ./discover-packages.nix { inherit lib; };
-    collectPackageModules = import ./collect-package-modules.nix { inherit lib; };
-    mkHost = import ./mk-host.nix { inherit nixpkgs inputs self overlays dotfilesLib; };
-    mkHome = import ./mk-home.nix { inherit nixpkgs inputs self overlays dotfilesLib; };
+    importAll = import ./import-all.nix { inherit lib; };
+    mkHost = import ./mk-host.nix {
+      inherit
+        nixpkgs
+        inputs
+        self
+        overlays
+        repoLib
+        ;
+    };
+    mkHome = import ./mk-home.nix {
+      inherit
+        nixpkgs
+        inputs
+        self
+        overlays
+        repoLib
+        ;
+    };
   };
-in dotfilesLib
+in
+repoLib

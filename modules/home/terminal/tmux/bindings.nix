@@ -1,6 +1,6 @@
-{ config, lib, ... }:
+{ lib, ... }:
 let
-  data = import ./bindings-data.nix { };
+  data = import ./_bindings-data.nix { };
   render =
     table: binding:
     "bind -T ${table} ${
@@ -9,7 +9,7 @@ let
   keys = bindings: map (binding: binding.key) bindings;
 in
 {
-  config = lib.mkIf (config.my.terminal.enable && config.my.terminal.tmux.enable) {
+  config = {
     assertions = [
       {
         assertion = builtins.length (keys data.prefix) == builtins.length (lib.unique (keys data.prefix));

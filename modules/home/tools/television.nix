@@ -1,6 +1,6 @@
 { config, lib, ... }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.television) {
+  config = lib.mkIf (config.my.tools.television) {
     programs = {
       nix-search-tv = {
         enable = true;

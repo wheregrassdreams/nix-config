@@ -1,4 +1,4 @@
-{ dotfilesLib, ... }:
+{ repoLib, ... }:
 {
-  imports = [ ./options.nix ../../homebrew/options.nix ] ++ dotfilesLib.collectPackageModules ./.;
+  imports = [ ../../homebrew/options.nix ] ++ repoLib.importAll ./.;
 }

@@ -8,7 +8,7 @@ let
   cfg = config.my;
 in
 {
-  config = lib.mkIf (cfg.git.enable && cfg.git.github.enable) {
+  config = lib.mkIf cfg.git.github.enable {
     # programs.gh = {
     #   enable = true;
     #   settings.git_protocol = "ssh";

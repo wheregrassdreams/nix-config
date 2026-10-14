@@ -40,19 +40,28 @@ namespaces such as `my.development` and `my.connectivity`.
 
 Within a package:
 
-- `default.nix` is the main configuration module and package marker.
-- `options.nix` declares the package's public options when it has a stable
-  configuration interface.
+- `default.nix` is the package marker and main configuration module.
+- Importing a package selects that capability. Package-level `enable` options
+  are redundant; keep `enable` for optional features inside the package.
+- `options.nix` is an ordinary package-owned module and is collected alongside
+  configuration modules.
 - Keep small packages directly in the package directory. Use meaningful
   subdirectories such as `tmux/` or `zsh/` when they clarify ownership; a
   generic `module/` directory is not required.
-- A package entry point may collect configuration `.nix` files from its own
-  directory tree, excluding its entry point, options declaration, and `lib/`.
-- Compose configuration with ordinary Nix module `imports`. Feature fragments
-  read their package options from `config` and gate their settings with
-  `lib.mkIf` rather than receiving ad hoc arguments from the package entry.
-- `lib/` contains concrete implementation helpers and is imported explicitly;
-  it is never auto-collected as configuration.
+- A package entry point uses `repoLib.importAll ./.` to recursively collect
+  `.nix` modules in deterministic path order. It excludes the entry point,
+  `lib/`, names beginning with `_`, and any child package directory marked by
+  its own `default.nix`.
+- Package discovery continues below a package marker, so parent and child
+  packages are registered independently. The host explicitly selects both
+  when it needs both capabilities.
+- Files and directories beginning with `_` are private helpers or excluded
+  configuration. A helper can still be imported explicitly by its consumer.
+- `lib/` contains technical implementation helpers and is imported explicitly;
+  it is never discovered as configuration or as a package.
+- Feature fragments read package options from `config` and gate optional
+  behavior with `lib.mkIf` rather than receiving ad hoc arguments from the
+  package entry.
 - Source comments should explain non-obvious behavior. Add a README only when
   a package has boundaries or lifecycle rules that are not clear from source.
 
@@ -107,6 +116,10 @@ The system registry exports one platform package per target:
 Home Manager and system adapters remain separate. A Home package must not
 import a Darwin or NixOS implementation, and a platform adapter must not
 import Home Manager behavior.
+
+`modules/system/shared/` is a system configuration package for behavior shared
+by Darwin and NixOS. Platform packages depend on it one way; it is separate
+from their implementation-only `lib/` directories.
 
 ## Flake partitions
 

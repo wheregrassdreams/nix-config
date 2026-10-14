@@ -1,11 +1,10 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }:
 {
-  config = lib.mkIf config.my.git.enable {
+  config = {
     programs.git = {
       enable = true;
       settings = {

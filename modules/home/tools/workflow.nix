@@ -5,7 +5,7 @@
   ...
 }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.workflow) {
+  config = lib.mkIf (config.my.tools.workflow) {
     home.packages = with pkgs; [
       # hurl
       sshpass

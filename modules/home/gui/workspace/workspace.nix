@@ -1,6 +1,6 @@
-{ config, lib, ... }:
+{ ... }:
 {
-  config = lib.mkIf config.my.gui.workspace.enable {
+  config = {
     my.homebrew = {
       taps = [
         {

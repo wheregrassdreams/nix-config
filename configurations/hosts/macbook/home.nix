@@ -14,7 +14,6 @@
   my = {
     inherit identity;
     homebrew = {
-      enable = true;
       brewPrefix = "/opt/homebrew";
       sync = {
         enable = true;
@@ -27,16 +26,14 @@
 
     connectivity = {
       tailscale = {
-        enable = true;
         host = "homelab.tail50e8c0.ts.net";
       };
-      clashVerge = {
-        enable = true;
-        hostname = "cv-macbook-zane";
-        tailnetDomain = "wheregrassdreams.top";
-        tailnetCidr = "100.64.0.0/10";
-        dnsUpstream = "100.124.158.7";
-      };
+    };
+    networking.clashVerge = {
+      hostname = "cv-macbook-zane";
+      tailnetDomain = "wheregrassdreams.top";
+      tailnetCidr = "100.64.0.0/10";
+      dnsUpstream = "100.124.158.7";
     };
 
     paths.personal = {
@@ -62,7 +59,6 @@
       keymap.karabiner.enable = true;
       editor.zed.enable = true;
       menuBar.ice.enable = false;
-      workspace.enable = true;
     };
 
     services.defaultMode = "external";
@@ -75,11 +71,7 @@
       replication = "sync";
       restore = "copy-tree";
     };
-    ssh.enable = true;
-    secrets.enable = true;
-
     shell = {
-      enable = true;
       zsh.enable = true;
       prompt.enable = true;
       integrations = {
@@ -88,13 +80,7 @@
       };
     };
 
-    terminal = {
-      enable = true;
-      tmux.enable = true;
-    };
-
     tools = {
-      enable = true;
       core = true;
       direnv = true;
       query = true;
@@ -105,21 +91,19 @@
     };
 
     git = {
-      enable = true;
-      interactive.enable = true;
+      lazygit.enable = true;
       github.enable = true;
       gitlab.enable = false;
       gitea.enable = true;
     };
 
     development = {
-      enable = true;
-      lua = true;
-      nix = true;
-      go = true;
-      javascript = true;
-      rust = true;
-      haskell = false;
+      lua.enable = true;
+      nix.enable = true;
+      go.enable = true;
+      javascript.enable = true;
+      rust.enable = true;
+      haskell.enable = false;
       python = {
         enable = true;
         suite = "full";
@@ -138,8 +122,10 @@
     }
   ];
   programs.go.env.GOPRIVATE = [ "*.xiaoe-tools.com" ];
-  programs.bash.initExtra = lib.optionalString pkgs.stdenv.isDarwin ''ulimit -s 65500'';
-  programs.zsh.initContent = lib.mkAfter (lib.optionalString pkgs.stdenv.isDarwin ''ulimit -s 65500'');
+  programs.bash.initExtra = lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500";
+  programs.zsh.initContent = lib.mkAfter (lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500");
+  my.terminal.tmux.inputMethod.command =
+    lib.mkIf config.my.gui.keymap.karabiner.enable "${config.my.homebrew.brewPrefix}/bin/im-select";
 
   targets.darwin.defaults = {
     ".GlobalPreferences"."com.apple.mouse.scaling" = -1.0;
@@ -155,7 +141,8 @@
       ShowMountedServersOnDesktop = false;
       ShowRemovableMediaOnDesktop = false;
     };
-  } // lib.optionalAttrs config.my.gui.menuBar.ice.enable {
+  }
+  // lib.optionalAttrs config.my.gui.menuBar.ice.enable {
     "com.jordanbaird.Ice" = {
       AutoRehide = true;
       CanToggleAlwaysHiddenSection = true;
@@ -178,7 +165,4 @@
     };
   };
 
-  config = lib.mkIf config.my.gui.keymap.karabiner.enable {
-    my.terminal.tmux.inputMethod.command = "${config.my.homebrew.brewPrefix}/bin/im-select";
-  };
 }

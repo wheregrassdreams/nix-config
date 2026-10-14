@@ -1,8 +1,6 @@
 { lib, ... }:
 {
   options.my.ssh = {
-    enable = lib.mkEnableOption "SSH client defaults";
-
     server = {
       enable = lib.mkEnableOption "an SSH server";
 

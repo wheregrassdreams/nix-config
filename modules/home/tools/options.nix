@@ -1,7 +1,6 @@
 { lib, ... }:
 {
   options.my.tools = {
-    enable = lib.mkEnableOption "command-line tools";
     core = lib.mkEnableOption "core CLI tools";
     direnv = lib.mkEnableOption "project environment loading with direnv";
     query = lib.mkEnableOption "search and structured data tools";

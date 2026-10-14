@@ -1,12 +1,11 @@
 {
-  config,
   pkgs,
   lib,
   isDarwin,
   ...
 }:
 {
-  config = lib.mkIf config.my.development.enable {
+  config = {
     programs.k9s.enable = true;
     home = {
       packages = with pkgs; [

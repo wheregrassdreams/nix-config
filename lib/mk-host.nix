@@ -1,4 +1,10 @@
-{ nixpkgs, overlays ? [], inputs, self ? null, dotfilesLib ? null }:
+{
+  nixpkgs,
+  overlays ? [ ],
+  inputs,
+  self ? null,
+  repoLib ? null,
+}:
 {
   system,
   userName,
@@ -8,16 +14,34 @@
   stateVersion ? null,
   isDarwin ? false,
   isWsl ? false,
-  systemModules ? [],
-  homeModules ? []
+  systemModules ? [ ],
+  homeModules ? [ ],
 }:
 let
   systemFunc = if isDarwin then inputs.nix-darwin.lib.darwinSystem else nixpkgs.lib.nixosSystem;
-  homeManagerModule = if isDarwin then inputs.home-manager.darwinModules.home-manager else inputs.home-manager.nixosModules.home-manager;
+  homeManagerModule =
+    if isDarwin then
+      inputs.home-manager.darwinModules.home-manager
+    else
+      inputs.home-manager.nixosModules.home-manager;
 in
 systemFunc {
   inherit system;
-  specialArgs = { inherit inputs self system hostName stateVersion isDarwin isWsl userName identity dotfilesPath dotfilesLib; };
+  specialArgs = {
+    inherit
+      inputs
+      self
+      system
+      hostName
+      stateVersion
+      isDarwin
+      isWsl
+      userName
+      identity
+      dotfilesPath
+      repoLib
+      ;
+  };
   modules = [
     { nixpkgs.overlays = overlays; }
     { nixpkgs.config.allowUnfree = true; }
@@ -26,12 +50,29 @@ systemFunc {
     {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
-      home-manager.users.${userName} = { ... }: {
-        imports = homeModules;
-        home.homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}";
-      };
+      home-manager.users.${userName} =
+        { ... }:
+        {
+          imports = homeModules;
+          home.homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}";
+        };
       home-manager.sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
-      home-manager.extraSpecialArgs = { inherit inputs system hostName userName identity isDarwin isWsl dotfilesPath dotfilesLib; flake = self; };
+      home-manager.extraSpecialArgs = {
+        inherit
+          inputs
+          system
+          hostName
+          userName
+          identity
+          isDarwin
+          isWsl
+          dotfilesPath
+          repoLib
+          ;
+        flake = self;
+      };
     }
-  ] ++ systemModules ++ nixpkgs.lib.optionals isWsl [ inputs.nixos-wsl.nixosModules.wsl ];
+  ]
+  ++ systemModules
+  ++ nixpkgs.lib.optionals isWsl [ inputs.nixos-wsl.nixosModules.wsl ];
 }

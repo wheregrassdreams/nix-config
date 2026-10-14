@@ -1,5 +1,5 @@
 {
-  description = "Dotfiles development-only flake inputs";
+  description = "Nix configuration development-only flake inputs";
 
   inputs = {
     # Keep this lock aligned with the base graph so the development partition

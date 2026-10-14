@@ -21,6 +21,7 @@ in
     home.base
     home.shell
     home.terminal
+    home."terminal.tmux"
     home.tools
     home.langs
     home.git
@@ -29,7 +30,7 @@ in
     home."ai.claude"
     home."ai.codex"
     home."ai.opencode"
-    home."agent-resources"
+    home."ai.agent-resources"
     home."gui.browser"
     home."gui.editor"
     home."gui.file-browser"

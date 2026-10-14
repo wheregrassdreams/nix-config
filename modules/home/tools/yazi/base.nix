@@ -5,7 +5,7 @@
   ...
 }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.interactive) {
+  config = lib.mkIf config.my.tools.interactive {
     programs.yazi = {
       enable = true;
       enableZshIntegration = true;

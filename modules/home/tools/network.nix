@@ -5,7 +5,7 @@
   ...
 }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.network) {
+  config = lib.mkIf (config.my.tools.network) {
     home.packages = with pkgs; [
       # mosh
       tailscale

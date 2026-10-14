@@ -5,7 +5,7 @@
   ...
 }:
 {
-  config = lib.mkIf (config.my.development.enable && config.my.development.nix.enable) {
+  config = lib.mkIf config.my.development.nix.enable {
     home.packages = with pkgs; [
       alejandra
       deadnix

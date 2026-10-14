@@ -5,7 +5,7 @@ let
   goPath = "${paths.xdg.data}/go";
 in
 {
-  config = lib.mkIf (cfg.enable && cfg.go.enable) {
+  config = lib.mkIf cfg.go.enable {
     programs.go = {
       enable = true;
       packages = { };

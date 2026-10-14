@@ -19,7 +19,7 @@ let
   );
 in
 {
-  config = lib.mkIf (cfg.enable && cfg.python.enable) {
+  config = lib.mkIf cfg.python.enable {
     home.packages = with pkgs; [
       (if cfg.python.suite == "full" then data else python)
       uv

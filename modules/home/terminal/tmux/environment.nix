@@ -26,7 +26,7 @@ let
   '') sessionVariables;
 in
 {
-  config = lib.mkIf (config.my.terminal.enable && config.my.terminal.tmux.enable) {
+  config = {
     programs.tmux.extraConfig = lib.mkAfter ''
       set -g update-environment "${updateEnvironment}"
     '';

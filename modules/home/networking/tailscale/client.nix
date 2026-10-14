@@ -13,12 +13,12 @@ in
     {
       assertions = [
         {
-          assertion = !cfg.enable || host != "";
-          message = "my.connectivity.tailscale.host must be set when Tailscale is enabled";
+          assertion = host != "";
+          message = "my.connectivity.tailscale.host must be set when this package is imported";
         }
       ];
     }
-    (lib.mkIf cfg.enable {
+    {
       my.homebrew.casks = [ "tailscale-app" ];
       home.file.".local/bin/tailscale-self-dns" = {
         executable = true;
@@ -29,6 +29,6 @@ in
           test "$actual" = '${host}' || { echo "declared host: ${host}" >&2; exit 2; }
         '';
       };
-    })
+    }
   ];
 }

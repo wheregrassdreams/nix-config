@@ -5,7 +5,7 @@
   ...
 }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.query) {
+  config = lib.mkIf (config.my.tools.query) {
     programs = {
       ripgrep.enable = true;
       jq.enable = true;

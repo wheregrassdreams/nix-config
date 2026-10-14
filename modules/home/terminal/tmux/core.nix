@@ -1,11 +1,10 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }:
 {
-  config = lib.mkIf (config.my.terminal.enable && config.my.terminal.tmux.enable) {
+  config = {
     programs.tmux = {
       enable = true;
       baseIndex = 1;

@@ -5,7 +5,7 @@ in
 {
   options.my.agentResources.dataHome = lib.mkOption {
     type = lib.types.str;
-    default = ".agents/";
+    default = "${config.home.homeDirectory}/.agents/";
     description = "Shared runtime directory used by agent applications and their resources.";
   };
 

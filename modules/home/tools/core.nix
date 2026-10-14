@@ -5,7 +5,7 @@
   ...
 }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.core) {
+  config = lib.mkIf (config.my.tools.core) {
     home.packages = with pkgs; [
       gnumake
       just

@@ -1,8 +1,8 @@
-# Deliberately not imported by default. This is a prepared enhancement which
-# derives future menu entries from bindings-data.nix without changing tmux.
+# This module is discovered with the rest of tmux's configuration, but remains
+# inert until its generated data is consumed by a real feature.
 { pkgs, ... }:
 let
-  data = import ./bindings-data.nix { };
+  data = import ./_bindings-data.nix { };
   menu = {
     keybindings.prefix_table = "Space";
     items = map (binding: {

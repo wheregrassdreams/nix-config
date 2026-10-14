@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   pkgs,
   ...
@@ -16,7 +15,7 @@ let
   };
 in
 {
-  config = lib.mkIf (config.my.terminal.enable && config.my.terminal.tmux.enable) {
+  config = {
     programs.tmux.extraConfig = lib.mkAfter ''
       bind f run-shell ${finder}/bin/tmux-window-finder
     '';

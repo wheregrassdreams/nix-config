@@ -1,10 +1,19 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  ...
+}:
 let
   sopsAgeKeyFile = "${config.xdg.configHome}/sops/age/keys.txt";
   sshPrivateKeyFile = "${config.home.homeDirectory}/.ssh/id_ed25519";
-in {
-  config = lib.mkIf config.my.secrets.enable {
-    home.packages = with pkgs; [ sops age ssh-to-age ];
+in
+{
+  config = {
+    home.packages = with pkgs; [
+      sops
+      age
+      ssh-to-age
+    ];
 
     sops.age = {
       keyFile = sopsAgeKeyFile;

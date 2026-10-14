@@ -1,6 +1,6 @@
-{ config, lib, ... }:
+{ ... }:
 {
-  config = lib.mkIf config.my.ssh.enable {
+  config = {
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;

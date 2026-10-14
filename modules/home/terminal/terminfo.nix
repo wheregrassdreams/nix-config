@@ -6,7 +6,7 @@
 }:
 let
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
-  terminfo = pkgs.runCommand "dotfiles-terminfo" { } ''
+  terminfo = pkgs.runCommand "nix-config-terminfo" { } ''
     source="$(find ${pkgs.ncurses}/share/terminfo -type f -name tmux-256color -print -quit)"
     test -n "$source"
     destination="$out/''${source#${pkgs.ncurses}/share/terminfo/}"
@@ -19,7 +19,7 @@ let
   changeMode = "${pkgs.coreutils}/bin/chmod";
 in
 {
-  config = lib.mkIf config.my.terminal.enable {
+  config = {
     # On Darwin Ghostty and Kitty are Homebrew casks. Their terminfo must be
     # copied only after brew-sync has installed the applications.
     home.activation.installTerminfo =

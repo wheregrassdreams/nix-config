@@ -1,6 +1,6 @@
 { config, lib, ... }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.interactive) {
+  config = lib.mkIf config.my.tools.interactive {
     # TODO: 考虑拆分出样式、快捷键
     # 用到包的地方显式声明一下，如fd eza file ripgrep timg bat
     programs.fzf = {

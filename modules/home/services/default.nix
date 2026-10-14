@@ -1,23 +1,46 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  repoLib,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.my.services;
   components = [
-    { name = "mysql"; formula = "mysql"; settings = cfg.mysql; }
-    { name = "postgres"; formula = "postgresql@17"; settings = cfg.postgres; }
-    { name = "redis"; formula = "redis"; settings = cfg.redis; }
+    {
+      name = "mysql";
+      formula = "mysql";
+      settings = cfg.mysql;
+    }
+    {
+      name = "postgres";
+      formula = "postgresql@17";
+      settings = cfg.postgres;
+    }
+    {
+      name = "redis";
+      formula = "redis";
+      settings = cfg.redis;
+    }
   ];
-  modeOf = component:
-    if component.settings.mode != null then component.settings.mode else cfg.defaultMode;
+  modeOf =
+    component: if component.settings.mode != null then component.settings.mode else cfg.defaultMode;
   enabledComponents = builtins.filter (component: component.settings.enable) components;
   localComponents = builtins.filter (component: modeOf component != "external") enabledComponents;
-  daemonComponents = builtins.filter (component: modeOf component == "local-daemon") enabledComponents;
-  stoppedComponents = builtins.filter (component: modeOf component != "local-daemon") enabledComponents;
+  daemonComponents = builtins.filter (
+    component: modeOf component == "local-daemon"
+  ) enabledComponents;
+  stoppedComponents = builtins.filter (
+    component: modeOf component != "local-daemon"
+  ) enabledComponents;
   enabledClient = component: component.enable && component.client.enable;
-in {
+in
+{
   imports = [
-    ./options.nix
     ../homebrew/options.nix
-  ];
+  ]
+  ++ repoLib.importAll ./.;
 
   config = lib.mkMerge [
     {
@@ -27,8 +50,14 @@ in {
       }) components;
 
       home.packages =
-        lib.optionals (enabledClient cfg.mysql) [ pkgs.mycli pkgs.mysql-shell ]
-        ++ lib.optionals (enabledClient cfg.postgres) [ pkgs.pgcli pkgs.postgresql ]
+        lib.optionals (enabledClient cfg.mysql) [
+          pkgs.mycli
+          pkgs.mysql-shell
+        ]
+        ++ lib.optionals (enabledClient cfg.postgres) [
+          pkgs.pgcli
+          pkgs.postgresql
+        ]
         ++ lib.optionals (enabledClient cfg.redis) [ pkgs.iredis ];
     }
     (lib.mkIf pkgs.stdenv.isDarwin {

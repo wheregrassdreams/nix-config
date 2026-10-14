@@ -1,6 +1,6 @@
 { config, lib, ... }:
 {
-  config = lib.mkIf (config.my.shell.enable && config.my.shell.prompt.enable) {
+  config = lib.mkIf config.my.shell.prompt.enable {
     programs.starship = {
       enable = true;
       enableZshIntegration = true;

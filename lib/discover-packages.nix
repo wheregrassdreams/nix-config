@@ -1,22 +1,23 @@
 { lib }:
 root:
 let
-  ignoredDirectoryNames = [ "lib" "module" ];
+  isExcludedName = name: lib.hasPrefix "_" name || name == "lib";
 
-  discover = path: segments:
+  discover =
+    path: segments:
     let
       entries = builtins.readDir path;
       names = builtins.attrNames entries;
-      isDirectory = name: entries.${name} == "directory";
-      childDirectories = builtins.filter
-        (name: isDirectory name && !(builtins.elem name ignoredDirectoryNames))
-        names;
+      childDirectories = builtins.filter (
+        name: entries.${name} == "directory" && !isExcludedName name
+      ) names;
+      package = lib.optionalAttrs (entries ? "default.nix") {
+        ${lib.concatStringsSep "." segments} = import path;
+      };
+      children = lib.foldl' (
+        result: name: result // discover (path + "/${name}") (segments ++ [ name ])
+      ) { } childDirectories;
     in
-    if entries ? "default.nix" then
-      [ (lib.nameValuePair (lib.concatStringsSep "." segments) (import path)) ]
-    else
-      lib.concatMap
-        (name: discover (path + "/" + name) (segments ++ [ name ]))
-        childDirectories;
+    package // children;
 in
-lib.listToAttrs (discover root [])
+discover root [ ]

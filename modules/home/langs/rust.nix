@@ -6,7 +6,7 @@
   ...
 }:
 {
-  config = lib.mkIf (config.my.development.enable && config.my.development.rust.enable) {
+  config = lib.mkIf config.my.development.rust.enable {
     home.packages = [
       (inputs.fenix.packages.${system}.stable.withComponents [
         "rustc"

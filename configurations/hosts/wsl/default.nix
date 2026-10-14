@@ -22,6 +22,7 @@ in
     home.base
     home.shell
     home.terminal
+    home."terminal.tmux"
     home.tools
     home.langs
     home.git

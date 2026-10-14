@@ -1,6 +1,6 @@
 { config, lib, ... }:
 {
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.direnv) {
+  config = lib.mkIf (config.my.tools.direnv) {
     programs.direnv = {
       enable = true;
       enableZshIntegration = true;

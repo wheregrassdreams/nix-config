@@ -8,7 +8,7 @@ let
   cfg = config.my.development;
 in
 {
-  config = lib.mkIf (cfg.enable && cfg.clang.enable) {
+  config = lib.mkIf cfg.clang.enable {
     home.packages =
       with pkgs;
       [

@@ -1,7 +1,6 @@
 { lib, ... }:
 {
   options.my.homebrew = {
-    enable = lib.mkEnableOption "Homebrew package synchronization";
 
     brewPrefix = lib.mkOption {
       type = lib.types.str;
@@ -10,16 +9,18 @@
     };
 
     taps = lib.mkOption {
-      type = lib.types.listOf (lib.types.submodule {
-        options = {
-          name = lib.mkOption { type = lib.types.str; };
-          trusted = lib.mkOption {
-            type = lib.types.bool;
-            default = false;
-            description = "trust this non-official Homebrew tap during bundle synchronization";
+      type = lib.types.listOf (
+        lib.types.submodule {
+          options = {
+            name = lib.mkOption { type = lib.types.str; };
+            trusted = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+              description = "trust this non-official Homebrew tap during bundle synchronization";
+            };
           };
-        };
-      });
+        }
+      );
       default = [ ];
       description = "Homebrew taps to declare in the generated Brewfile";
     };
@@ -43,7 +44,9 @@
     };
 
     sync = {
-      enable = lib.mkEnableOption "Homebrew synchronization during Home Manager activation" // { default = true; };
+      enable = lib.mkEnableOption "Homebrew synchronization during Home Manager activation" // {
+        default = true;
+      };
       autoUpdate = lib.mkOption {
         type = lib.types.bool;
         default = false;
@@ -55,7 +58,11 @@
         description = "upgrade already installed declared packages during synchronization";
       };
       cleanup = lib.mkOption {
-        type = lib.types.enum [ "none" "uninstall" "zap" ];
+        type = lib.types.enum [
+          "none"
+          "uninstall"
+          "zap"
+        ];
         default = "none";
         description = "how synchronization handles packages absent from the declared Brewfile";
       };

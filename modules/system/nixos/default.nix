@@ -1,9 +1,9 @@
-{ dotfilesLib, ... }:
+{ repoLib, ... }:
 {
   imports = [
-    ../lib/nix.nix
-    ../lib/base-tools.nix
+    ../shared
     ../services/nixos.nix
     ../../home/ssh/options.nix
-  ] ++ dotfilesLib.collectPackageModules ./.;
+  ]
+  ++ repoLib.importAll ./.;
 }

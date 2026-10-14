@@ -5,7 +5,7 @@
   ...
 }:
 let
-  cfg = config.my.connectivity.clashVerge;
+  cfg = config.my.networking.clashVerge;
   script = pkgs.writeText "clash-verge-tailnet.js" (
     builtins.replaceStrings
       [
@@ -22,7 +22,7 @@ let
         (builtins.toJSON cfg.tailnetCidr)
         (builtins.toJSON cfg.dnsUpstream)
       ]
-      (builtins.readFile ../../../../resources/clash-verge/clash-verge-tailnet.js)
+      (builtins.readFile ./clash-verge-tailnet.js)
   );
 in
 {
@@ -30,27 +30,27 @@ in
     {
       assertions = [
         {
-          assertion = !cfg.enable || cfg.hostname != "";
-          message = "my.connectivity.clashVerge.hostname must be set when Clash Verge is enabled";
+          assertion = cfg.hostname != "";
+          message = "my.networking.clashVerge.hostname must be set when this package is imported";
         }
         {
-          assertion = !cfg.enable || cfg.tailnetDomain != "";
-          message = "my.connectivity.clashVerge.tailnetDomain must be set when Clash Verge is enabled";
+          assertion = cfg.tailnetDomain != "";
+          message = "my.networking.clashVerge.tailnetDomain must be set when this package is imported";
         }
         {
-          assertion = !cfg.enable || cfg.tailnetCidr != "";
-          message = "my.connectivity.clashVerge.tailnetCidr must be set when Clash Verge is enabled";
+          assertion = cfg.tailnetCidr != "";
+          message = "my.networking.clashVerge.tailnetCidr must be set when this package is imported";
         }
         {
-          assertion = !cfg.enable || cfg.dnsUpstream != "";
-          message = "my.connectivity.clashVerge.dnsUpstream must be set when Clash Verge is enabled";
+          assertion = cfg.dnsUpstream != "";
+          message = "my.networking.clashVerge.dnsUpstream must be set when this package is imported";
         }
       ];
     }
-    (lib.mkIf cfg.enable {
+    {
       my.homebrew.casks = [ "clash-verge-rev" ];
       home.file."Library/Application Support/io.github.clash-verge-rev.clash-verge-rev/profiles/Script.js".source =
         script;
-    })
+    }
   ];
 }

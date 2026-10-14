@@ -8,7 +8,7 @@ let
     inputs.llm-agents.overlays.default
   ];
 
-  dotfilesLib = import ../../lib {
+  repoLib = import ../../lib {
     lib = nixpkgs.lib;
     inherit
       nixpkgs
@@ -26,22 +26,26 @@ let
       (lib.setAttrByPath [
         (if host.isDarwin or false then "darwinConfigurations" else "nixosConfigurations")
         name
-      ] (dotfilesLib.mkHost host))
-      (lib.setAttrByPath [ "homeConfigurations" "${host.userName}@${name}" ] (dotfilesLib.mkHome host));
+      ] (repoLib.mkHost host))
+      (lib.setAttrByPath [ "homeConfigurations" "${host.userName}@${name}" ] (repoLib.mkHome host));
 
-  hostOutputs = lib.foldl' lib.recursiveUpdate { }
-    (lib.mapAttrsToList mkHostOutputs hosts);
+  hostOutputs = lib.foldl' lib.recursiveUpdate { } (lib.mapAttrsToList mkHostOutputs hosts);
 in
 {
-  flake = lib.recursiveUpdate {
-    homeModules = dotfilesLib.discoverPackages ../../modules/home;
-    darwinModules.platform = import ../../modules/system/darwin;
-    nixosModules.platform = import ../../modules/system/nixos;
-  } (lib.recursiveUpdate hostOutputs {
-    lib = lib.extend (
-      _: _: {
-        dotfiles = dotfilesLib;
+  flake =
+    lib.recursiveUpdate
+      {
+        homeModules = repoLib.discoverPackages ../../modules/home;
+        darwinModules.platform = import ../../modules/system/darwin;
+        nixosModules.platform = import ../../modules/system/nixos;
       }
-    );
-  });
+      (
+        lib.recursiveUpdate hostOutputs {
+          lib = lib.extend (
+            _: _: {
+              nixConfig = repoLib;
+            }
+          );
+        }
+      );
 }

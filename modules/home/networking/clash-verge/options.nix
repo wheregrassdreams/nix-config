@@ -1,8 +1,6 @@
 { lib, ... }:
 {
-  options.my.connectivity.clashVerge = {
-    enable = lib.mkEnableOption "Clash Verge Rev connectivity client";
-
+  options.my.networking.clashVerge = {
     hostname = lib.mkOption {
       type = lib.types.str;
       default = "";

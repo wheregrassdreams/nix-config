@@ -1,7 +1,6 @@
 { lib, ... }:
 {
   options.my.connectivity.tailscale = {
-    enable = lib.mkEnableOption "Tailscale connectivity";
     host = lib.mkOption {
       type = lib.types.str;
       default = "";

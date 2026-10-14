@@ -1,7 +1,4 @@
+{ repoLib, ... }:
 {
-  imports = [
-    ./options.nix
-    ./terminfo.nix
-    ./tmux
-  ];
+  imports = repoLib.importAll ./.;
 }

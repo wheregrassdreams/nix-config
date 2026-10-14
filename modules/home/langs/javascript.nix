@@ -13,7 +13,7 @@ let
   };
 in
 {
-  config = lib.mkIf (config.my.development.enable && config.my.development.javascript.enable) {
+  config = lib.mkIf config.my.development.javascript.enable {
     programs.bun = {
       enable = true;
       enableGitIntegration = true;

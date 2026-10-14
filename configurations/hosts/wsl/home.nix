@@ -32,16 +32,10 @@ in
     paths.personal.windows = "/mnt/c";
 
     shell = {
-      enable = true;
       zsh.enable = true;
       prompt.enable = true;
     };
-    terminal = {
-      enable = true;
-      tmux.enable = true;
-    };
     tools = {
-      enable = true;
       core = true;
       direnv = true;
       query = true;
@@ -52,21 +46,18 @@ in
       media = false;
     };
     git = {
-      enable = true;
-      interactive.enable = true;
+      lazygit.enable = true;
       github.enable = true;
     };
-    ssh.enable = true;
     development = {
-      enable = true;
-      nix = true;
+      nix.enable = true;
       python.enable = true;
       python.suite = "minimal";
       clang.enable = true;
       clang.opengl.enable = false;
-      javascript = false;
-      go = false;
-      rust = false;
+      javascript.enable = false;
+      go.enable = false;
+      rust.enable = false;
     };
   };
 

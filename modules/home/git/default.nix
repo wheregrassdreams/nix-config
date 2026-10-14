@@ -1,7 +1,7 @@
-{ dotfilesLib, ... }:
+{ repoLib, ... }:
 {
   imports = [
-    ./options.nix
     ../identity
-  ] ++ dotfilesLib.collectPackageModules ./.;
+  ]
+  ++ repoLib.importAll ./.;
 }

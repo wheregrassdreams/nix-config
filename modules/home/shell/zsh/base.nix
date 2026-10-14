@@ -8,7 +8,7 @@ let
   cfg = config.my.shell;
 in
 {
-  config = lib.mkIf (cfg.enable && cfg.zsh.enable) {
+  config = lib.mkIf cfg.zsh.enable {
     home.file = {
       ".config/zsh/scripts/edit-command-line.zsh".source = ./scripts/edit-command-line.zsh;
       ".config/zsh/scripts/keybinds.zsh".source = ./scripts/keybinds.zsh;

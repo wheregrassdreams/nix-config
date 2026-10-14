@@ -1,9 +1,4 @@
+{ inputs, repoLib, ... }:
 {
-  imports = [
-    ./options.nix
-    ./macos.nix
-    ./nix-index.nix
-    ./prompt.nix
-    ./zsh/base.nix
-  ];
+  imports = [ inputs.nix-index-database.homeModules.nix-index ] ++ repoLib.importAll ./.;
 }

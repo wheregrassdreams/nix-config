@@ -1,4 +1,13 @@
-{ nixpkgs, inputs, self ? null, overlays ? [ inputs.nur.overlays.default inputs.llm-agents.overlays.default ], dotfilesLib ? null }:
+{
+  nixpkgs,
+  inputs,
+  self ? null,
+  overlays ? [
+    inputs.nur.overlays.default
+    inputs.llm-agents.overlays.default
+  ],
+  repoLib ? null,
+}:
 {
   system,
   userName,
@@ -7,7 +16,7 @@
   dotfilesPath ? (if isDarwin then "/Users/${userName}/.dotfiles" else "/home/${userName}/.dotfiles"),
   isDarwin ? false,
   isWsl ? false,
-  homeModules ? [],
+  homeModules ? [ ],
   ...
 }:
 inputs.home-manager.lib.homeManagerConfiguration {
@@ -16,9 +25,24 @@ inputs.home-manager.lib.homeManagerConfiguration {
     config.allowUnfree = true;
     inherit overlays;
   };
-  extraSpecialArgs = { inherit inputs self system userName identity hostName isDarwin isWsl dotfilesPath dotfilesLib; flake = self; };
+  extraSpecialArgs = {
+    inherit
+      inputs
+      self
+      system
+      userName
+      identity
+      hostName
+      isDarwin
+      isWsl
+      dotfilesPath
+      repoLib
+      ;
+    flake = self;
+  };
   modules = [
     inputs.sops-nix.homeManagerModules.sops
     { home.homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}"; }
-  ] ++ homeModules;
+  ]
+  ++ homeModules;
 }

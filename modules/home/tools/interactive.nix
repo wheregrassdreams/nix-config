@@ -5,11 +5,7 @@
   ...
 }:
 {
-  imports = [
-    ./fzf/base.nix
-    ./yazi/base.nix
-  ];
-  config = lib.mkIf (config.my.tools.enable && config.my.tools.interactive) {
+  config = lib.mkIf config.my.tools.interactive {
     programs = {
       bat = {
         enable = true;

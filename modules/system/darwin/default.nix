@@ -1,8 +1,7 @@
-{ dotfilesLib, ... }: {
+{ repoLib, ... }:
+{
   imports = [
-    ../lib/nix.nix
-    ../lib/base-tools.nix
-    ./options.nix
-    ./lib/dock.nix
-  ] ++ dotfilesLib.collectPackageModules ./.;
+    ../shared
+  ]
+  ++ repoLib.importAll ./.;
 }

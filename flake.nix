@@ -1,5 +1,5 @@
 {
-  description = "Zane's dotfiles";
+  description = "Zane's Nix configuration";
 
   # 这里定义整个系统/用户配置所依赖的外部 flake。
   inputs = {

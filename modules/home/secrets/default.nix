@@ -1,4 +1,4 @@
-{ dotfilesLib, ... }:
+{ repoLib, ... }:
 {
-  imports = [ ./options.nix ] ++ dotfilesLib.collectPackageModules ./.;
+  imports = repoLib.importAll ./.;
 }
