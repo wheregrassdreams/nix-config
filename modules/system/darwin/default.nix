@@ -1,8 +1,8 @@
-{ ... }: {
+{ dotfilesLib, ... }: {
   imports = [
-    ./base.nix
-    ./homebrew.nix
-    ./dock-implementation.nix
-    ./disk-images.nix
-  ];
+    ../lib/nix.nix
+    ../lib/base-tools.nix
+    ./options.nix
+    ./lib/dock.nix
+  ] ++ dotfilesLib.collectPackageModules ./.;
 }

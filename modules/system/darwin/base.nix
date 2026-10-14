@@ -1,7 +1,5 @@
-{ config, lib, userName, hostName, dotfilesPath, pkgs, ... }:
+{ userName, hostName, pkgs, ... }:
 {
-  nix.enable = false; # 使用determinate
-
   networking = {
     applicationFirewall.enable = true;
     computerName = hostName;

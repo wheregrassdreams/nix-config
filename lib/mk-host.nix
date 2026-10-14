@@ -8,7 +8,6 @@
   stateVersion ? null,
   isDarwin ? false,
   isWsl ? false,
-  hostModule,
   systemModules ? [],
   homeModules ? []
 }:
@@ -23,7 +22,6 @@ systemFunc {
     { nixpkgs.overlays = overlays; }
     { nixpkgs.config.allowUnfree = true; }
     (if isDarwin then inputs.sops-nix.darwinModules.sops else inputs.sops-nix.nixosModules.sops)
-    hostModule
     homeManagerModule
     {
       home-manager.useGlobalPkgs = true;

@@ -15,35 +15,37 @@ let
   enabledClient = component: component.enable && component.client.enable;
 in {
   imports = [
-    ../../options/services.nix
-    ../../options/homebrew.nix
+    ./options.nix
+    ../homebrew/options.nix
   ];
 
-  config = {
-    assertions = map (component: {
-      assertion = component.settings.enable || component.settings.mode == null;
-      message = "my.services.${component.name}.mode requires my.services.${component.name}.enable";
-    }) components;
+  config = lib.mkMerge [
+    {
+      assertions = map (component: {
+        assertion = component.settings.enable || component.settings.mode == null;
+        message = "my.services.${component.name}.mode requires my.services.${component.name}.enable";
+      }) components;
 
-    my.homebrew.brews = map (component: component.formula) localComponents;
-
-    home.packages =
-      lib.optionals (enabledClient cfg.mysql) [ pkgs.mycli pkgs.mysql-shell ]
-      ++ lib.optionals (enabledClient cfg.postgres) [ pkgs.pgcli pkgs.postgresql ]
-      ++ lib.optionals (enabledClient cfg.redis) [ pkgs.iredis ];
-
-    home.activation.manageHomebrewServices = lib.mkIf (stoppedComponents != [ ] || daemonComponents != [ ]) (
-      lib.hm.dag.entryAfter [ "brewBundle" ] ''
-      brew=${lib.escapeShellArg "${config.my.homebrew.brewPrefix}/bin/brew"}
-      if [ -x "$brew" ]; then
-        ${lib.concatMapStrings (component: ''
-          "$brew" services stop ${lib.escapeShellArg component.formula} >/dev/null 2>&1 || true
-        '') stoppedComponents}
-        ${lib.concatMapStrings (component: ''
-          "$brew" services start ${lib.escapeShellArg component.formula}
-        '') daemonComponents}
-      fi
-      ''
-    );
-  };
+      home.packages =
+        lib.optionals (enabledClient cfg.mysql) [ pkgs.mycli pkgs.mysql-shell ]
+        ++ lib.optionals (enabledClient cfg.postgres) [ pkgs.pgcli pkgs.postgresql ]
+        ++ lib.optionals (enabledClient cfg.redis) [ pkgs.iredis ];
+    }
+    (lib.mkIf pkgs.stdenv.isDarwin {
+      my.homebrew.brews = map (component: component.formula) localComponents;
+    })
+    (lib.mkIf (pkgs.stdenv.isDarwin && (stoppedComponents != [ ] || daemonComponents != [ ])) {
+      home.activation.manageHomebrewServices = lib.hm.dag.entryAfter [ "brewBundle" ] ''
+        brew=${lib.escapeShellArg "${config.my.homebrew.brewPrefix}/bin/brew"}
+        if [ -x "$brew" ]; then
+          ${lib.concatMapStrings (component: ''
+            "$brew" services stop ${lib.escapeShellArg component.formula} >/dev/null 2>&1 || true
+          '') stoppedComponents}
+          ${lib.concatMapStrings (component: ''
+            "$brew" services start ${lib.escapeShellArg component.formula}
+          '') daemonComponents}
+        fi
+      '';
+    })
+  ];
 }

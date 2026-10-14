@@ -26,9 +26,9 @@ lib.mkMerge [
 
     home.packages = with pkgs; [
       timg
-      duf
+      # duf
       dust
-      moor
+      # moor
       procs
       tokei
 

@@ -21,16 +21,53 @@ let
     };
 in
 {
-  imports = [
-    ../../../modules/home
-    ../../../modules/home/data/home.nix
-    ../../../modules/home/services
-    ../../profiles/workstation/home.nix
-  ];
+  home = {
+    stateVersion = "25.11";
+    enableNixpkgsReleaseCheck = false;
+    username = identity.username;
+  };
 
   my = {
-    identity = identity;
+    inherit identity;
     paths.personal.windows = "/mnt/c";
+
+    shell = {
+      enable = true;
+      zsh.enable = true;
+      prompt.enable = true;
+    };
+    terminal = {
+      enable = true;
+      tmux.enable = true;
+    };
+    tools = {
+      enable = true;
+      core = true;
+      direnv = true;
+      query = true;
+      network = true;
+      workflow = true;
+      interactive = true;
+      television = true;
+      media = false;
+    };
+    git = {
+      enable = true;
+      interactive.enable = true;
+      github.enable = true;
+    };
+    ssh.enable = true;
+    development = {
+      enable = true;
+      nix = true;
+      python.enable = true;
+      python.suite = "minimal";
+      clang.enable = true;
+      clang.opengl.enable = false;
+      javascript = false;
+      go = false;
+      rust = false;
+    };
   };
 
   # WSLg provides Wayland, while zsh-system-clipboard otherwise prefers the

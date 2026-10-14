@@ -4,13 +4,6 @@
   ...
 }:
 {
-  imports = [
-    ../../../modules/system/nix.nix
-    ../../../modules/system/base-tools.nix
-    ../../../modules/system/nixos.nix
-    ../../../modules/system/services/nixos.nix
-  ];
-
   config = {
     system.stateVersion = "25.11";
     networking.hostName = hostName;

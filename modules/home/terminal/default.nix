@@ -1,15 +1,15 @@
-{ dotfilesLib, config, lib, pkgs, isDarwin, ... }@ctx:
-dotfilesLib.domain ctx {
-  namespace = "my.terminal";
-  description = "terminal environment";
-  base = ./terminfo.nix;
-
-  features.tmux = {
-    description = "tmux";
-    module = ./tmux/default.nix;
-    settings.inputMethod.command = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-    };
-  };
+{ config, lib, ... }@ctx:
+let
+  cfg = config.my.terminal;
+  module = import ./tmux/default.nix;
+  tmux = if builtins.isFunction module then module (ctx // { feature = cfg.tmux; }) else module;
+  terminfoModule = import ./terminfo.nix;
+  terminfo = if builtins.isFunction terminfoModule then terminfoModule ctx else terminfoModule;
+in
+{
+  imports = [ ./options.nix ];
+  config = lib.mkMerge [
+    (lib.mkIf cfg.enable (terminfo.config or terminfo))
+    (lib.mkIf (cfg.enable && cfg.tmux.enable) (tmux.config or tmux))
+  ];
 }

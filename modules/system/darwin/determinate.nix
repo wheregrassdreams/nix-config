@@ -2,6 +2,7 @@
 {
   imports = [ inputs.determinate.darwinModules.default ];
 
+  nix.enable = false; # 使用determinate
   determinateNix.customSettings = {
     experimental-features = [ "nix-command" "flakes" ];
     trusted-users = [ "root" "@admin" userName ];

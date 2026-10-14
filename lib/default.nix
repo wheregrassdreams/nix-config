@@ -7,11 +7,8 @@
 }:
 let
   dotfilesLib = {
-    domain = import ./domain.nix { inherit lib; };
-    feature.group = children: {
-      _type = "dotfiles-feature-group";
-      inherit children;
-    };
+    discoverPackages = import ./discover-packages.nix { inherit lib; };
+    collectPackageModules = import ./collect-package-modules.nix { inherit lib; };
     mkHost = import ./mk-host.nix { inherit nixpkgs inputs self overlays dotfilesLib; };
     mkHome = import ./mk-home.nix { inherit nixpkgs inputs self overlays dotfilesLib; };
   };

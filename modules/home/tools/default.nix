@@ -1,59 +1,22 @@
-{
-  dotfilesLib,
-  config,
-  lib,
-  pkgs,
-  inputs,
-  system,
-  ...
-}@ctx:
+{ config, lib, ... }@ctx:
 let
-  domainArgs = ctx // {
-    inherit
-      config
-      lib
-      pkgs
-      inputs
-      system
-      ;
-  };
+  cfg = config.my.tools;
+  apply = path:
+    let module = import path;
+    in if builtins.isFunction module then module ctx else module;
+  enabled = feature: path:
+    lib.optional (cfg.enable && feature) (apply path);
 in
-dotfilesLib.domain domainArgs {
-  namespace = "my.tools";
-  description = "command-line tools";
-
-  features = {
-    core = {
-      description = "core CLI tools";
-      module = ./core.nix;
-    };
-    direnv = {
-      description = "project environment loading with direnv";
-      module = ./direnv.nix;
-    };
-    query = {
-      description = "search and structured data tools";
-      module = ./query.nix;
-    };
-    network = {
-      description = "network and remote access tools";
-      module = ./network.nix;
-    };
-    workflow = {
-      description = "command-line workflow tools";
-      module = ./workflow.nix;
-    };
-    interactive = {
-      description = "interactive tools, including FZF and Yazi";
-      module = ./interactive.nix;
-    };
-    television = {
-      description = "Television interactive search";
-      module = ./television.nix;
-    };
-    media = {
-      description = "media CLI tools";
-      module = ./media.nix;
-    };
-  };
+{
+  imports = [ ./options.nix ];
+  config = lib.mkMerge (
+    enabled cfg.core ./core.nix
+    ++ enabled cfg.direnv ./direnv.nix
+    ++ enabled cfg.query ./query.nix
+    ++ enabled cfg.network ./network.nix
+    ++ enabled cfg.workflow ./workflow.nix
+    ++ enabled cfg.interactive ./interactive.nix
+    ++ enabled cfg.television ./television.nix
+    ++ enabled cfg.media ./media.nix
+  );
 }

@@ -5,7 +5,7 @@ let
     config.allowUnfree = true;
   };
 in {
-  config = lib.mkIf (config.my.ai.enable && config.my.ai.codex.cli) {
+  config = lib.mkIf config.my.ai.codex.cli.enable {
     programs.codex = {
       enable = true;
       package = pkgs-unstable.codex;

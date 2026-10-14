@@ -1,3 +1,4 @@
+{ dotfilesLib, ... }:
 {
-  imports = [ ../../options/ssh.nix ./base.nix ];
+  imports = [ ./options.nix ] ++ dotfilesLib.collectPackageModules ./.;
 }

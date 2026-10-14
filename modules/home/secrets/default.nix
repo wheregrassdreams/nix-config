@@ -1,3 +1,4 @@
+{ dotfilesLib, ... }:
 {
-  imports = [ ../../options/secrets.nix ./base.nix ];
+  imports = [ ./options.nix ] ++ dotfilesLib.collectPackageModules ./.;
 }

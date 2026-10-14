@@ -3,8 +3,6 @@ let
   cfg = config.my.ssh.server;
 in
 {
-  imports = [ ../../options/ssh.nix ];
-
   config = lib.mkIf cfg.enable {
     services.openssh.enable = true;
     users.users = lib.mapAttrs (_: keys: {

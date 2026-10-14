@@ -1,3 +1,6 @@
 { pkgs, ... }: {
-  home.packages = with pkgs; [ mosh tailscale ];
+  home.packages = with pkgs; [
+    # mosh
+    tailscale
+  ];
 }

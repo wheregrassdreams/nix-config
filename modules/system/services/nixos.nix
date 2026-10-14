@@ -5,7 +5,7 @@ let
   isManual = component: component.enable && modeOf component == "local-manual";
   isDaemon = component: component.enable && modeOf component == "local-daemon";
 in {
-  imports = [ ../../options/services.nix ];
+  imports = [ ../../home/services/options.nix ];
 
   config = {
     assertions = map (name: {

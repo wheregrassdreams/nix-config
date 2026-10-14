@@ -126,10 +126,14 @@ UID is permanently `1000`; rename the user without changing that UID. See
 
 ## Layout
 
-- `configurations/hosts/`: host identity and machine-local facts.
-- `configurations/profiles/`: capability combinations.
-- `modules/options/`: reusable `my.*` option interfaces.
-- `modules/home/` and `modules/system/`: Home Manager and system adapters.
+- `configurations/hosts/default.nix`: single host registry for system and
+  standalone Home outputs.
+- `configurations/hosts/<host>/`: host facts, package composition, and local
+  settings.
+- `modules/home/`: Home Manager capability packages, with package-local option
+  declarations and implementation.
+- `modules/system/`: Darwin and NixOS platform packages.
+- `modules/flake-parts/`: flake output composition and input partitions.
 - `resources/`: versioned configuration deployed outside Nix.
 - `secrets/`: encrypted SOPS data.
 

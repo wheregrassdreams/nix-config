@@ -1,16 +1,16 @@
 { pkgs, ... }: {
   home.packages = with pkgs; [
-    hurl
+    # hurl
     sshpass
     act
     xh
-    entr
+    # entr
     just
     sttr
     tldr
     trash-cli
     clipboard-jh
     nur.repos.charmbracelet.gum
-    nur.repos.charmbracelet.mods
+    # nur.repos.charmbracelet.mods
   ];
 }
