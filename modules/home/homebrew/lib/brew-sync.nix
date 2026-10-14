@@ -1,4 +1,9 @@
-{ cfg, lib, pkgs, brewfile }:
+{
+  cfg,
+  lib,
+  pkgs,
+  brewfile,
+}:
 pkgs.writeShellScriptBin "brew-sync" ''
   set -eu
 

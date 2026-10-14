@@ -1,4 +1,9 @@
-{ userName, hostName, pkgs, ... }:
+{
+  userName,
+  hostName,
+  pkgs,
+  ...
+}:
 {
   networking = {
     applicationFirewall.enable = true;

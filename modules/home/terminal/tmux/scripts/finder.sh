@@ -1,4 +1,6 @@
-SOURCE_CMD="$(cat <<'EOF'
+# shellcheck shell=bash
+SOURCE_CMD="$(
+  cat <<'EOF'
 tmux list-windows -a -F $'#{?session_attached,1,0}#{?window_active,1,0}#{session_last_attached}\t#{session_name}\t#{session_name}:#{window_index}\t\e[38;5;245m#{session_name}\e[0m\t\e[38;2;222;222;222m#{window_name}\e[0m\t\e[38;2;103;103;103m#{?session_attached,#{?window_active,(current),},} #{?window_last_flag,,}\e[0m' |
 sort -rnk1
 EOF

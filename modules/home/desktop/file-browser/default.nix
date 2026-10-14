@@ -1,6 +1,6 @@
 {
   lib,
-  pkgs,
+  isDarwin,
   repoLib,
   ...
 }:
@@ -12,5 +12,5 @@
       platforms = [ "darwin" ];
     })
   ]
-  ++ lib.optionals pkgs.stdenv.isDarwin (repoLib.importAll ./.);
+  ++ lib.optionals isDarwin (repoLib.importAll ./.);
 }

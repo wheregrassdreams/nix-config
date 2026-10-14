@@ -4,8 +4,15 @@
 
   nix.enable = false; # 使用determinate
   determinateNix.customSettings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    trusted-users = [ "root" "@admin" userName ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    trusted-users = [
+      "root"
+      "@admin"
+      userName
+    ];
     sandbox = true;
     auto-optimise-store = true;
     builders-use-substitutes = true;

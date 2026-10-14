@@ -1,6 +1,6 @@
 {
   lib,
-  pkgs,
+  isDarwin,
   repoLib,
   ...
 }:
@@ -8,6 +8,6 @@
   imports = [
     ./options.nix
   ]
-  ++ lib.optionals pkgs.stdenv.isDarwin [ ../../homebrew ]
+  ++ lib.optionals isDarwin [ ../../homebrew ]
   ++ repoLib.importAll ./.;
 }

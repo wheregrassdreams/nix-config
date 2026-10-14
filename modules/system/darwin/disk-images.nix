@@ -1,4 +1,5 @@
-{ config, lib, ... }: {
+{ ... }:
+{
   system.defaults.CustomUserPreferences."com.apple.frameworks.diskimages" = {
     skip-verify = true;
     skip-verify-locked = true;

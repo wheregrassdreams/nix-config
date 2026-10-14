@@ -2,7 +2,7 @@
   description = "Darwin-only inputs for the nix-config flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/47472570b1e607482890801aeaf29bfb749884f6?shallow=1";
+    nixpkgs.url = "github:NixOS/nixpkgs/8fd9daa3db09ced9700431c5b7ad0e8ba199b575?shallow=1";
 
     nix-darwin = {
       url = "github:lnl7/nix-darwin/nix-darwin-25.11?shallow=1";

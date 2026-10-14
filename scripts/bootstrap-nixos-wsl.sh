@@ -44,10 +44,10 @@ die() {
 }
 
 cleanup() {
-  if [[ -n "$github_setup_script" && -f "$github_setup_script" ]]; then
+  if [[ -n $github_setup_script && -f $github_setup_script ]]; then
     rm -f -- "$github_setup_script"
   fi
-  if [[ -n "$tmp_dir" && -d "$tmp_dir" ]]; then
+  if [[ -n $tmp_dir && -d $tmp_dir ]]; then
     rm -rf -- "$tmp_dir"
   fi
 }
@@ -58,7 +58,7 @@ configure_github_ssh() {
 
   printf '\nConfigure GitHub SSH for zane now? [Y/n] '
   read -r answer
-  if [[ -n "$answer" && ! "$answer" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+  if [[ -n $answer && ! $answer =~ ^[Yy]([Ee][Ss])?$ ]]; then
     printf 'GitHub SSH setup skipped; origin remains HTTPS.\n'
     return
   fi
@@ -125,7 +125,7 @@ ZANE_SSH_SETUP
   rm -f -- "$github_setup_script"
   github_setup_script=""
 
-  if [[ "$setup_status" -eq 0 ]]; then
+  if [[ $setup_status -eq 0 ]]; then
     printf 'GitHub SSH is ready; origin now uses SSH.\n'
   else
     printf 'GitHub SSH setup did not finish; origin remains HTTPS. Configure it later with gh auth login and gh ssh-key add.\n' >&2
@@ -134,48 +134,75 @@ ZANE_SSH_SETUP
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --repo) repo="${2:?--repo requires OWNER/REPO}"; shift 2 ;;
-    --branch) branch="${2:?--branch requires a branch}"; shift 2 ;;
-    --host) host="${2:?--host requires a host}"; shift 2 ;;
-    --target) target="${2:?--target requires a path}"; shift 2 ;;
-    --source) source_override="${2:?--source requires a path}"; shift 2 ;;
-    --private) private_repo=true; shift ;;
-    --skip-github-ssh) skip_github_ssh=true; shift ;;
-    --repair) repair=true; shift ;;
-    -h|--help) usage; exit 0 ;;
-    *) die "unknown option: $1" ;;
+  --repo)
+    repo="${2:?--repo requires OWNER/REPO}"
+    shift 2
+    ;;
+  --branch)
+    branch="${2:?--branch requires a branch}"
+    shift 2
+    ;;
+  --host)
+    host="${2:?--host requires a host}"
+    shift 2
+    ;;
+  --target)
+    target="${2:?--target requires a path}"
+    shift 2
+    ;;
+  --source)
+    source_override="${2:?--source requires a path}"
+    shift 2
+    ;;
+  --private)
+    private_repo=true
+    shift
+    ;;
+  --skip-github-ssh)
+    skip_github_ssh=true
+    shift
+    ;;
+  --repair)
+    repair=true
+    shift
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *) die "unknown option: $1" ;;
   esac
 done
 
-[[ "$repo" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || die "--repo must be OWNER/REPO"
-[[ "$branch" =~ ^[A-Za-z0-9._/-]+$ ]] || die "--branch contains unsupported characters"
-[[ "$host" =~ ^[A-Za-z0-9._-]+$ ]] || die "--host contains unsupported characters"
-[[ "$target" = /* ]] || die "--target must be an absolute path"
-[[ -z "$source_override" || "$source_override" = /* ]] || die "--source must be an absolute path"
+[[ $repo =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || die "--repo must be OWNER/REPO"
+[[ $branch =~ ^[A-Za-z0-9._/-]+$ ]] || die "--branch contains unsupported characters"
+[[ $host =~ ^[A-Za-z0-9._-]+$ ]] || die "--host contains unsupported characters"
+[[ $target == /* ]] || die "--target must be an absolute path"
+[[ -z $source_override || $source_override == /* ]] || die "--source must be an absolute path"
 [[ "$(id -u)" -ne 0 ]] || die "run this as a normal WSL user, not root"
 grep -qiE '(microsoft|wsl)' /proc/sys/kernel/osrelease || die "this script only supports WSL"
 command -v curl >/dev/null || die "curl is required"
 command -v nix >/dev/null || die "nix is required"
 command -v sudo >/dev/null || die "sudo is required"
-curl --proto '=https' --tlsv1.2 -fsSI --connect-timeout 10 https://github.com >/dev/null \
-  || die "cannot reach GitHub over HTTPS"
+curl --proto '=https' --tlsv1.2 -fsSI --connect-timeout 10 https://github.com >/dev/null ||
+  die "cannot reach GitHub over HTTPS"
 
 first_install=true
 source_dir=""
-if [[ -e "$target" || -L "$target" ]]; then
-  [[ -d "$target" && ! -L "$target" ]] || die "target must be a directory path: $target"
+if [[ -e $target || -L $target ]]; then
+  [[ -d $target && ! -L $target ]] || die "target must be a directory path: $target"
   if [[ -n "$(find "$target" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
-    [[ -f "$target/flake.nix" && -d "$target/.git" ]] \
-      || die "existing target is not a Git flake checkout: $target"
+    [[ -f "$target/flake.nix" && -d "$target/.git" ]] ||
+      die "existing target is not a Git flake checkout: $target"
     first_install=false
     source_dir="$target"
   fi
 fi
 
-if [[ -n "$source_override" ]]; then
+if [[ -n $source_override ]]; then
   "$first_install" || die "--source cannot be used when the target checkout already exists"
-  [[ -d "$source_override/.git" && -f "$source_override/flake.nix" ]] \
-    || die "--source must be a local Git flake checkout: $source_override"
+  [[ -d "$source_override/.git" && -f "$source_override/flake.nix" ]] ||
+    die "--source must be a local Git flake checkout: $source_override"
   source_dir="$source_override"
 fi
 
@@ -191,29 +218,29 @@ fi
 if "$repair"; then
   printf '  repair: checkout ownership and zane password\n'
 fi
-if [[ -n "$source_override" ]]; then
+if [[ -n $source_override ]]; then
   printf '  source: local checkout %s\n' "$source_override"
 fi
 printf '\nThis will build, test, and switch the NixOS configuration. Continue? [y/N] '
 read -r answer
-[[ "$answer" =~ ^[Yy]([Ee][Ss])?$ ]] || die "cancelled"
+[[ $answer =~ ^[Yy]([Ee][Ss])?$ ]] || die "cancelled"
 
 repo_url="https://github.com/$repo.git"
 nix_features=(--extra-experimental-features 'nix-command flakes')
 
-if "$first_install" && [[ -z "$source_override" ]] && "$private_repo"; then
+if "$first_install" && [[ -z $source_override ]] && "$private_repo"; then
   printf '\nAuthenticating with GitHub for the private repository...\n'
   nix shell "${nix_features[@]}" nixpkgs#git nixpkgs#gh --command gh auth login --web --git-protocol https
   nix shell "${nix_features[@]}" nixpkgs#git nixpkgs#gh --command gh auth setup-git
 fi
 
 if "$first_install"; then
-  if [[ -z "$source_override" ]]; then
+  if [[ -z $source_override ]]; then
     tmp_dir="$(mktemp -d -t nixos-wsl-bootstrap.XXXXXXXX)"
     stage="$tmp_dir/source"
     printf '\nCloning bootstrap source...\n'
-    nix run "${nix_features[@]}" nixpkgs#git -- clone --branch "$branch" --single-branch "$repo_url" "$stage" \
-      || die "clone failed; use --private for a private GitHub repository"
+    nix run "${nix_features[@]}" nixpkgs#git -- clone --branch "$branch" --single-branch "$repo_url" "$stage" ||
+      die "clone failed; use --private for a private GitHub repository"
     source_dir="$stage"
   fi
 fi
@@ -228,7 +255,7 @@ sudo nixos-rebuild switch --flake "$source_dir#$host"
 if "$first_install"; then
   printf '\nInstalling the permanent zane-owned checkout...\n'
   sudo install -d -m 0755 -o zane -g users "$(dirname "$target")"
-  if [[ -d "$target" ]]; then
+  if [[ -d $target ]]; then
     sudo rmdir "$target" || die "target must be absent or an empty directory: $target"
   fi
   sudo mv "$source_dir" "$target"
@@ -265,7 +292,7 @@ EOF
 
 printf '\nShut down WSL now so the next launch starts as zane? [y/N] '
 read -r shutdown_answer
-if [[ "$shutdown_answer" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+if [[ $shutdown_answer =~ ^[Yy]([Ee][Ss])?$ ]]; then
   if command -v wsl.exe >/dev/null; then
     printf 'Shutting down WSL...\n'
     wsl.exe --shutdown || printf 'WSL shutdown failed; run "wsl --shutdown" from Windows PowerShell.\n' >&2

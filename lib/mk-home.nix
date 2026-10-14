@@ -47,6 +47,7 @@ inputs.home-manager.lib.homeManagerConfiguration {
   };
   modules = [
     inputs.sops-nix.homeManagerModules.sops
+    ../modules/home/homebrew/options.nix
     {
       home = {
         username = userName;

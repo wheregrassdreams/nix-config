@@ -61,7 +61,7 @@ systemFunc {
       home-manager.users.${userName} =
         { ... }:
         {
-          imports = homeModules;
+          imports = [ ../modules/home/homebrew/options.nix ] ++ homeModules;
           home = {
             username = userName;
             homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}";

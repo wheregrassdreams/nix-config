@@ -31,37 +31,51 @@ let
       description = "the recovery procedure category for the data";
     };
   };
-  itemType = lib.types.submodule ({ ... }: {
-    options = lifecycleOptions // {
-      source = {
-        type = lib.mkOption {
-          type = lib.types.enum [ "path" "service" ];
-          description = "whether the data originates from a file tree or a service";
-        };
-        path = lib.mkOption {
-          type = lib.types.nullOr lib.types.str;
-          default = null;
-          description = "source path for path-backed data";
-        };
-        service = lib.mkOption {
-          type = lib.types.nullOr lib.types.str;
-          default = null;
-          description = "logical service name for service-backed data";
+  itemType = lib.types.submodule (
+    { ... }:
+    {
+      options = lifecycleOptions // {
+        source = {
+          type = lib.mkOption {
+            type = lib.types.enum [
+              "path"
+              "service"
+            ];
+            description = "whether the data originates from a file tree or a service";
+          };
+          path = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = null;
+            description = "source path for path-backed data";
+          };
+          service = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = null;
+            description = "logical service name for service-backed data";
+          };
         };
       };
-    };
-  });
-  serviceTemplateType = lib.types.submodule ({ ... }: {
-    options = lifecycleOptions;
-  });
-  itemAssertions = lib.concatMap (name:
-    let item = cfg.items.${name}; in [
+    }
+  );
+  serviceTemplateType = lib.types.submodule (
+    { ... }:
+    {
+      options = lifecycleOptions;
+    }
+  );
+  itemAssertions = lib.concatMap (
+    name:
+    let
+      item = cfg.items.${name};
+    in
+    [
       {
         assertion = item.source.type != "path" || (item.source.path != null && item.source.service == null);
         message = "my.data.items.${name}: path sources require source.path and forbid source.service";
       }
       {
-        assertion = item.source.type != "service" || (item.source.service != null && item.source.path == null);
+        assertion =
+          item.source.type != "service" || (item.source.service != null && item.source.path == null);
         message = "my.data.items.${name}: service sources require source.service and forbid source.path";
       }
       {
@@ -80,9 +94,14 @@ let
         assertion = item.restore != "import-export" || item.replication == "export-required";
         message = "my.data.items.${name}: import-export restoration requires export-required replication";
       }
-    ]) (builtins.attrNames cfg.items);
-  serviceTemplateAssertions = lib.concatMap (name:
-    let template = cfg.serviceTemplates.${name}; in [
+    ]
+  ) (builtins.attrNames cfg.items);
+  serviceTemplateAssertions = lib.concatMap (
+    name:
+    let
+      template = cfg.serviceTemplates.${name};
+    in
+    [
       {
         assertion = template.replication == "export-required";
         message = "my.data.serviceTemplates.${name}: service data requires export-required replication";
@@ -91,8 +110,10 @@ let
         assertion = template.restore == "import-export";
         message = "my.data.serviceTemplates.${name}: service data requires import-export restoration";
       }
-    ]) (builtins.attrNames cfg.serviceTemplates);
-in {
+    ]
+  ) (builtins.attrNames cfg.serviceTemplates);
+in
+{
   options.my.data = {
     items = lib.mkOption {
       type = lib.types.attrsOf itemType;

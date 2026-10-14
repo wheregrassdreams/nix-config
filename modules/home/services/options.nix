@@ -1,10 +1,12 @@
 { lib, ... }:
 let
-  modeType = lib.types.nullOr (lib.types.enum [
-    "external"
-    "local-manual"
-    "local-daemon"
-  ]);
+  modeType = lib.types.nullOr (
+    lib.types.enum [
+      "external"
+      "local-manual"
+      "local-daemon"
+    ]
+  );
   component = name: {
     enable = lib.mkEnableOption name;
     mode = lib.mkOption {
@@ -12,12 +14,19 @@ let
       default = null;
       description = "runtime mode for ${name}; null inherits services.defaultMode";
     };
-    client.enable = lib.mkEnableOption "${name} client tools" // { default = true; };
+    client.enable = lib.mkEnableOption "${name} client tools" // {
+      default = true;
+    };
   };
-in {
+in
+{
   options.my.services = {
     defaultMode = lib.mkOption {
-      type = lib.types.enum [ "external" "local-manual" "local-daemon" ];
+      type = lib.types.enum [
+        "external"
+        "local-manual"
+        "local-daemon"
+      ];
       default = "external";
       description = "default lifecycle mode for enabled local services";
     };

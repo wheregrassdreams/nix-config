@@ -11,7 +11,7 @@ timestamp="$(date '+%Y%m%d-%H%M%S')"
 backup_path="${source_path}.hm-backup-${timestamp}"
 suffix=1
 
-while [[ -e "$backup_path" || -L "$backup_path" ]]; do
+while [[ -e $backup_path || -L $backup_path ]]; do
   backup_path="${source_path}.hm-backup-${timestamp}.${suffix}"
   suffix=$((suffix + 1))
 done

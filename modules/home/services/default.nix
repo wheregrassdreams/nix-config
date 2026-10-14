@@ -3,6 +3,7 @@
   repoLib,
   lib,
   pkgs,
+  isDarwin,
   ...
 }:
 let
@@ -40,7 +41,7 @@ in
   imports = [
     ./options.nix
   ]
-  ++ lib.optionals pkgs.stdenv.isDarwin [ ../homebrew ]
+  ++ lib.optionals isDarwin [ ../homebrew ]
   ++ repoLib.importAll ./.;
 
   config = lib.mkMerge [

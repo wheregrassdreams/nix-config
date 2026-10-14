@@ -1,6 +1,6 @@
 {
   lib,
-  pkgs,
+  isDarwin,
   repoLib,
   ...
 }:
@@ -8,12 +8,12 @@
   imports = [
     ./options.nix
   ]
-  ++ lib.optionals pkgs.stdenv.isDarwin [ ../../homebrew ]
+  ++ lib.optionals isDarwin [ ../../homebrew ]
   ++ [
     (repoLib.assertPlatform {
       package = "connectivity.clash-verge";
       platforms = [ "darwin" ];
     })
   ]
-  ++ lib.optionals pkgs.stdenv.isDarwin (repoLib.importAll ./.);
+  ++ lib.optionals isDarwin (repoLib.importAll ./.);
 }
