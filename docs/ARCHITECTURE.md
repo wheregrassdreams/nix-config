@@ -1,130 +1,158 @@
 # Architecture
 
-## Composition model
+## Composition
 
 The host registry is the single source for system and standalone Home outputs.
-Each host declares its machine facts and selects exported capability packages
-directly:
+Each host owns machine facts and chooses exported capability packages:
 
 ```text
 flake outputs -> configurations/hosts -> package registries -> package configuration
 ```
 
-`configurations/hosts/default.nix` explicitly maps host names to host
-descriptors. The flake iterates this map to create the matching Darwin or
-NixOS output and the standalone Home Manager output. A host descriptor refers
-to capability values such as `self.homeModules."gui.browser"`; it does not
-name a reusable profile.
+`configurations/hosts/default.nix` maps host names to descriptors. The flake
+uses that map to create the corresponding Darwin or NixOS output and standalone
+Home Manager output. Hosts are the composition roots; there is no profiles
+layer.
 
 - `configurations/hosts/<host>/default.nix` owns platform, host identity,
-  capability selection, and machine facts.
-- `configurations/hosts/<host>/home.nix` and `system.nix` hold settings local to
-  that host and target.
-- There is no `configurations/profiles/` layer.
-- There is no global `modules/options/` layer. A package owns its public option
-  declarations beside its entry point.
+  machine facts, and capability selection.
+- `configurations/hosts/<host>/home.nix` and `system.nix` own host-local values
+  and settings. This includes Home Manager username and locale.
+- There is no `modules/home/base` package. Reusable path contracts belong to
+  `modules/home/paths/` and are selected explicitly by hosts that use them.
 - `modules/flake-parts/` owns flake output composition and input partitions.
 
 ## Capability packages
 
-A directory with `default.nix` is a package entry point and is eligible for
-discovery. Directories without an entry point can organize related packages.
-The `ai/`, `gui/`, and `networking/` directories are organizational groups;
-they do not export a parent package. Registry keys preserve the dotted path,
-for example `homeModules."ai.codex"` or
-`homeModules."networking.tailscale"`.
+A directory with `default.nix` is a package entry point and is discovered as an
+output. A directory without one can organize related packages. Organizational
+groups do not automatically become packages:
 
-The chosen implementation names include `modules/home/langs/` and
-`modules/home/networking/`. These directory names are independent from option
-namespaces such as `my.development` and `my.connectivity`.
+- `ai/` groups AI application packages and shared agent resources.
+- `connectivity/` groups user-level connectivity tools such as SSH and
+  Tailscale clients.
+- `desktop/` groups desktop application packages. A package may configure
+  both GUI and CLI behavior when they form one user-facing capability.
+- `dev/` groups development packages such as `dev.langs` and `dev.ci`.
+- `terminal/` owns the terminal product and its `shell`, `tools`, and `tmux`
+  packages.
+
+Registry keys preserve dotted paths, for example
+`homeModules."ai.codex"`, `homeModules."connectivity.tailscale"`,
+`homeModules."desktop.browser"`, and `homeModules."dev.langs"`.
 
 Within a package:
 
-- `default.nix` is the package marker and main configuration module.
-- Importing a package selects that capability. Package-level `enable` options
-  are redundant; keep `enable` for optional features inside the package.
-- `options.nix` is an ordinary package-owned module and is collected alongside
-  configuration modules.
-- Keep small packages directly in the package directory. Use meaningful
-  subdirectories such as `tmux/` or `zsh/` when they clarify ownership; a
-  generic `module/` directory is not required.
-- A package entry point uses `repoLib.importAll ./.` to recursively collect
-  `.nix` modules in deterministic path order. It excludes the entry point,
-  `lib/`, names beginning with `_`, and any child package directory marked by
-  its own `default.nix`.
-- Package discovery continues below a package marker, so parent and child
-  packages are registered independently. The host explicitly selects both
-  when it needs both capabilities.
-- Files and directories beginning with `_` are private helpers or excluded
-  configuration. A helper can still be imported explicitly by its consumer.
-- `lib/` contains technical implementation helpers and is imported explicitly;
-  it is never discovered as configuration or as a package.
-- Feature fragments read package options from `config` and gate optional
-  behavior with `lib.mkIf` rather than receiving ad hoc arguments from the
-  package entry.
-- Source comments should explain non-obvious behavior. Add a README only when
-  a package has boundaries or lifecycle rules that are not clear from source.
+- `default.nix` marks the package and is its main configuration module.
+- A package owns its public options. Importing the package selects the
+  capability; `enable` is for optional subfeatures, not the package itself.
+- When present, `options.nix` is imported explicitly by `default.nix`.
+- The package entry point uses `repoLib.importAll ./.` to collect its other
+  `.nix` configuration files recursively in deterministic path order.
+- Files and directories beginning with `_` are excluded from discovery and
+  may still be imported explicitly by a consumer.
+- A child directory with its own `default.nix` is a separate package. Parent
+  package collection skips that directory; hosts choose parent and child
+  packages independently.
+- `lib/` contains implementation helpers and is imported explicitly, never
+  discovered as configuration.
+- Feature fragments read their package options from `config` and gate optional
+  behavior with `lib.mkIf`.
+- Keep small packages compact. Use source comments for non-obvious behavior;
+  add a README when package boundaries or lifecycle rules need more context.
 
-Not every directory needs all of these files. Small packages remain compact.
-The `editor/` directory at the Home root remains an unregistered placeholder;
-the current editor package is `gui.editor`.
+## Product packages
+
+### Terminal
+
+`terminal.shell` owns Zsh, prompts, shell integrations, `direnv`, and Atuin.
+Atuin is selected as an optional shell-history feature. In the current host
+configuration it records locally, owns `Ctrl-R`, leaves the up-arrow behavior
+alone, and has automatic sync disabled.
+
+`terminal.tools` is the everyday command-line package. Its files provide soft
+internal groupings such as search/data, interactive tools, files, clipboard,
+web, and SSH helpers; those groups are not separate packages. The full package
+is the default. Its `minimal` option keeps the core everyday set and omits
+extended utilities. `television` and media tools remain optional subfeatures.
+`xh`, `sshpass`, `trash-cli`, and command-line clipboard tools live here for
+now. `act` belongs to `dev.ci`, not terminal tools.
+
+### Connectivity and desktop
+
+`connectivity.ssh` owns the Home Manager SSH client configuration. The NixOS
+SSH server adapter remains in `modules/system/nixos/`; platform-specific server
+behavior is not combined with the Home client package.
+
+The former `gui/` package group is named `desktop/`. Product boundaries follow
+the user capability rather than a strict GUI/CLI split. `networking/` is named
+`connectivity/`, with options under `my.connectivity`.
+
+### Development and paths
+
+`dev/` is an organizational group. Language support lives in `dev.langs` and
+local CI tools in `dev.ci`. `langs/` is the chosen implementation name for the
+language package; its current options use `my.dev.langs`.
+
+`home.paths` owns the `my.paths` contract, generated `NIX_CONFIG_PATH_*`
+variables, and collision validation. Hosts provide host-specific path values.
+
+`core` is an architectural concept for ecosystem rules and conventions, not a
+default package. It does not imply that Git, SSH, or a baseline Home package is
+automatically selected.
 
 ## Package relationships
 
-- Hosts choose packages and provide host-specific values. They are the
-  composition roots, not shared capability libraries.
-- `ai.<application>` packages own each agent application's options and
-  configuration. `ai/` only groups those packages.
-- `agent-resources` currently owns the shared agent resource environment
-  variables and runtime directories. The source and deployment contract for
-  repository-managed `.agent/` MCP and skills resources is still being worked
-  out; do not infer an application-specific layout from this package.
+- Hosts select packages and provide host-specific values. Shared capabilities
+  remain one-way dependencies; reusable cross-package coordination can become
+  an integration package when concrete reuse exists.
+- `ai.<application>` packages own application-specific configuration.
+  `ai.agent-resources` owns the shared agent resource paths and runtime
+  directories under `~/.agents/`.
+- `resources/agents/` is the intended repository source for shared MCP and
+  skills assets. App-specific MCP activation and resource deployment are not
+  yet a settled contract; a shared MCP inventory must not be mistaken for an
+  active client configuration.
 - GUI applications declare their Homebrew casks through the stable Homebrew
   interface. The host combines those packages with `homebrew` on macOS.
 - The Home Manager Homebrew package owns the generated Brewfile and
-  user-level synchronization. The Darwin platform package owns the
-  Homebrew installation substrate. Cleanup remains an explicit operation.
+  user-level synchronization. The Darwin platform package owns the Homebrew
+  installation substrate. Cleanup remains an explicit operation.
 - `my.services` owns local processes and client tools only. It does not own
   durable service data, backups, or restoration.
-- Direct cross-package definitions are appropriate for stable, one-way
-  dependencies. Reusable coordination across packages should become an
-  integration package when that need is concrete.
 
-## State and recovery direction
+## State and recovery
 
 State belongs to the capability that creates or manages it. The long-term
 direction is for packages to describe their own state (for example, tmux
-Continuum history or an agent's sessions), while shared backup/recovery logic
-applies policy, collects data, tracks copies, and supports restoration.
+Continuum history or an agent application's sessions), while shared
+backup/recovery logic applies policy, collects data, tracks copies, and
+supports restoration.
 
-The policy model is not finalized. Loss impact (including level 3 historical
-data, level 2 rebuildable caches, and critical data), content type (such as
-code, binary files, logs, or databases), and available recovery source are
-separate dimensions. No backup tool, retention policy, or critical-data level
-is selected here. The existing `my.data` contract remains transitional until
-that model is researched and agreed.
+The policy model is not finalized. Loss impact, content type, and available
+recovery source are separate dimensions. No backup tool, retention policy, or
+critical-data level is selected. Do not infer recovery behavior from Atuin's
+optional encrypted sync or from a package's local state directory. The
+existing `my.data` contract remains transitional until the model is researched
+and agreed.
 
-## Platform packages
+## System packages
 
 The system registry exports one platform package per target:
 
-- `darwinModules.platform` configures the Darwin substrate and imports its
+- `darwinModules.platform` configures the Darwin substrate and imports
   platform-local behavior, including Dock and Homebrew installation.
 - `nixosModules.platform` configures the NixOS/WSL substrate and SSH server
   adapter.
 
-Home Manager and system adapters remain separate. A Home package must not
-import a Darwin or NixOS implementation, and a platform adapter must not
-import Home Manager behavior.
-
 `modules/system/shared/` is a system configuration package for behavior shared
-by Darwin and NixOS. Platform packages depend on it one way; it is separate
-from their implementation-only `lib/` directories.
+by Darwin and NixOS. Platform packages depend on it one way. It is separate
+from platform-local `lib/` implementation helpers. Home Manager packages do
+not import Darwin or NixOS implementations.
 
 ## Flake partitions
 
-The root flake uses flake-parts for explicit output composition. Development-
-only inputs stay in the `dev` partition under
+Development-only inputs stay in the `dev` partition under
 `modules/flake-parts/dev/`; they do not enter the base deployment input graph
 without a current base-output consumer.
 
@@ -132,9 +160,7 @@ without a current base-output consumer.
 
 - `resources/` holds versioned configuration deliberately deployed outside
   Nix. Neovim remains a manual symlink from `resources/nvim`.
-- `.agent/` is the intended source location for shared MCP and skills
-  resources once their deployment and application-consumption contract is
-  established.
+- `resources/agents/` is reserved for shared agent MCP and skills source files
+  once their consuming applications and deployment behavior are wired.
 - `secrets/` holds encrypted SOPS data only. Never add plaintext credentials.
-- Windows configuration remains out of scope for this repository; WSL
-  integration is in scope.
+- Windows configuration remains out of scope; WSL integration is in scope.

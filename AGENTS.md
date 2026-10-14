@@ -15,15 +15,18 @@ flake output -> configurations/hosts -> exported capability packages
 - Each host owns its machine facts, local settings, and selected capability
   packages. There is no profiles layer.
 - A package is discovered from its `default.nix`; groups such as `ai/`,
-  `gui/`, and `networking/` have no package entry point of their own.
+  `connectivity/`, `desktop/`, and `dev/` have no package entry point of
+  their own. `terminal/` owns the terminal capability and its shell, tools,
+  and tmux packages.
 - Package options live with the package. There is no global `modules/options/`
   tree.
 - `modules/home/` is Home Manager-only. `modules/system/` owns Darwin/NixOS
   behavior. Neither imports the other's implementation.
 - `modules/flake-parts/` owns flake output composition and input partitions.
 - `resources/` holds versioned configuration deliberately deployed outside
-  Nix. `.agent/` is the intended source for shared agent resources once their
-  deployment contract is settled.
+  Nix. `resources/agents/` is the intended source for shared agent resources;
+  `ai.agent-resources` manages the user-level `~/.agents/` directory. The
+  application-consumption contract for MCP resources is still being settled.
 - `secrets/` holds encrypted SOPS data only.
 
 The canonical outputs are `darwinConfigurations.macbook`,
@@ -58,14 +61,24 @@ must be followed by host-appropriate boot, service, and recovery verification.
 - Keep small packages directly in their package directory. Use meaningful
   subdirectories such as `tmux/` or `zsh/` when they clarify ownership; do not
   create a generic `module/` directory.
-- Package entry points may collect configuration `.nix` files below their own
-  directory, excluding `default.nix`, `options.nix`, and `lib/`.
+- Package entry points explicitly import `options.nix` when present, then
+  collect other configuration `.nix` files below their own directory,
+  excluding `default.nix`, `options.nix`, `_`-prefixed names, `lib/`, and
+  child package directories.
 - Prefer ordinary Nix module `imports`; feature fragments read their own
   package options from `config` and gate their settings with `lib.mkIf`.
 - `lib/` contains technical implementation helpers and is imported explicitly,
   never as configuration discovery.
-- Use names such as `langs/` and `networking/` for the chosen implementation
-  directories; do not infer public option names from directory names.
+- Use `dev/langs/`, `connectivity/`, and `desktop/` for the chosen
+  implementation directories; do not infer public option names from directory
+  names.
+- `terminal.shell` owns shell configuration, including Atuin and direnv.
+  `terminal.tools` is the everyday CLI package, internally grouped by source
+  file; `minimal` is an optional reduced set. Development utilities belong in
+  `dev/`.
+- Host settings own Home Manager username and locale. There is no Home `base`
+  package; reusable path settings belong to the separately selected
+  `home.paths` package.
 - Keep direct package dependencies stable and one-way. Add an integration
   package when reusable cross-package coordination is concrete.
 - Keep development-only inputs in the `dev` partition under

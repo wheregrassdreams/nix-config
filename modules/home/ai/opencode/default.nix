@@ -1,4 +1,8 @@
 { repoLib, ... }:
 {
-  imports = [ ../../homebrew/options.nix ] ++ repoLib.importAll ./.;
+  imports = [
+    ./options.nix
+    ../../homebrew/options.nix
+  ]
+  ++ repoLib.importAll ./.;
 }

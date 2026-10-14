@@ -38,6 +38,7 @@ let
 in
 {
   imports = [
+    ./options.nix
     ../homebrew/options.nix
   ]
   ++ repoLib.importAll ./.;

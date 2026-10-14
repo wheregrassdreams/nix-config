@@ -19,14 +19,16 @@ in
     ./system.nix
   ];
   homeModules = [
-    home.base
-    home.shell
+    home.paths
+    home."terminal.shell"
     home.terminal
     home."terminal.tmux"
-    home.tools
-    home.langs
+    home."terminal.tools"
+    home."dev.langs"
+    home."dev.ci"
     home.git
-    home.ssh
+    home."connectivity.ssh"
+    home."connectivity.tailscale"
     home.services
     home.data
     ./home.nix

@@ -18,28 +18,29 @@ in
     ./system.nix
   ];
   homeModules = [
-    home.base
-    home.shell
+    home.paths
+    home."terminal.shell"
     home.terminal
     home."terminal.tmux"
-    home.tools
-    home.langs
+    home."terminal.tools"
+    home."dev.langs"
+    home."dev.ci"
     home.git
-    home.ssh
+    home."connectivity.ssh"
     home.secrets
     home."ai.claude"
     home."ai.codex"
     home."ai.opencode"
     home."ai.agent-resources"
-    home."gui.browser"
-    home."gui.editor"
-    home."gui.file-browser"
-    home."gui.keymap"
-    home."gui.menu-bar"
-    home."gui.terminal"
-    home."gui.workspace"
-    home."networking.clash-verge"
-    home."networking.tailscale"
+    home."desktop.browser"
+    home."desktop.editor"
+    home."desktop.file-browser"
+    home."desktop.keymap"
+    home."desktop.menu-bar"
+    home."desktop.terminal"
+    home."desktop.workspace"
+    home."connectivity.clash-verge"
+    home."connectivity.tailscale"
     home.services
     home.homebrew
     home.data

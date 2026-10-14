@@ -3,7 +3,9 @@ packageRoot:
 let
   isExcludedName = name: lib.hasPrefix "_" name || name == "lib";
 
-  isModuleFile = name: lib.hasSuffix ".nix" name && name != "default.nix" && !isExcludedName name;
+  isModuleFile =
+    name:
+    lib.hasSuffix ".nix" name && name != "default.nix" && name != "options.nix" && !isExcludedName name;
 
   collect =
     directory: isRoot:

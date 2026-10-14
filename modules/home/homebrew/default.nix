@@ -18,7 +18,7 @@ let
   };
 in
 {
-  imports = repoLib.importAll ./.;
+  imports = [ ./options.nix ] ++ repoLib.importAll ./.;
 
   config = {
     xdg.configFile."homebrew/Brewfile".source = brewfile;

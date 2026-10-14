@@ -3,7 +3,7 @@
   imports = [
     ../shared
     ../services/nixos.nix
-    ../../home/ssh/options.nix
+    ./options.nix
   ]
   ++ repoLib.importAll ./.;
 }

@@ -9,6 +9,11 @@
   home = {
     stateVersion = "25.11";
     enableNixpkgsReleaseCheck = false;
+    username = identity.username;
+    sessionVariables = {
+      LANG = "en_US.UTF-8";
+      LC_ALL = "en_US.UTF-8";
+    };
   };
 
   my = {
@@ -29,7 +34,7 @@
         host = "homelab.tail50e8c0.ts.net";
       };
     };
-    networking.clashVerge = {
+    connectivity.clashVerge = {
       hostname = "cv-macbook-zane";
       tailnetDomain = "wheregrassdreams.top";
       tailnetCidr = "100.64.0.0/10";
@@ -37,7 +42,7 @@
     };
 
     paths.personal = {
-      work = "${config.home.homeDirectory}/Work";
+      work = "${config.home.homeDirectory}/Workspace/work";
       notes = "${config.home.homeDirectory}/Workspace/notes";
     };
 
@@ -46,7 +51,7 @@
       opencode.cli.enable = false;
     };
 
-    gui = {
+    desktop = {
       browser = {
         default = "safari";
         chrome.enable = true;
@@ -71,23 +76,19 @@
       replication = "sync";
       restore = "copy-tree";
     };
-    shell = {
+    terminal.shell = {
       zsh.enable = true;
       prompt.enable = true;
+      atuin.enable = true;
+      direnv.enable = true;
       integrations = {
         macos.enable = true;
         nixIndex.enable = true;
       };
     };
 
-    tools = {
-      core = true;
-      direnv = true;
-      query = true;
-      network = true;
-      workflow = true;
-      interactive = true;
-      media = true;
+    terminal.tools = {
+      media.enable = true;
     };
 
     git = {
@@ -97,7 +98,7 @@
       gitea.enable = true;
     };
 
-    development = {
+    dev.langs = {
       lua.enable = true;
       nix.enable = true;
       go.enable = true;
@@ -125,7 +126,7 @@
   programs.bash.initExtra = lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500";
   programs.zsh.initContent = lib.mkAfter (lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500");
   my.terminal.tmux.inputMethod.command =
-    lib.mkIf config.my.gui.keymap.karabiner.enable "${config.my.homebrew.brewPrefix}/bin/im-select";
+    lib.mkIf config.my.desktop.keymap.karabiner.enable "${config.my.homebrew.brewPrefix}/bin/im-select";
 
   targets.darwin.defaults = {
     ".GlobalPreferences"."com.apple.mouse.scaling" = -1.0;
@@ -142,7 +143,7 @@
       ShowRemovableMediaOnDesktop = false;
     };
   }
-  // lib.optionalAttrs config.my.gui.menuBar.ice.enable {
+  // lib.optionalAttrs config.my.desktop.menuBar.ice.enable {
     "com.jordanbaird.Ice" = {
       AutoRehide = true;
       CanToggleAlwaysHiddenSection = true;

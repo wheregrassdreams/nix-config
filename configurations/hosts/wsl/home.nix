@@ -25,31 +25,38 @@ in
     stateVersion = "25.11";
     enableNixpkgsReleaseCheck = false;
     username = identity.username;
+    sessionVariables = {
+      LANG = "en_US.UTF-8";
+      LC_ALL = "en_US.UTF-8";
+      BROWSER = "wslview";
+      ZSH_SYSTEM_CLIPBOARD_USE_WL_CLIPBOARD = "1";
+    };
+    packages = [
+      pkgs.wl-clipboard
+      pkgs.wslu
+      (windowsOpen "open")
+      (windowsOpen "xdg-open")
+    ];
   };
 
   my = {
     inherit identity;
     paths.personal.windows = "/mnt/c";
 
-    shell = {
+    terminal.shell = {
       zsh.enable = true;
       prompt.enable = true;
+      atuin.enable = true;
+      direnv.enable = true;
     };
-    tools = {
-      core = true;
-      direnv = true;
-      query = true;
-      network = true;
-      workflow = true;
-      interactive = true;
-      television = true;
-      media = false;
+    terminal.tools = {
+      television.enable = true;
     };
     git = {
       lazygit.enable = true;
       github.enable = true;
     };
-    development = {
+    dev.langs = {
       nix.enable = true;
       python.enable = true;
       python.suite = "minimal";
@@ -58,21 +65,6 @@ in
       javascript.enable = false;
       go.enable = false;
       rust.enable = false;
-    };
-  };
-
-  # WSLg provides Wayland, while zsh-system-clipboard otherwise prefers the
-  # X11 path whenever DISPLAY is present. Windows handles URL and file opening.
-  home = {
-    packages = [
-      pkgs.wl-clipboard
-      pkgs.wslu
-      (windowsOpen "open")
-      (windowsOpen "xdg-open")
-    ];
-    sessionVariables = {
-      BROWSER = "wslview";
-      ZSH_SYSTEM_CLIPBOARD_USE_WL_CLIPBOARD = "1";
     };
   };
 

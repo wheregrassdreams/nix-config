@@ -1,12 +1,12 @@
 { config, lib, ... }:
 let
-  cfg = config.my.agentResources;
+  cfg = config.my.ai.agentResources;
 in
 {
-  options.my.agentResources.dataHome = lib.mkOption {
+  options.my.ai.agentResources.dataHome = lib.mkOption {
     type = lib.types.str;
-    default = "${config.home.homeDirectory}/.agents/";
-    description = "Shared runtime directory used by agent applications and their resources.";
+    default = "${config.home.homeDirectory}/.agents";
+    description = "Home directory for shared agent skills and resource catalogs.";
   };
 
   config = {
