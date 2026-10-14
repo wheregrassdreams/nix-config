@@ -6,13 +6,13 @@
 --       as this provides autocomplete and documentation while editing
 
 ---@type LazySpec
-local dotfiles = vim.fn.getenv "DOTFILES"
-if dotfiles == vim.NIL or dotfiles == "" then dotfiles = vim.loop.cwd() end
+local configRepo = vim.fn.getenv "NIX_CONFIG_REPO_ROOT"
+if configRepo == vim.NIL or configRepo == "" then configRepo = vim.loop.cwd() end
 
 local user = vim.fn.getenv "USER"
 if user == vim.NIL or user == "" then user = "zanelu" end
 
-local flake = '(builtins.getFlake "' .. dotfiles .. '")'
+local flake = '(builtins.getFlake "' .. configRepo .. '")'
 
 return {
   "AstroNvim/astrolsp",

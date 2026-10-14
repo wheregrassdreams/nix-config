@@ -10,7 +10,9 @@
   userName,
   identity,
   hostName,
-  dotfilesPath ? (if isDarwin then "/Users/${userName}/.dotfiles" else "/home/${userName}/.dotfiles"),
+  configRepoPath ? (
+    if isDarwin then "/Users/${userName}/.dotfiles" else "/home/${userName}/.dotfiles"
+  ),
   stateVersion ? null,
   isDarwin ? false,
   isWsl ? false,
@@ -38,7 +40,7 @@ systemFunc {
       isWsl
       userName
       identity
-      dotfilesPath
+      configRepoPath
       repoLib
       ;
   };
@@ -66,7 +68,7 @@ systemFunc {
           identity
           isDarwin
           isWsl
-          dotfilesPath
+          configRepoPath
           repoLib
           ;
         flake = self;

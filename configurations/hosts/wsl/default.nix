@@ -12,7 +12,7 @@ in
   inherit identity;
   userName = identity.username;
   hostName = "nixos";
-  dotfilesPath = "/home/zane/nix-config";
+  configRepoPath = "/home/zane/nix-config";
   isWsl = true;
   systemModules = [
     self.nixosModules.platform

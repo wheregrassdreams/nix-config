@@ -13,7 +13,9 @@
   userName,
   identity,
   hostName,
-  dotfilesPath ? (if isDarwin then "/Users/${userName}/.dotfiles" else "/home/${userName}/.dotfiles"),
+  configRepoPath ? (
+    if isDarwin then "/Users/${userName}/.dotfiles" else "/home/${userName}/.dotfiles"
+  ),
   isDarwin ? false,
   isWsl ? false,
   homeModules ? [ ],
@@ -35,7 +37,7 @@ inputs.home-manager.lib.homeManagerConfiguration {
       hostName
       isDarwin
       isWsl
-      dotfilesPath
+      configRepoPath
       repoLib
       ;
     flake = self;

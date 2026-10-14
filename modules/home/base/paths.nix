@@ -1,17 +1,24 @@
-{ config, lib, dotfilesPath, ... }:
+{
+  config,
+  lib,
+  configRepoPath,
+  ...
+}:
 let
   cfg = config.my.paths;
-  locationVariable = name:
-    "DOTFILES_PATH_${lib.toUpper (lib.replaceStrings [ "-" "." "/" " " ] [ "_" "_" "_" "_" ] name)}";
+  locationVariable =
+    name:
+    "NIX_CONFIG_PATH_${lib.toUpper (lib.replaceStrings [ "-" "." "/" " " ] [ "_" "_" "_" "_" ] name)}";
   locationVariables = lib.mapAttrs' (name: path: {
     name = locationVariable name;
     value = path;
   }) cfg.personal;
-in {
+in
+{
   config = {
     my.paths = {
       home = lib.mkDefault config.home.homeDirectory;
-      dotfiles = lib.mkDefault dotfilesPath;
+      configRepo = lib.mkDefault configRepoPath;
       localBin = lib.mkDefault "${config.home.homeDirectory}/.local/bin";
       xdg = {
         config = lib.mkDefault config.xdg.configHome;
@@ -22,14 +29,15 @@ in {
     };
 
     home.sessionVariables = {
-      DOTFILES = cfg.dotfiles;
-      DOTFILES_HOME = cfg.home;
-      DOTFILES_LOCAL_BIN_DIR = cfg.localBin;
-      DOTFILES_XDG_CONFIG_DIR = cfg.xdg.config;
-      DOTFILES_XDG_DATA_DIR = cfg.xdg.data;
-      DOTFILES_XDG_CACHE_DIR = cfg.xdg.cache;
-      DOTFILES_XDG_STATE_DIR = cfg.xdg.state;
-    } // locationVariables;
+      NIX_CONFIG_REPO_ROOT = cfg.configRepo;
+      NIX_CONFIG_USER_HOME = cfg.home;
+      NIX_CONFIG_LOCAL_BIN = cfg.localBin;
+      NIX_CONFIG_XDG_CONFIG_HOME = cfg.xdg.config;
+      NIX_CONFIG_XDG_DATA_HOME = cfg.xdg.data;
+      NIX_CONFIG_XDG_CACHE_HOME = cfg.xdg.cache;
+      NIX_CONFIG_XDG_STATE_HOME = cfg.xdg.state;
+    }
+    // locationVariables;
 
     home.sessionPath = [ cfg.localBin ];
   };

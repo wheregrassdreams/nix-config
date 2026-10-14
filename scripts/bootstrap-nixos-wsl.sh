@@ -260,7 +260,7 @@ Then reopen NixOS. It should log in as zane. Verify:
   git --version
   git config user.name
   cmd.exe /c ver
-  printf '%s\\n' "\$DOTFILES"
+  printf '%s\\n' "\$NIX_CONFIG_REPO_ROOT"
 EOF
 
 printf '\nShut down WSL now so the next launch starts as zane? [y/N] '
