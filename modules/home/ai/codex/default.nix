@@ -1,4 +1,4 @@
 { repoLib, ... }:
 {
-  imports = [ ./options.nix ] ++ repoLib.importAll ./.;
+  imports = repoLib.importAll ./.;
 }

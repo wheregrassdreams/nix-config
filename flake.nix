@@ -1,6 +1,17 @@
 {
   description = "Zane's Nix configuration";
 
+  nixConfig = {
+    extra-substituters = [
+      "https://cache.numtide.com"
+      "https://vicinae.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      "vicinae.cachix.org-1:1kDrfienkGHPYbkpNj1mWTr7Fm1+zcenzgTizIcI3oc="
+    ];
+  };
+
   # 这里定义整个系统/用户配置所依赖的外部 flake。
   inputs = {
     # Stable nixpkgs：作为系统和 home-manager 的主 pkgs
@@ -34,10 +45,10 @@
     };
 
     # LLM agents / AI tooling（作为工具使用）
-    llm-agents = {
-      url = "github:numtide/llm-agents.nix";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
+    llm-agents.url = "github:numtide/llm-agents.nix";
+
+    # Official Vicinae package and Home Manager module, including macOS launchd support.
+    vicinae.url = "git+https://github.com/vicinaehq/vicinae?rev=8c63ae2ef1d46592b2236ec077575280f718d659";
 
     # sops-nix：用于管理 secrets（系统模块型工具）
     sops-nix = {

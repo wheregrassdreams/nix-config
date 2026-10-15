@@ -27,9 +27,11 @@
           age
           deadnix
           just
+          nodejs
           nixd
           # nixfmt-rfc-style
           pre-commit
+          python3
           shellcheck
           shfmt
           sops
