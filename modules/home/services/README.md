@@ -4,7 +4,8 @@
 machine. It supports MySQL, PostgreSQL, and Redis with three modes:
 
 - `external`: process lifecycle is managed elsewhere, for example Docker.
-- `local-manual`: install local tools without enabling a daemon.
+- `local-manual`: install the Nix-managed server and client tools without
+  starting a daemon.
 - `local-daemon`: declare the platform daemon.
 
 The module may install client tools, but it does not own database data,
