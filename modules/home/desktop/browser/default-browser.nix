@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.my.desktop.browser;
+  defaultbrowserName = if cfg.default == "orion" then "kagimacos" else cfg.default;
   setDefaultBrowser = pkgs.writeShellScriptBin "browser-default" ''
     defaultbrowser=${lib.escapeShellArg "${config.my.homebrew.brewPrefix}/bin/defaultbrowser"}
     if [ ! -x "$defaultbrowser" ]; then
@@ -13,7 +14,7 @@ let
       exit 0
     fi
 
-    exec "$defaultbrowser" ${cfg.default}
+    exec "$defaultbrowser" ${defaultbrowserName}
   '';
 in
 {
@@ -21,7 +22,9 @@ in
     my.homebrew = {
       brews = [ "defaultbrowser" ];
       casks =
-        lib.optionals cfg.chrome.enable [ "google-chrome" ] ++ lib.optionals cfg.zen.enable [ "zen" ];
+        lib.optionals cfg.chrome.enable [ "google-chrome" ]
+        ++ lib.optionals cfg.orion.enable [ "orion" ]
+        ++ lib.optionals cfg.zen.enable [ "zen" ];
     };
 
     home.packages = [ setDefaultBrowser ];

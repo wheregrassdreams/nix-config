@@ -1,10 +1,14 @@
 {
   hostName,
   pkgs,
+  self,
   ...
 }:
 {
+  imports = [ self.nixosModules.platform ];
+
   config = {
+    home-manager.backupFileExtension = "hm-backup";
     system.stateVersion = "25.11";
     networking.hostName = hostName;
     time.timeZone = "Asia/Shanghai";

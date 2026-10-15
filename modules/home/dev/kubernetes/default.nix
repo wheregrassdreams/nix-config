@@ -15,18 +15,20 @@ in
   };
 
   config = {
-    home.packages =
-      with pkgs;
+    home.packages = with pkgs;
       [
         kubectl
         k9s
       ]
-      ++ lib.optionals (!cfg.minimal) [
+
+      ++ lib.optionals (!cfg.minimal)
+      [
         kubernetes-helm
         kustomize
         kubectx
         stern
         fluxcd
       ];
+
   };
 }

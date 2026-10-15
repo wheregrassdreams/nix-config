@@ -1,6 +1,9 @@
-{ hostName, userName, ... }:
+{ hostName, self, userName, ... }:
 {
+  imports = [ self.darwinModules.platform ];
+
   config = {
+    home-manager.backupFileExtension = "hm-backup";
     system.stateVersion = 5;
     system.primaryUser = userName;
     networking.hostName = hostName;

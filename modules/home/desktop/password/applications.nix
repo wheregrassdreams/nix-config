@@ -1,0 +1,4 @@
+{ ... }:
+{
+  my.homebrew.casks = [ "bitwarden" ];
+}

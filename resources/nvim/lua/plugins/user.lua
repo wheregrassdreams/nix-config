@@ -4,6 +4,8 @@
 -- PLEASE REMOVE THE EXAMPLES YOU HAVE NO INTEREST IN BEFORE ENABLING THIS FILE
 -- Here are some examples:
 
+local downloads_path = vim.env.NIX_CONFIG_PATH_DOWNLOADS or vim.fn.expand("~/Downloads")
+
 ---@type LazySpec
 return {
 
@@ -164,7 +166,7 @@ return {
   {
     "mistricky/codesnap.nvim",
     opts = function(plugin, opts)
-      opts.save_path = "~/Downloads/"
+      opts.save_path = downloads_path .. "/"
       opts.has_breadcrumbs = true
       opts.bg_theme = "sea"
       opts.bg_x_padding = 0
@@ -192,7 +194,7 @@ return {
       -- },
     },
     opts = {
-      save_path = "~/Downloads/",
+      save_path = downloads_path .. "/",
       has_breadcrumbs = true,
       bg_theme = "sea",
       -- bg_padding = 0, -- 默认无背景

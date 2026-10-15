@@ -1,4 +1,5 @@
 {
+  flake,
   identity,
   lib,
   pkgs,
@@ -21,6 +22,25 @@ let
     };
 in
 {
+  imports = [
+    flake.homeModules.paths
+    flake.homeModules."terminal.shell"
+    flake.homeModules.terminal
+    flake.homeModules."terminal.tmux"
+    flake.homeModules."terminal.tools"
+    flake.homeModules."dev.kubernetes"
+    flake.homeModules."dev.ci"
+    flake.homeModules."dev.tools"
+    flake.homeModules."dev.langs.c"
+    flake.homeModules."dev.langs.nix"
+    flake.homeModules."dev.langs.python"
+    flake.homeModules.git
+    flake.homeModules."storage.remote"
+    flake.homeModules."connectivity.ssh"
+    flake.homeModules."connectivity.tailscale"
+    flake.homeModules.services
+  ];
+
   home = {
     stateVersion = "25.11";
     enableNixpkgsReleaseCheck = false;
@@ -43,7 +63,6 @@ in
     paths.personal.windows = "/mnt/c";
 
     terminal.shell = {
-      zsh.enable = true;
       prompt.enable = true;
       atuin.enable = true;
       direnv.enable = true;
@@ -55,16 +74,7 @@ in
       lazygit.enable = true;
       github.enable = true;
     };
-    dev.langs = {
-      nix.enable = true;
-      python.enable = true;
-      python.suite = "minimal";
-      clang.enable = true;
-      clang.opengl.enable = false;
-      javascript.enable = false;
-      go.enable = false;
-      rust.enable = false;
-    };
+    dev.langs.c.opengl.enable = false;
   };
 
   # home.sessionVariables is skipped when an inherited shell has already
