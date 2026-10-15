@@ -43,8 +43,9 @@ if [[ $platform == wsl && $runtime_host == nixos ]]; then
   printf 'warning: WSL hostname "nixos" is temporarily mapped to canonical host "wsl"\n' >&2
 fi
 
-system_ref="$repo#$canonical_host"
-home_ref="$repo#${current_user}@${canonical_host}"
+flake_repo="path:$repo"
+system_ref="$flake_repo#$canonical_host"
+home_ref="$flake_repo#${current_user}@${canonical_host}"
 
 case "$action:$platform" in
 describe:*)
@@ -74,17 +75,17 @@ switch:wsl)
   exec sudo nixos-rebuild switch --flake "$system_ref"
   ;;
 build-home:*)
-  exec nix run --inputs-from "$repo" home-manager -- build --flake "$home_ref"
+  exec nix run --inputs-from "$flake_repo" home-manager -- build --flake "$home_ref"
   ;;
 switch-home:*)
-  exec nix run --inputs-from "$repo" home-manager -- switch --flake "$home_ref" \
-    -B "${repo}/scripts/home-manager-backup.sh"
+  exec nix run --inputs-from "$flake_repo" home-manager -- switch --flake "$home_ref" \
+    -b hm-backup
   ;;
 fast-build:darwin)
-  exec nix run "$repo#nix-fast-build" -- --no-nom --skip-cached --flake "$repo#darwinConfigurations.${canonical_host}.system"
+  exec nix run "$flake_repo#nix-fast-build" -- --no-nom --skip-cached --flake "$flake_repo#darwinConfigurations.${canonical_host}.system"
   ;;
 fast-build:wsl)
-  exec nix run "$repo#nix-fast-build" -- --no-nom --skip-cached --flake "$repo#nixosConfigurations.${canonical_host}.config.system.build.toplevel"
+  exec nix run "$flake_repo#nix-fast-build" -- --no-nom --skip-cached --flake "$flake_repo#nixosConfigurations.${canonical_host}.config.system.build.toplevel"
   ;;
 *)
   die "unsupported action: $action"
