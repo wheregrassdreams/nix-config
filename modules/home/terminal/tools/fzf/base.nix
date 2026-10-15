@@ -4,7 +4,9 @@
   # 用到包的地方显式声明一下，如fd eza file ripgrep timg bat
   programs.fzf = {
     enable = true;
-    enableZshIntegration = true;
+    # zsh loads this integration only when ZLE has a real TTY; the package
+    # activation shell otherwise emits `can't change option: zle`.
+    enableZshIntegration = false;
     defaultCommand = "fd --hidden --strip-cwd-prefix --exclude .git --exclude .DS_Store";
     defaultOptions = [
       "--ansi"

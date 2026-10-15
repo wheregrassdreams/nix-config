@@ -2,7 +2,6 @@
 {
   options.my.terminal.shell = {
     zsh = {
-      enable = lib.mkEnableOption "portable Zsh shell";
       clipboard.enable = lib.mkEnableOption "system clipboard integration" // {
         default = true;
       };

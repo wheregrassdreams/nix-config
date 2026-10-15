@@ -1,9 +1,21 @@
 { config, lib, ... }:
 let
-  locationVariable =
-    name:
-    "NIX_CONFIG_PATH_${lib.toUpper (lib.replaceStrings [ "-" "." "/" " " ] [ "_" "_" "_" "_" ] name)}";
-  names = map locationVariable (builtins.attrNames config.my.paths.personal);
+  pathVariables = import ./lib/path-variables.nix { inherit lib; };
+  paths = config.my.paths;
+  pathNames =
+    builtins.attrNames (pathVariables {
+      prefix = "NIX_CONFIG_PATH_";
+      values = paths.personal;
+    })
+    ++ builtins.attrNames (pathVariables {
+      prefix = "NIX_CONFIG_PATH_";
+      values = paths.exported;
+    });
+  xdgNames = builtins.attrNames (pathVariables {
+    prefix = "NIX_CONFIG_XDG_";
+    values = paths.xdg;
+  });
+  allNames = pathNames ++ xdgNames;
 in
 {
   options.my.paths = {
@@ -42,12 +54,17 @@ in
       default = { };
       description = "Named personal and business locations";
     };
+    exported = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      description = "Named path contracts contributed by selected capability packages";
+    };
   };
 
   config.assertions = [
     {
-      assertion = builtins.length names == builtins.length (lib.unique names);
-      message = "my.paths.personal contains names that map to the same NIX_CONFIG_PATH_* environment variable";
+      assertion = builtins.length allNames == builtins.length (lib.unique allNames);
+      message = "my.paths.personal and my.paths.exported contain names that map to the same NIX_CONFIG_PATH_* or NIX_CONFIG_XDG_* environment variable";
     }
   ];
 }

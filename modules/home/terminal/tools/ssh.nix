@@ -5,5 +5,8 @@
   ...
 }:
 {
-  home.packages = lib.optionals (!config.my.terminal.tools.minimal) [ pkgs.sshpass ];
+  home.packages = lib.optionals (!config.my.terminal.tools.minimal) [
+    pkgs.sshpass
+    pkgs.unstable.trzsz-ssh
+  ];
 }

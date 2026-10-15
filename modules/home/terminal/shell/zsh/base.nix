@@ -8,7 +8,7 @@ let
   cfg = config.my.terminal.shell;
 in
 {
-  config = lib.mkIf cfg.zsh.enable {
+  config = {
     home.file = {
       ".config/zsh/scripts/edit-command-line.zsh".source = ./scripts/edit-command-line.zsh;
       ".config/zsh/scripts/keybinds.zsh".source = ./scripts/keybinds.zsh;
@@ -39,6 +39,10 @@ in
           ''
             source ${config.xdg.configHome}/zsh/scripts/keybinds.zsh
             source ${config.xdg.configHome}/zsh/scripts/edit-command-line.zsh
+
+            if [[ -o interactive && -o zle && -t 0 ]]; then
+              eval "$(${pkgs.fzf}/bin/fzf --zsh)"
+            fi
 
             # 对命令名启用模糊
             zstyle ':completion:*:commands' matcher-list \
@@ -73,7 +77,9 @@ in
           # Custom ~/.zshenv goes here
         '';
         profileExtra = ''
-          # Custom ~/.zprofile goes here
+          # Let GUI-launched editors resolve Home Manager tools and language servers first.
+          typeset -U path PATH
+          path=("${config.home.profileDirectory}/bin" $path)
         '';
         loginExtra = ''
           # Custom ~/.zlogin goes here

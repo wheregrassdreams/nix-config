@@ -6,13 +6,7 @@
 }:
 let
   cfg = config.my.paths;
-  locationVariable =
-    name:
-    "NIX_CONFIG_PATH_${lib.toUpper (lib.replaceStrings [ "-" "." "/" " " ] [ "_" "_" "_" "_" ] name)}";
-  locationVariables = lib.mapAttrs' (name: path: {
-    name = locationVariable name;
-    value = path;
-  }) cfg.personal;
+  pathVariables = import ./lib/path-variables.nix { inherit lib; };
 in
 {
   config = {
@@ -32,13 +26,28 @@ in
       NIX_CONFIG_REPO_ROOT = cfg.configRepo;
       NIX_CONFIG_USER_HOME = cfg.home;
       NIX_CONFIG_LOCAL_BIN = cfg.localBin;
-      NIX_CONFIG_XDG_CONFIG_HOME = cfg.xdg.config;
-      NIX_CONFIG_XDG_DATA_HOME = cfg.xdg.data;
-      NIX_CONFIG_XDG_CACHE_HOME = cfg.xdg.cache;
-      NIX_CONFIG_XDG_STATE_HOME = cfg.xdg.state;
     }
-    // locationVariables;
+    // pathVariables {
+      prefix = "NIX_CONFIG_PATH_";
+      values = cfg.personal;
+    }
+    // pathVariables {
+      prefix = "NIX_CONFIG_XDG_";
+      values = cfg.xdg;
+    }
+    # Keep package path registrations dormant until a concrete downstream
+    # consumer needs these shell-level contracts.
+    # // pathVariables {
+    #   prefix = "NIX_CONFIG_PATH_";
+    #   values = cfg.exported;
+    # }
+    ;
 
-    home.sessionPath = [ cfg.localBin ];
+    # Prefer declarative packages when a local, manually installed binary has
+    # the same name; keep localBin available for project-specific tools.
+    home.sessionPath = [
+      "${config.home.profileDirectory}/bin"
+      cfg.localBin
+    ];
   };
 }

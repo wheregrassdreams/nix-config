@@ -5,6 +5,8 @@
 }:
 {
   config = {
+    my.paths.exported."terminal.tmux.resurrect" = "${config.xdg.dataHome}/tmux/resurrect";
+
     programs.tmux = {
       enable = true;
       baseIndex = 1;
@@ -31,7 +33,9 @@
           plugin = tmuxPlugins.continuum;
           extraConfig = ''
             set -g @continuum-restore 'on'
-            set -g @continuum-boot 'on'
+            # Continuum's macOS boot helper opens Terminal.app. A local
+            # launchd agent starts the configured server silently instead.
+            set -g @continuum-boot 'off'
             set -g @continuum-save-interval '15'
           '';
         }
