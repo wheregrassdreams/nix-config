@@ -1,0 +1,4 @@
+{ repoLib, ... }:
+{
+  imports = repoLib.importAll ./.;
+}
