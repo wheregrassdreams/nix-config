@@ -4,7 +4,7 @@
   pkgs,
   brewfile,
 }:
-pkgs.writeShellScriptBin "brew-sync" ''
+pkgs.writeShellScriptBin "brew-nix-sync" ''
   set -eu
 
   brew=${lib.escapeShellArg "${cfg.brewPrefix}/bin/brew"}
@@ -14,7 +14,7 @@ pkgs.writeShellScriptBin "brew-sync" ''
   cleanup=${lib.escapeShellArg cfg.sync.cleanup}
 
   usage() {
-    echo "Usage: brew-sync [--update] [--upgrade] [--cleanup] [--zap]" >&2
+    echo "Usage: brew nix-sync [--update] [--upgrade] [--cleanup] [--zap]" >&2
   }
 
   while [ "$#" -gt 0 ]; do

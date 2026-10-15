@@ -43,6 +43,8 @@
       description = "Mac App Store applications to declare in the generated Brewfile";
     };
 
+    driftCheck.enable = lib.mkEnableOption "weekly read-only Homebrew drift check with notifications";
+
     sync = {
       enable = lib.mkEnableOption "Homebrew synchronization during Home Manager activation" // {
         default = true;
