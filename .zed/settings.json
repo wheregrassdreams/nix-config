@@ -1,0 +1,32 @@
+{
+  "languages": {
+    "Nix": {
+      "language_servers": ["nixd", "!nil"]
+    }
+  },
+  "lsp": {
+    "nixd": {
+      "settings": {
+        "nixd": {
+          "nixpkgs": {
+            "expr": "import (builtins.getFlake (builtins.toString ./.)).inputs.nixpkgs { }"
+          },
+          "options": {
+            "darwin": {
+              "expr": "(builtins.getFlake (builtins.toString ./.)).darwinConfigurations.macbook.options"
+            },
+            "nixos": {
+              "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.wsl.options"
+            },
+            "homeManagerMacbook": {
+              "expr": "(builtins.getFlake (builtins.toString ./.)).homeConfigurations.\"zanelu@macbook\".options"
+            },
+            "homeManagerWsl": {
+              "expr": "(builtins.getFlake (builtins.toString ./.)).homeConfigurations.\"zane@wsl\".options"
+            }
+          }
+        }
+      }
+    }
+  }
+}
