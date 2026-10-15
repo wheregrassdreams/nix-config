@@ -9,6 +9,38 @@ default:
 check:
     nix flake check "path:{{ repo }}" --no-write-lock-file --no-eval-cache
 
+# Compare installed Homebrew formulae and casks with the active Homebrew bundle; report only.
+homebrew-drift-check:
+    bash "{{ repo }}/modules/home/homebrew/lib/drift-check.sh"
+
+# Show registered path contracts and their current disk usage; this is read-only.
+paths-report:
+    bash "{{ repo }}/modules/home/paths/report.sh" "{{ repo }}"
+
+# Inventory repositories and review uninitialized, uncommitted, and inactive candidates.
+projects-scan:
+    project-scan
+
+# Snapshot dirty or not-provably-pushed worktrees into local storage.
+projects-snapshot *args:
+    project-snapshot {{ args }}
+
+# List retained snapshots; restore with project-snapshot --restore STORE REF DESTINATION.
+projects-snapshots:
+    project-snapshot --list
+
+# Discover skills without installing them.
+agent-skills-find query:
+    bash "{{ repo }}/scripts/agent-skills.sh" find "{{ query }}"
+
+# Fetch one skill into the repository; Home Manager deploys the checked-in copy.
+agent-skills-add source skill:
+    bash "{{ repo }}/scripts/agent-skills.sh" add "{{ source }}" "{{ skill }}"
+
+# Refresh a recorded skill source. Review the resulting diff before committing.
+agent-skills-update name:
+    bash "{{ repo }}/scripts/agent-skills.sh" update "{{ name }}"
+
 # Format Nix and shell files without changing the active machine.
 fmt:
     cd "{{ repo }}" && nix fmt
