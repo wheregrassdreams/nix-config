@@ -4,6 +4,7 @@
 .null-ls_*
 .lsp/
 lazy-lock.json
+modules/home/dev/projects/lib/project-tools/nix-config-projects
 
 # build images
 result
