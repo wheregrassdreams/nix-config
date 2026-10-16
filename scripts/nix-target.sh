@@ -75,9 +75,11 @@ switch:wsl)
   exec sudo nixos-rebuild switch --flake "$system_ref"
   ;;
 build-home:*)
-  exec nix run --inputs-from "$flake_repo" home-manager -- build --flake "$home_ref"
+  export NIX_CONFIG="${NIX_CONFIG:+$NIX_CONFIG$'\n'}accept-flake-config = true"
+  exec nix run --accept-flake-config --inputs-from "$flake_repo" home-manager -- build --flake "$home_ref"
   ;;
 switch-home:*)
+  export NIX_CONFIG="${NIX_CONFIG:+$NIX_CONFIG$'\n'}accept-flake-config = true"
   exec nix run --inputs-from "$flake_repo" nixpkgs#nh -- home switch "$flake_repo" \
     --configuration "${current_user}@${canonical_host}" \
     --backup-extension hm-backup

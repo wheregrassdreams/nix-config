@@ -95,6 +95,7 @@
         "picgo"
         "postman"
         "tusk"
+        # "kicad"
         # "neteasemusic" # Homebrew Cask.
         # "wechat" # Homebrew Cask.
         # "ticktick" # Homebrew Cask.

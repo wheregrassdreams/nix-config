@@ -49,6 +49,8 @@ inputs.home-manager.lib.homeManagerConfiguration {
     inputs.sops-nix.homeManagerModules.sops
     ../modules/home/homebrew/options.nix
     {
+      manual.manpages.enable = false;
+
       home = {
         username = userName;
         homeDirectory = if isDarwin then "/Users/${userName}" else "/home/${userName}";
