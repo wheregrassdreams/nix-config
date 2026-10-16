@@ -1,0 +1,62 @@
+name: Rebase tmux-latest-homebrew
+
+on:
+  push:
+    branches: [nix-config, tmux-latest-homebrew]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tmux-latest-homebrew-rebase
+  cancel-in-progress: false
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Rebase the temporary tmux branch
+        id: rebase
+        run: |
+          if ! git ls-remote --exit-code --heads origin tmux-latest-homebrew >/dev/null 2>&1; then
+            echo "tmux-latest-homebrew is not published; skipping"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git fetch origin \
+            refs/heads/nix-config:refs/remotes/origin/nix-config \
+            refs/heads/tmux-latest-homebrew:refs/remotes/origin/tmux-latest-homebrew
+
+          previous="$(git rev-parse refs/remotes/origin/tmux-latest-homebrew)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch --detach refs/remotes/origin/tmux-latest-homebrew
+          git rebase refs/remotes/origin/nix-config
+
+          if [ "$(git rev-parse HEAD)" = "$previous" ]; then
+            echo "tmux-latest-homebrew is already current"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - uses: cachix/install-nix-action@v31
+        if: steps.rebase.outputs.changed == 'true'
+
+      - name: Check the rebased branch
+        if: steps.rebase.outputs.changed == 'true'
+        run: nix flake check "path:$GITHUB_WORKSPACE" --no-write-lock-file --no-eval-cache
+
+      - name: Update the remote temporary branch
+        if: steps.rebase.outputs.changed == 'true'
+        run: |
+          expected="$(git rev-parse refs/remotes/origin/tmux-latest-homebrew)"
+          git push \
+            --force-with-lease="refs/heads/tmux-latest-homebrew:$expected" \
+            origin HEAD:refs/heads/tmux-latest-homebrew
