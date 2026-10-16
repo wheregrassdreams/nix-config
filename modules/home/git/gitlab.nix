@@ -4,8 +4,11 @@
   pkgs,
   ...
 }:
+let
+  cfg = config.my.git.gitlab;
+in
 {
-  config = lib.mkIf config.my.git.gitlab.enable {
+  config = lib.mkIf cfg.enable {
     home.packages = [ pkgs.glab ];
   };
 }

@@ -1,6 +1,9 @@
 { config, lib, ... }:
+let
+  cfg = config.my.desktop.files.baseline;
+in
 {
-  config = lib.mkIf config.my.desktop.files.baseline.enable {
+  config = lib.mkIf cfg.enable {
     targets.darwin.defaults."com.apple.finder" = {
       _FXShowPosixPathInTitle = true;
       _FXSortFoldersFirst = true;

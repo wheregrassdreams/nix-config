@@ -1,6 +1,9 @@
 { config, lib, ... }:
+let
+  cfg = config.my.terminal.tools;
+in
 {
-  config = lib.mkIf (config.my.terminal.tools.television.enable) {
+  config = lib.mkIf cfg.television.enable {
     programs = {
       nix-search-tv = {
         enable = true;

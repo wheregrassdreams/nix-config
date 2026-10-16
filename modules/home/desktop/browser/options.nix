@@ -1,4 +1,7 @@
 { config, lib, ... }:
+let
+  cfg = config.my.desktop.browser;
+in
 {
   options.my.desktop.browser = {
     chrome.enable = lib.mkEnableOption "Google Chrome";
@@ -19,15 +22,15 @@
   config.assertions = [
     {
       assertion =
-        config.my.desktop.browser.default != "chrome" || config.my.desktop.browser.chrome.enable;
+        cfg.default != "chrome" || cfg.chrome.enable;
       message = "my.desktop.browser.default is chrome, but Chrome is disabled";
     }
     {
-      assertion = config.my.desktop.browser.default != "zen" || config.my.desktop.browser.zen.enable;
+      assertion = cfg.default != "zen" || cfg.zen.enable;
       message = "my.desktop.browser.default is zen, but Zen is disabled";
     }
     {
-      assertion = config.my.desktop.browser.default != "orion" || config.my.desktop.browser.orion.enable;
+      assertion = cfg.default != "orion" || cfg.orion.enable;
       message = "my.desktop.browser.default is orion, but Orion is disabled";
     }
   ];

@@ -4,6 +4,9 @@
   pkgs,
   ...
 }:
+let
+  cfg = config.my.terminal.tools;
+in
 {
   programs = {
     ripgrep.enable = true;
@@ -20,7 +23,7 @@
     };
   };
 
-  home.packages = lib.optionals (!config.my.terminal.tools.minimal) (
+  home.packages = lib.optionals (!cfg.minimal) (
     with pkgs;
     [
       yq

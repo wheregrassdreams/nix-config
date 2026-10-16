@@ -5,10 +5,10 @@
 }:
 let
   cfg = config.my.dev.langs.javascript;
-  homePaths = config.my.paths;
+  homeCfg = config.my.paths;
   paths = cfg.paths // {
-    nodeGypHeaders = "${homePaths.xdg.cache}/node-gyp";
-    nodeCompileCache = "${homePaths.xdg.cache}/nodejs-compile-cache";
+    nodeGypHeaders = "${homeCfg.xdg.cache}/node-gyp";
+    nodeCompileCache = "${homeCfg.xdg.cache}/nodejs-compile-cache";
   };
 in
 {

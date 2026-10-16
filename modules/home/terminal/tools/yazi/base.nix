@@ -4,8 +4,11 @@
   pkgs,
   ...
 }:
+let
+  cfg = config.my.terminal.tools;
+in
 {
-  config = lib.mkIf (!config.my.terminal.tools.minimal) {
+  config = lib.mkIf (!cfg.minimal) {
     programs.yazi = {
       enable = true;
       enableZshIntegration = true;

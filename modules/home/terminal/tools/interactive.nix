@@ -4,6 +4,9 @@
   pkgs,
   ...
 }:
+let
+  cfg = config.my.terminal.tools;
+in
 {
   config = lib.mkMerge [
     {
@@ -28,7 +31,7 @@
 
       home.packages = [ pkgs.timg ];
     }
-    (lib.mkIf (!config.my.terminal.tools.minimal) {
+    (lib.mkIf (!cfg.minimal) {
       programs.fastfetch.enable = true;
       programs.btop.enable = true;
       home.packages = with pkgs; [

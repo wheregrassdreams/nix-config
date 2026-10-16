@@ -5,10 +5,12 @@
   ...
 }:
 let
-  denoCache = "${config.my.paths.xdg.cache}/deno";
+  cfg = config.my.terminal.tools;
+  paths = config.my.paths;
+  denoCache = "${paths.xdg.cache}/deno";
 in
 {
-  config = lib.mkIf (config.my.terminal.tools.media.enable && !config.my.terminal.tools.minimal) {
+  config = lib.mkIf (cfg.media.enable && !cfg.minimal) {
     my.paths.exported."terminal.tools.deno-cache" = denoCache;
     home.sessionVariables.DENO_DIR = denoCache;
 

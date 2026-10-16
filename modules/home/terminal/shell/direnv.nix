@@ -1,6 +1,9 @@
 { config, lib, ... }:
+let
+  cfg = config.my.terminal.shell;
+in
 {
-  config = lib.mkIf config.my.terminal.shell.direnv.enable {
+  config = lib.mkIf cfg.direnv.enable {
     programs.direnv = {
       enable = true;
       enableZshIntegration = true;

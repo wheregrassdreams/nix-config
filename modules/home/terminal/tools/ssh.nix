@@ -4,8 +4,11 @@
   pkgs,
   ...
 }:
+let
+  cfg = config.my.terminal.tools;
+in
 {
-  home.packages = lib.optionals (!config.my.terminal.tools.minimal) [
+  home.packages = lib.optionals (!cfg.minimal) [
     pkgs.sshpass
     pkgs.unstable.trzsz-ssh
   ];

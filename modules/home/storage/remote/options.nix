@@ -1,5 +1,6 @@
 { config, lib, ... }:
 let
+  cfg = config.my.storage.remote;
   targets = import ./lib/targets.nix { inherit lib; };
   gitBackend = lib.types.submodule {
     options = {
@@ -55,7 +56,7 @@ let
   targetAssertions = lib.concatMap (
     name:
     let
-      target = config.my.storage.remote.targets.${name};
+      target = cfg.targets.${name};
     in
     [
       {
@@ -97,7 +98,7 @@ let
         message = "my.storage.remote.targets.${name}.backend.webdav.root cannot contain parent-directory segments.";
       }
     ]
-  ) (builtins.attrNames config.my.storage.remote.targets);
+  ) (builtins.attrNames cfg.targets);
 in
 {
   options.my.storage.remote.targets = lib.mkOption {

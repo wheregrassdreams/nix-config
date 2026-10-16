@@ -1,6 +1,9 @@
 { config, lib, ... }:
+let
+  cfg = config.my.terminal.shell;
+in
 {
-  config = lib.mkIf config.my.terminal.shell.integrations.nixIndex.enable {
+  config = lib.mkIf cfg.integrations.nixIndex.enable {
     # command-not-found handler to suggest nix way of installing stuff.
     # FIXME: This ought to show new nix cli commands though:
     # https://github.com/nix-community/nix-index/issues/191

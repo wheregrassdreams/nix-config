@@ -1,4 +1,7 @@
 { config, lib, ... }:
+let
+  cfg = config.my.terminal.tools;
+in
 {
   home.shellAliases = lib.mkMerge [
     {
@@ -7,7 +10,7 @@
       grep = "rg";
       json2string = "jq tostring";
     }
-    (lib.mkIf (!config.my.terminal.tools.minimal) {
+    (lib.mkIf (!cfg.minimal) {
       top = "btop";
       neofetch = "fastfetch";
       ps = "procs";

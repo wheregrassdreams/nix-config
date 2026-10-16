@@ -1,6 +1,9 @@
 { config, lib, ... }:
+let
+  cfg = config.my.terminal.shell;
+in
 {
-  config = lib.mkIf config.my.terminal.shell.prompt.enable {
+  config = lib.mkIf cfg.prompt.enable {
     programs.starship = {
       enable = true;
       enableZshIntegration = true;

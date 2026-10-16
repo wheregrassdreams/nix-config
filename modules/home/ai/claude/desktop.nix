@@ -5,6 +5,9 @@
   repoLib,
   ...
 }:
+let
+  cfg = config.my.ai.claude.desktop;
+in
 {
   imports = [
     (repoLib.assertPlatform {
@@ -20,7 +23,7 @@
     })
   ];
 
-  config = lib.mkIf config.my.ai.claude.desktop.enable {
+  config = lib.mkIf cfg {
     my.homebrew.casks = lib.mkIf pkgs.stdenv.isDarwin [ "claude" ];
   };
 }

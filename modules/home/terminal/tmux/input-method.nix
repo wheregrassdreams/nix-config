@@ -1,6 +1,7 @@
 { config, lib, ... }:
 let
-  inputMethod = config.my.terminal.tmux.inputMethod.command;
+  cfg = config.my.terminal.tmux;
+  inputMethod = cfg.inputMethod.command;
 in
 {
   config = lib.mkIf (inputMethod != null) {
