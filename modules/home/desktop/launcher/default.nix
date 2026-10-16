@@ -5,14 +5,20 @@
   ...
 }:
 {
-  imports =
-    lib.optionals (!isDarwin) [ ./options.nix ]
-    ++ lib.optionals isDarwin [ ../../homebrew ]
-    ++ [
-      (repoLib.assertPlatform {
-        package = "desktop.launcher";
-        platforms = [ "darwin" ];
-      })
-    ]
-    ++ lib.optionals isDarwin (repoLib.importAll ./.);
+  imports = [
+    (repoLib.assertPlatform {
+      package = "desktop.launcher";
+      platforms = [
+        "darwin"
+        "linux"
+      ];
+    })
+  ]
+  ++ lib.optionals isDarwin [
+    ../../homebrew
+    ./macos/_raycast.nix
+    ./macos/_vicinae.nix
+  ]
+  ++ lib.optionals (!isDarwin) [ ./linux/_vicinae.nix ]
+  ++ repoLib.importAll ./.;
 }
