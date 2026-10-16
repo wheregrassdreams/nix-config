@@ -4,6 +4,18 @@
   pkgs,
   brewfile,
 }:
+let
+  brewStateSync = (pkgs.buildGoModule.override {
+    go = pkgs.unstable.go_1_27;
+  })
+    {
+      pname = "brew-state-sync";
+      version = "0.1.0";
+      src = ./brew-state-sync;
+      vendorHash = null;
+      subPackages = [ "cmd/brew-state-sync" ];
+    };
+in
 pkgs.writeShellScriptBin "brew-nix-sync" ''
   set -eu
 
@@ -14,7 +26,7 @@ pkgs.writeShellScriptBin "brew-nix-sync" ''
   cleanup=${lib.escapeShellArg cfg.sync.cleanup}
 
   usage() {
-    echo "Usage: brew nix-sync [--update] [--upgrade] [--cleanup] [--zap]" >&2
+    echo "Usage: brew-nix-sync [--update] [--upgrade] [--cleanup] [--zap]" >&2
   }
 
   while [ "$#" -gt 0 ]; do
@@ -34,22 +46,27 @@ pkgs.writeShellScriptBin "brew-nix-sync" ''
     exit 1
   fi
 
+  sync_args=(sync --prefix ${lib.escapeShellArg cfg.brewPrefix} --brew "$brew" --brewfile "$brewfile")
   if [ "$auto_update" -eq 1 ]; then
-    "$brew" update
-  else
-    export HOMEBREW_NO_AUTO_UPDATE=1
+    sync_args+=(--auto-update)
   fi
+  if [ "$upgrade" -eq 1 ]; then
+    sync_args+=(--upgrade)
+  fi
+  ${brewStateSync}/bin/brew-state-sync "''${sync_args[@]}"
 
-  set -- bundle install --file="$brewfile"
-  if [ "$upgrade" -eq 0 ]; then
-    set -- "$@" --no-upgrade
-  fi
   case "$cleanup" in
     none) ;;
-    uninstall) set -- "$@" --force-cleanup ;;
-    zap) set -- "$@" --force-cleanup --zap ;;
+    uninstall|zap)
+      # The Go synchronizer owns missing-package installs; Bundle still owns
+      # its mature cleanup and zap semantics for explicit invocations.
+      export HOMEBREW_NO_AUTO_UPDATE=1
+      bundle_args=(bundle install --file="$brewfile" --no-upgrade --force-cleanup)
+      if [ "$cleanup" = zap ]; then
+        bundle_args+=(--zap)
+      fi
+      exec "$brew" "''${bundle_args[@]}"
+      ;;
     *) echo "invalid cleanup mode: $cleanup" >&2; exit 2 ;;
   esac
-
-  exec "$brew" "$@"
 ''

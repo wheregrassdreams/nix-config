@@ -4,7 +4,7 @@
   ...
 }:
 let
-  data = import ./_bindings-data.nix { };
+  data = import ./data.nix { };
   render = binding: "bind -T copy-mode-vi ${binding.key} ${binding.command}";
   copy = if isDarwin then "copy-pipe \"pbcopy\"" else "copy-selection";
 in

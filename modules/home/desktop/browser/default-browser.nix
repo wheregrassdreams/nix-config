@@ -7,7 +7,7 @@
 let
   homebrewCfg = config.my.homebrew.brewPrefix;
   cfg = config.my.desktop.browser;
-  defaultbrowserName = if cfg.default == "orion" then "kagimacos" else cfg.default;
+  defaultbrowserName = cfg.default;
   setDefaultBrowser = pkgs.writeShellScriptBin "browser-default" ''
     defaultbrowser=${lib.escapeShellArg "${homebrewCfg}/bin/defaultbrowser"}
     if [ ! -x "$defaultbrowser" ]; then

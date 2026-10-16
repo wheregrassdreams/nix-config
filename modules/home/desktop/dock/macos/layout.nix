@@ -12,30 +12,8 @@ let
     "file://"
     +
       builtins.replaceStrings
-        [
-          " "
-          "!"
-          "\""
-          "#"
-          "$"
-          "%"
-          "&"
-          "'"
-          "("
-          ")"
-        ]
-        [
-          "%20"
-          "%21"
-          "%22"
-          "%23"
-          "%24"
-          "%25"
-          "%26"
-          "%27"
-          "%28"
-          "%29"
-        ]
+        [ " " "!" "\"" "#" "$" "%" "&" "'" "(" ")" ]
+        [ "%20" "%21" "%22" "%23" "%24" "%25" "%26" "%27" "%28" "%29" ]
         (normalize path);
   wantedURIs = lib.concatMapStringsSep "\n" (entry: entryURI entry.path) cfg.entries;
   addEntry =

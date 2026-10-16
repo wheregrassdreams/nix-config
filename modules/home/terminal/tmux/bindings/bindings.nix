@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  data = import ./_bindings-data.nix { };
+  data = import ./data.nix { };
   render =
     table: binding:
     "bind -T ${table} ${

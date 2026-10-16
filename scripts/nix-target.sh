@@ -78,8 +78,9 @@ build-home:*)
   exec nix run --inputs-from "$flake_repo" home-manager -- build --flake "$home_ref"
   ;;
 switch-home:*)
-  exec nix run --inputs-from "$flake_repo" home-manager -- switch --flake "$home_ref" \
-    -b hm-backup
+  exec nix run --inputs-from "$flake_repo" nixpkgs#nh -- home switch "$flake_repo" \
+    --configuration "${current_user}@${canonical_host}" \
+    --backup-extension hm-backup
   ;;
 fast-build:darwin)
   exec nix run "$flake_repo#nix-fast-build" -- --no-nom --skip-cached --flake "$flake_repo#darwinConfigurations.${canonical_host}.system"

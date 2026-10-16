@@ -10,12 +10,44 @@ in
   config = {
     programs.git = {
       enable = true;
+      ignores = [
+        # macOS metadata
+        ".DS_Store"
+        ".AppleDouble"
+        ".LSOverride"
+        "._*"
+        ".Spotlight-V100/"
+        ".Trashes/"
+        ".fseventsd/"
+
+        # Windows metadata
+        "Thumbs.db"
+        "ehthumbs.db"
+        "Desktop.ini"
+
+        # Editor and temporary files
+        "*~"
+        "*.swp"
+        "*.swo"
+        "*.swn"
+        ".#*"
+        "\\#*#"
+
+        # Local environment files
+        ".env"
+        ".env.local"
+        ".env.*.local"
+
+        # Local-only Claude settings
+        "**/.claude/settings.local.json"
+      ];
       settings = {
         user = {
           name = cfg.fullname;
           email = cfg.email;
         };
         core.pager = "delta";
+        core.excludesFile = "${config.xdg.configHome}/git/ignore";
         interactive.diffFilter = "delta --color-only --features=interactive";
 
         delta = {

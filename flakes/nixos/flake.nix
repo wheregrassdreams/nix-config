@@ -8,6 +8,11 @@
       url = "github:nix-community/NixOS-WSL/main?shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    apple-emoji-linux = {
+      url = "github:samuelngs/apple-emoji-linux?shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = _: { };

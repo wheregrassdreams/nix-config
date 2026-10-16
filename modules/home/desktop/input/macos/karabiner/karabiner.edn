@@ -14,11 +14,19 @@
     :rules [
             [:caps_lock :left_control nil { :alone :escape }]
             [:!Scaps_lock :!Sleft_control]
-
             ]}
-  {:des "Left Control -> Ctrl+;"
+  {:des "Left Control -> Caps Lock"
     :rules [
-            [:left_control :!Csemicolon]
+            [:!S##left_control :!Scaps_lock]
+            [:!R##left_control :!Rcaps_lock]
+            [:!C##left_control :!Ccaps_lock]
+            [:!Q##left_control :!Qcaps_lock]
+            [:!O##left_control :!Ocaps_lock]
+            [:!E##left_control :!Ecaps_lock]
+            [:!T##left_control :!Tcaps_lock]
+            [:!W##left_control :!Wcaps_lock]
+            [:!F##left_control :!Fcaps_lock]
+            [:left_control :caps_lock]
             ]}
   {:des "Right Option + j/i/k/l -> Left/Up/Down/Right"
     :rules [

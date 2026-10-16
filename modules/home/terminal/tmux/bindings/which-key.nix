@@ -2,7 +2,7 @@
 # inert until its generated data is consumed by a real feature.
 { pkgs, ... }:
 let
-  data = import ./_bindings-data.nix { };
+  data = import ./data.nix { };
   menu = {
     keybindings.prefix_table = "Space";
     items = map (binding: {

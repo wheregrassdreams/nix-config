@@ -32,6 +32,7 @@
         light.name = "zenwritten-light";
         dark.name = "vicinae-dark";
       };
+      tray.enabled = false;
       providers = {
         clipboard.entrypoints.history.alias = "clip";
         files.entrypoints.search.shortcut = "control+shift+SPACE";

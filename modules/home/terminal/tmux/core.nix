@@ -1,8 +1,15 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
+let
+  inputMethod = config.my.terminal.tmux.inputMethod;
+  interceptPrefix =
+    inputMethod.command != null
+    && lib.any (event: event.type == "prefix") (lib.attrValues inputMethod.events);
+in
 {
   config = {
     my.paths.exported."terminal.tmux.resurrect" = "${config.xdg.dataHome}/tmux/resurrect";
@@ -15,7 +22,9 @@
       historyLimit = 10000;
       keyMode = "vi";
       mouse = true;
-      prefix = "C-a";
+      # The input-method consumer intercepts prefix when enabled so it can
+      # reset the input method before entering tmux's prefix table.
+      prefix = if interceptPrefix then "None" else inputMethod.prefixKey;
       shell = "${pkgs.zsh}/bin/zsh";
       terminal = "tmux-256color";
       escapeTime = 10;

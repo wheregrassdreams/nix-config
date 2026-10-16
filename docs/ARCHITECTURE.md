@@ -69,9 +69,9 @@ configure that application as a capability in its own right. Add a platform
 directory only when the implementation or configuration is actually
 platform-specific.
 
-The desktop group includes the capability packages `browser`, `editor`,
-`files`, `input`, `launcher`, `menubar`, `note`, `password`, `terminal`, and
-`window-manager`;
+The desktop group includes the capability packages `agent`, `apps`, `browser`,
+`editor`, `files`, `input`, `launcher`, `menubar`, `note`, `password`,
+`terminal`, and `window-manager`;
 `dock` is a Home Manager package for user Dock layout. Keep cross-platform
 applications grouped by application when their configuration differs, as with
 `terminal/ghostty/` and `terminal/kitty/`. Use a `macos/` or `darwin/` subtree
@@ -79,6 +79,17 @@ when configuration is specific to that platform, as with Finder, Karabiner,
 menubar management, and Dock. Keep an application and its configuration
 assets together, such as the Zed keymap under `editor/zed/`. These internal
 directories do not create packages unless they have their own `default.nix`.
+Desktop capability packages select applications using compact keys such as
+`kagimacos`, `zed`, or `ghostty`. On macOS, activation scans installed app
+bundles and resolves those keys from the final component of each bundle ID,
+expanding collisions deterministically. The `desktop.apps` integration package
+refreshes this local cache after Homebrew synchronization; it is a runtime
+machine fact, not a flake input. Vicinae first uses the previous cache so its
+LaunchAgent can start without waiting for Homebrew, then refreshes its aliases
+and restarts only Vicinae if they changed. Editor file associations use the
+refreshed identities. Browser selection remains owned by the browser package.
+This lookup is platform-specific and does not treat a macOS bundle ID as a
+Linux desktop entry ID.
 
 Within a package:
 

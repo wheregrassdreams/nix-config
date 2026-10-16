@@ -11,18 +11,17 @@ in
       type = lib.types.enum [
         "safari"
         "chrome"
-        "orion"
+        "kagimacos"
         "zen"
       ];
       default = "safari";
-      description = "macOS default browser";
+      description = "Application key for the macOS default browser";
     };
   };
 
   config.assertions = [
     {
-      assertion =
-        cfg.default != "chrome" || cfg.chrome.enable;
+      assertion = cfg.default != "chrome" || cfg.chrome.enable;
       message = "my.desktop.browser.default is chrome, but Chrome is disabled";
     }
     {
@@ -30,8 +29,8 @@ in
       message = "my.desktop.browser.default is zen, but Zen is disabled";
     }
     {
-      assertion = cfg.default != "orion" || cfg.orion.enable;
-      message = "my.desktop.browser.default is orion, but Orion is disabled";
+      assertion = cfg.default != "kagimacos" || cfg.orion.enable;
+      message = "my.desktop.browser.default is kagimacos, but Orion is disabled";
     }
   ];
 }

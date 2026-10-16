@@ -14,5 +14,11 @@ installed or its pin changes. Extension support data under Vicinae's separate
 `support/` path is left untouched. Updating an extension requires reviewing
 and changing both its commit and archive hash.
 
+Vicinae's Nix settings own stable aliases and the complete favorites list.
+Application aliases and favorites are generated from the host's selected
+default browser, terminal, and agent. `settings.json` stays writable for
+Vicinae's GUI-managed preferences; it should not duplicate those aliases or
+favorites because the Nix wrapper loads them as higher-priority overrides.
+
 `lib/raycast-extensions.nix` also retains `mkRayCastExtension` for extensions
 that need to be built from source instead of using a published bundle.

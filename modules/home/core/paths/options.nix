@@ -59,6 +59,11 @@ in
       default = { };
       description = "Named path contracts contributed by selected capability packages";
     };
+    secrets = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      description = "Named paths to secret material; consumers must handle their contents as sensitive data";
+    };
   };
 
   config.assertions = [

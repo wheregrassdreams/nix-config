@@ -9,6 +9,11 @@ let
 in
 {
   config = {
+    my.paths.secrets = {
+      inherit sopsAgeKeyFile;
+      inherit sshPrivateKeyFile;
+    };
+
     home.packages = with pkgs; [
       sops
       age

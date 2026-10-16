@@ -46,6 +46,8 @@
     flake.homeModules."ai.agent-resources"
 
     flake.homeModules."desktop.browser"
+    flake.homeModules."desktop.agent"
+    flake.homeModules."desktop.apps"
     flake.homeModules."desktop.editor"
     flake.homeModules."desktop.files"
     flake.homeModules."desktop.input"
@@ -78,14 +80,8 @@
     homebrew = {
       brewPrefix = "/opt/homebrew";
       taps = [
-        {
-          name = "bendews/tap";
-          trusted = true;
-        }
-        {
-          name = "shivammathur/php";
-          trusted = true;
-        }
+        { name = "bendews/tap"; trusted = true; }
+        { name = "shivammathur/php"; trusted = true; }
       ];
       brews = [
         # "terminal-notifier"
@@ -98,7 +94,6 @@
         "picgo"
         "postman"
         "tusk"
-        "font-jetbrains-mono-nerd-font"
       ];
       sync = {
         enable = true;
@@ -112,14 +107,16 @@
 
     connectivity = {
       tailscale = {
+        # TODO: 换成主domain会更实用，当前看不出意图
         host = "homelab.tail50e8c0.ts.net";
       };
-    };
-    connectivity.clashVerge = {
-      hostname = "mihomo-${hostName}";
-      tailnetDomain = "wheregrassdreams.top";
-      tailnetCidr = "100.64.0.0/10";
-      dnsUpstream = "100.124.158.7";
+      clashVerge = {
+        # TODO: 优化命名，当前命名看不出意图，至少要表明是和tailscale的集成
+        hostname = "mihomo-${hostName}";
+        tailnetDomain = "wheregrassdreams.top";
+        tailnetCidr = "100.64.0.0/10";
+        dnsUpstream = "100.124.158.7";
+      };
     };
 
     paths.personal = {
@@ -132,42 +129,33 @@
     ai.opencode.cli.enable = false;
 
     desktop = {
+
       browser = {
-        default = "orion";
+        default = "kagimacos";
         chrome.enable = true;
         orion.enable = true;
         zen.enable = false;
       };
+
       terminal = {
+        default = "ghostty";
         ghostty.enable = true;
         kitty.enable = true;
       };
+      agent.default = "codex";
+
       input = {
         keyboardMapping.enable = true;
         mouseScroll.enable = true;
       };
-      editor.zed.enable = true;
-      files.archiveExtraction.enable = true;
-      launcher = {
-        raycast.enable = true;
+
+      editor = {
+        zed.enable = true;
+        default = "zed";
       };
+
     };
 
-    services = {
-      defaultMode = "external";
-      mysql = {
-        enable = true;
-        mode = "local-manual";
-      };
-      postgres = {
-        enable = true;
-        mode = "local-manual";
-      };
-      redis = {
-        enable = true;
-        mode = "local-manual";
-      };
-    };
     storage.backup.datasets = {
       tmux-resurrect = {
         enable = false;
@@ -183,7 +171,9 @@
         class = "valuable";
       };
     };
+
     terminal.shell = {
+      # TODO: 有些改成默认的
       prompt.enable = true;
       atuin.enable = true;
       direnv.enable = true;
@@ -199,6 +189,7 @@
 
     git = {
       lazygit.enable = true;
+
       github.enable = true;
       gitlab.enable = false;
       gitea.enable = true;
@@ -213,25 +204,15 @@
       path = "${config.my.paths.personal.work}/.gitconfig";
     }
   ];
+
   programs.bash.initExtra = lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500";
   programs.zsh.initContent = lib.mkAfter (lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500");
+
   my.terminal.tmux.inputMethod.command =
     lib.mkIf config.my.desktop.input.keyboardMapping.enable "${config.my.homebrew.brewPrefix}/bin/im-select";
 
   targets.darwin.defaults = {
     ".GlobalPreferences"."com.apple.mouse.scaling" = -1.0;
-    "com.apple.finder" = {
-      AppleShowAllFiles = true;
-      CreateDesktop = false;
-      FXDefaultSearchScope = "SCcf";
-      FXPreferredViewStyle = "Nlsv";
-      FXRemoveOldTrashItems = true;
-      NewWindowTarget = "Desktop";
-      ShowExternalHardDrivesOnDesktop = false;
-      ShowHardDrivesOnDesktop = false;
-      ShowMountedServersOnDesktop = false;
-      ShowRemovableMediaOnDesktop = false;
-    };
   };
 
 }

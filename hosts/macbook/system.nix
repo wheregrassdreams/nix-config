@@ -1,8 +1,10 @@
-{ hostName, self, userName, ... }:
+{ hostName, pkgs, self, userName, ... }:
 {
   imports = [ self.darwinModules.platform ];
 
   config = {
+    fonts.packages = [ pkgs.unstable.nerd-fonts.jetbrains-mono ];
+
     home-manager.backupFileExtension = "hm-backup";
     system.stateVersion = 5;
     system.primaryUser = userName;
