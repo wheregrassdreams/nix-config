@@ -30,8 +30,8 @@ aggregate host registry and no profiles layer.
   `pkgs.unstable` exposes rolling nixpkgs, while `pkgs.latestAgents` exposes
   the daily-updated agent package set for explicit, per-application opt-in.
   Platform-only system builders and inputs remain in their partitions.
-- There is no `modules/home/base` package. Reusable path contracts belong to
-  `modules/home/paths/` and are selected explicitly by hosts that use them.
+- `modules/home/core/` is the shared Home context package. It owns identity,
+  path contracts, and the common SOPS/age user environment.
 
 ## Capability packages
 
@@ -85,9 +85,11 @@ Within a package:
 - `default.nix` marks the package and assembles its configuration.
 - A package owns its public options. Importing the package selects the
   capability; `enable` is for optional subfeatures, not the package itself.
-- When present, `options.nix` is imported explicitly by `default.nix`.
-- The package entry point uses `repoLib.importAll ./.` to collect its other
-  `.nix` configuration files recursively in deterministic path order.
+- When present, the package root's `options.nix` is imported automatically by
+  `repoLib.importAll ./.`; the scanner then collects other `.nix` configuration
+  files recursively in deterministic path order.
+- If configuration collection is platform-gated, import the root options on
+  platforms where `repoLib.importAll` is skipped.
 - Files and directories beginning with `_` are excluded from discovery and
   may still be imported explicitly by a consumer.
 - A child directory with its own `default.nix` is a separate package. Parent
@@ -204,16 +206,18 @@ maintainer's rolling nixpkgs set. The lock file pins that package source and
 `nix flake update llm-agents` advances the agent packages together. Generic
 fast-moving packages can use `pkgs.unstable` independently.
 
-`home.paths` owns generic path roots, host-specific personal locations, and
+`home.core` owns the shared identity and path context. Its paths component
+owns generic path roots, host-specific personal locations, and
 the export mechanism. A shared naming function generates active personal
 `NIX_CONFIG_PATH_*` and `NIX_CONFIG_XDG_*` variables and validates path-name
 collisions. Capability packages can register path contracts without adding
 their paths to a central catalogue; package path exports stay commented out
 until shell-level consumers are established.
 
-`core` is an architectural concept for ecosystem rules and conventions, not a
-default package. It does not imply that Git, SSH, or a baseline Home package is
-automatically selected.
+`core` is the Home host-context package, not a baseline application bundle.
+Hosts provide its identity and personal path values. It provides SOPS/age
+support to every selected Home host; consumers still declare which encrypted
+secrets they use. It does not select Git, SSH, or everyday tools by implication.
 
 ## Package relationships
 

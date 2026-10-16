@@ -2,6 +2,7 @@
 packageRoot:
 let
   isExcludedName = name: lib.hasPrefix "_" name || name == "lib";
+  optionsFile = packageRoot + "/options.nix";
 
   isModuleFile =
     name:
@@ -31,4 +32,4 @@ let
         [ ]
     ) names;
 in
-collect packageRoot true
+lib.optional (builtins.pathExists optionsFile) optionsFile ++ collect packageRoot true

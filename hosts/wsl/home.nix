@@ -23,9 +23,10 @@ let
 in
 {
   imports = [
-    flake.homeModules.paths
-    flake.homeModules."terminal.shell"
+    flake.homeModules.core
     flake.homeModules.terminal
+    flake.homeModules.git
+    flake.homeModules."terminal.shell"
     flake.homeModules."terminal.tmux"
     flake.homeModules."terminal.tools"
     flake.homeModules."dev.kubernetes"
@@ -34,7 +35,6 @@ in
     flake.homeModules."dev.langs.c"
     flake.homeModules."dev.langs.nix"
     flake.homeModules."dev.langs.python"
-    flake.homeModules.git
     flake.homeModules."storage.remote"
     flake.homeModules."connectivity.ssh"
     flake.homeModules."connectivity.tailscale"

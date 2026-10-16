@@ -63,10 +63,11 @@ must be followed by host-appropriate boot, service, and recovery verification.
 - Keep small packages directly in their package directory. Use meaningful
   subdirectories such as `tmux/` or `zsh/` when they clarify ownership; do not
   create a generic `module/` directory.
-- Package entry points explicitly import `options.nix` when present, then
-  collect other configuration `.nix` files below their own directory,
-  excluding `default.nix`, `options.nix`, `_`-prefixed names, `lib/`, and
-  child package directories.
+- Package entry points use `repoLib.importAll ./.`, which imports the package
+  root's `options.nix` when present, then collects other configuration `.nix`
+  files below the package, excluding `default.nix`, `options.nix`, `_`-prefixed
+  names, `lib/`, and child package directories. If collection is platform-gated,
+  import the root options explicitly on platforms where collection is skipped.
 - Prefer ordinary Nix module `imports`; feature fragments read their own
   package options from `config` and gate their settings with `lib.mkIf`.
 - `lib/` contains technical implementation helpers and is imported explicitly,
@@ -78,9 +79,8 @@ must be followed by host-appropriate boot, service, and recovery verification.
   `terminal.tools` is the everyday CLI package, internally grouped by source
   file; `minimal` is an optional reduced set. Development utilities belong in
   `dev/`.
-- Host settings own Home Manager username and locale. There is no Home `base`
-  package; reusable path settings belong to the separately selected
-  `home.paths` package.
+- Host settings own Home Manager username and locale. Hosts select
+  `home.core` for shared identity, path, and secrets context.
 - Keep direct package dependencies stable and one-way. Add an integration
   package when reusable cross-package coordination is concrete.
 - Keep development-only inputs in the `dev` partition under `flakes/dev/`;

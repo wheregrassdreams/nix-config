@@ -9,16 +9,16 @@
 }:
 {
   imports = [
-    flake.homeModules.paths
-    flake.homeModules."terminal.shell"
+    flake.homeModules.core
     flake.homeModules.terminal
+    flake.homeModules."terminal.shell"
     flake.homeModules."terminal.tmux"
     flake.homeModules."terminal.tools"
     flake.homeModules."dev.kubernetes"
     flake.homeModules."dev.ci"
     flake.homeModules."dev.projects"
-    flake.homeModules."storage.remote"
     flake.homeModules."dev.tools"
+
     flake.homeModules."dev.langs.c"
     flake.homeModules."dev.langs.css"
     flake.homeModules."dev.langs.go"
@@ -35,14 +35,16 @@
     flake.homeModules."dev.langs.typst"
     flake.homeModules."dev.langs.yaml"
     flake.homeModules."dev.langs.zig"
+
     flake.homeModules.git
     flake.homeModules."connectivity.ssh"
-    flake.homeModules.secrets
+
     flake.homeModules."ai.claude"
     flake.homeModules."ai.codex"
     flake.homeModules."ai.cc-switch"
     flake.homeModules."ai.opencode"
     flake.homeModules."ai.agent-resources"
+
     flake.homeModules."desktop.browser"
     flake.homeModules."desktop.editor"
     flake.homeModules."desktop.files"
@@ -53,10 +55,13 @@
     flake.homeModules."desktop.password"
     flake.homeModules."desktop.terminal"
     flake.homeModules."desktop.window-manager"
+
     flake.homeModules."connectivity.clash-verge"
     flake.homeModules."connectivity.tailscale"
+
     flake.homeModules.services
     flake.homeModules."storage.backup"
+    flake.homeModules."storage.remote"
   ];
 
   home = {

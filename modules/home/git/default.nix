@@ -1,8 +1,7 @@
 { repoLib, ... }:
 {
   imports = [
-    ./options.nix
-    ../identity
+    ../core
   ]
   ++ repoLib.importAll ./.;
 }

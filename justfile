@@ -15,7 +15,7 @@ homebrew-drift-check:
 
 # Show registered path contracts and their current disk usage; this is read-only.
 paths-report:
-    bash "{{ repo }}/modules/home/paths/report.sh" "{{ repo }}"
+    bash "{{ repo }}/modules/home/core/paths/report.sh" "{{ repo }}"
 
 # Inventory repositories and review uninitialized, uncommitted, and inactive candidates.
 projects-scan:

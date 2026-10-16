@@ -11,8 +11,6 @@ in
   inherit identity;
   outputType = "darwin";
   hostName = "macbook";
-  systemModules = [
-    ./system.nix
-  ];
+  systemModules = [ ./system.nix ];
   homeModules = [ ./home.nix ];
 }

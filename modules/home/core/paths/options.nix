@@ -1,19 +1,19 @@
 { config, lib, ... }:
 let
   pathVariables = import ./lib/path-variables.nix { inherit lib; };
-  paths = config.my.paths;
+  cfg = config.my.paths;
   pathNames =
     builtins.attrNames (pathVariables {
       prefix = "NIX_CONFIG_PATH_";
-      values = paths.personal;
+      values = cfg.personal;
     })
     ++ builtins.attrNames (pathVariables {
       prefix = "NIX_CONFIG_PATH_";
-      values = paths.exported;
+      values = cfg.exported;
     });
   xdgNames = builtins.attrNames (pathVariables {
     prefix = "NIX_CONFIG_XDG_";
-    values = paths.xdg;
+    values = cfg.xdg;
   });
   allNames = pathNames ++ xdgNames;
 in

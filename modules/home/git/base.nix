@@ -3,16 +3,18 @@
   pkgs,
   ...
 }:
+let
+  cfg = config.my.identity;
+in
 {
   config = {
     programs.git = {
       enable = true;
       settings = {
         user = {
-          name = config.my.identity.fullname;
-          email = config.my.identity.email;
+          name = cfg.fullname;
+          email = cfg.email;
         };
-
         core.pager = "delta";
         interactive.diffFilter = "delta --color-only --features=interactive";
 
