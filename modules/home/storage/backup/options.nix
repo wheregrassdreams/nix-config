@@ -116,6 +116,11 @@ let
   };
   datasetType = lib.types.submodule {
     options = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Whether this dataset participates in scheduled backup jobs.";
+      };
       paths = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];

@@ -10,6 +10,11 @@ at 02:00 local time, keeping 7 daily, 8 weekly, and 6 monthly snapshots.
 `rebuildable` runs weekly and keeps 4 weekly and 2 monthly snapshots. A
 repository is private to the configured Restic password and target path.
 
+On macOS, a calendar run missed during sleep is coalesced and runs after wake;
+a run missed while powered off is not replayed. On systemd hosts,
+`Persistent = true` causes a missed calendar run to start when the user timer
+becomes active again.
+
 Example S3 setup:
 
 ```nix
@@ -51,13 +56,22 @@ initializing. The check is repeated after a failed `init` to tolerate another
 run initializing the repository concurrently. Use `backup-init REPOSITORY`
 for explicit one-time initialization when automatic initialization is off.
 
-`backup-check REPOSITORY` runs Restic's repository integrity check. It does
-not restore data. `backup-restore REPOSITORY [SNAPSHOT] [--target PATH]`
-restores into a unique directory under `~/.local/share/backup-restore/` by
-default; supplying `--target` selects another explicit destination. Background
-jobs log output and notify only on failure. Successful runs stay quiet.
+`backup-check REPOSITORY` runs Restic's repository integrity check, while
+`backup-snapshots REPOSITORY` lists snapshots for the current host.
+`backup-status [CLASS]` shows the latest run result, including its start/end
+time and exit code. Background jobs write logs and notify only on failure;
+successful runs stay quiet.
+
+`backup-restore REPOSITORY [SNAPSHOT] [--target PATH]` restores into a unique
+directory under `~/.local/share/backup-restore/` by default. A custom target
+must be absent or empty, so an accidental restore cannot mix with existing
+files. Review the staged result before copying it into an application's live
+data directory.
 
 The capability that owns state should register its concrete paths in
-`my.storage.backup.datasets`. Dataset registration does not change path ownership or
-application settings; it only makes those paths eligible for the chosen
-backup policy.
+`my.storage.backup.datasets`. Set `enable = false` to keep a dataset documented
+without including it in a scheduled policy yet. Dataset registration does not
+change path ownership or application settings; it only makes those paths
+eligible for the chosen backup policy. Schedules are generated only when an
+enabled dataset, its class policy, and that policy's repository are all
+configured.

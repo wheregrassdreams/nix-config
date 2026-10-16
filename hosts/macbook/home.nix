@@ -168,6 +168,21 @@
         mode = "local-manual";
       };
     };
+    storage.backup.datasets = {
+      tmux-resurrect = {
+        enable = false;
+        paths = [ config.my.paths.exported."terminal.tmux.resurrect" ];
+        class = "valuable";
+      };
+      codex-sessions = {
+        enable = false;
+        paths = [
+          "${config.home.homeDirectory}/.codex/sessions"
+          "${config.home.homeDirectory}/.codex/archived_sessions"
+        ];
+        class = "valuable";
+      };
+    };
     terminal.shell = {
       prompt.enable = true;
       atuin.enable = true;
