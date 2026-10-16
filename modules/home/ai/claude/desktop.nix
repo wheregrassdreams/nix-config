@@ -23,7 +23,7 @@ in
     })
   ];
 
-  config = lib.mkIf cfg {
+  config = lib.mkIf cfg.enable {
     my.homebrew.casks = lib.mkIf pkgs.stdenv.isDarwin [ "claude" ];
   };
 }
