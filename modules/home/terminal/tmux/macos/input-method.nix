@@ -26,7 +26,7 @@ let
     bind-key -T prefix ${cfg.prefixKey} send-keys ${cfg.prefixKey}
   '';
   hookBindings = lib.concatMapStringsSep "\n" (hook: ''
-    set-hook -g ${lib.escapeShellArg hook} ${runSelectEnglish}
+    set-hook -g ${lib.escapeShellArg hook} ${lib.escapeShellArg runSelectEnglish}
   '') hooks;
 in
 {
