@@ -7,13 +7,12 @@ EOF
 )"
 
 fzf_header() {
-  local color1='\033[38;2;103;103;103m'
-  local reset='\033[0m'
-  echo "${color1}enter${reset} switch to   ${color1}^x${reset} kill    ${color1}^/${reset} preview    ${color1}tab${reset} multi"
+  printf '\033[38;2;103;103;103menter\033[0m switch to   \033[38;2;103;103;103m^x\033[0m kill    \033[38;2;103;103;103m^/\033[0m preview    \033[38;2;103;103;103mtab\033[0m multi'
 }
 
-sh -c "$SOURCE_CMD" |
-  fzf --tmux --ansi \
+if selected_windows="$(
+  sh -c "$SOURCE_CMD" |
+    fzf --tmux --ansi \
     --delimiter=$'\t' \
     --with-nth=4,5,6 \
     --tabstop=12 \
@@ -21,6 +20,20 @@ sh -c "$SOURCE_CMD" |
     --preview 'tmux capture-pane -ep -S -200 -E 1 -t {3}' \
     --preview-window +190 \
     --header "$(fzf_header)" \
-    --bind 'ctrl-x:execute-silent(printf "%s\n" {+3} | xargs -r -n1 tmux kill-window -t)+reload:'"$SOURCE_CMD" |
-  cut -f 3 |
-  xargs -I {} tmux switch-client -t {}
+    --bind 'ctrl-x:execute-silent(printf "%s\n" {+3} | xargs -r -n1 tmux kill-window -t)+reload:'"$SOURCE_CMD"
+)"; then
+  :
+else
+  fzf_status=$?
+  case "$fzf_status" in
+    1 | 130) exit 0 ;;
+    *) exit "$fzf_status" ;;
+  esac
+fi
+
+[[ -n $selected_windows ]] || exit 0
+
+targets="$(cut -f 3 <<< "$selected_windows")"
+while IFS= read -r target; do
+  [[ -n $target ]] && tmux switch-client -t "$target"
+done <<< "$targets"
