@@ -4,10 +4,12 @@
   nixConfig = {
     extra-substituters = [
       "https://cache.numtide.com"
+      "https://codex-cli.cachix.org"
       "https://vicinae.cachix.org"
     ];
     extra-trusted-public-keys = [
       "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      "codex-cli.cachix.org-1:1Br3H1hHoRYG22n//cGKJOk3cQXgYobUel6O8DgSing="
       "vicinae.cachix.org-1:1kDrfienkGHPYbkpNj1mWTr7Fm1+zcenzgTizIcI3oc="
     ];
   };
@@ -46,6 +48,9 @@
 
     # LLM agents / AI tooling（作为工具使用）
     llm-agents.url = "github:numtide/llm-agents.nix";
+
+    # OpenAI Codex CLI release binaries with a dedicated Cachix cache.
+    codex-cli-nix.url = "github:sadjow/codex-cli-nix";
 
     # Official Vicinae package and Home Manager module, including macOS launchd support.
     vicinae.url = "git+https://github.com/vicinaehq/vicinae?rev=8c63ae2ef1d46592b2236ec077575280f718d659";

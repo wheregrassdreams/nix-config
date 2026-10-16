@@ -77,16 +77,17 @@
 
   my = {
     inherit identity;
+    # desktop.files.disktree.enable = true;
     homebrew = {
       brewPrefix = "/opt/homebrew";
       taps = [
-        { name = "bendews/tap"; trusted = true; }
-        { name = "shivammathur/php"; trusted = true; }
+        # { name = "bendews/tap"; trusted = true; }
+        # { name = "shivammathur/php"; trusted = true; }
       ];
       brews = [
-        # "terminal-notifier"
-        "bendews/tap/apw"
-        # "shivammathur/php/php@7.2"
+        # "terminal-notifier"        # ghostty/kitty已经有这个功能了
+        # "bendews/tap/apw"          # 暂时没有使用场景
+        # "shivammathur/php/php@7.2" # 以前工作用到，现在不需要了
       ];
       casks = [
         "dbeaver-community"
@@ -94,7 +95,25 @@
         "picgo"
         "postman"
         "tusk"
+        # "neteasemusic" # Homebrew Cask.
+        # "wechat" # Homebrew Cask.
+        # "ticktick" # Homebrew Cask.
+        # "orbstack" # Homebrew Cask.
+        # "affinity" # Homebrew Cask (current unified Affinity app).
+        # "figma" # Homebrew Cask.
+        # "localsend" # Homebrew Cask.
+        # "syncthing-app" # Homebrew Cask GUI.
+        # "xnip" # Homebrew Cask.
       ];
+      # MAS fallback only where no Homebrew Cask is available:
+      # Gifski is the app; RunCat Neo is the available alternative to RunCat.
+      # masApps = {
+      #   "Gifski" = 1351639930;
+      #   "RunCat Neo" = 6757801838;
+      # };
+      # DiskTree has a local Nix package. Z-Library currently only has a manually downloaded,
+      # dynamically linked DMG via Z-Access; keep it unmanaged until the artifact is verifiable.
+      # RunCat has no Cask; RunCat Neo is the available MAS alternative.
       sync = {
         enable = true;
         autoUpdate = false;
@@ -106,6 +125,7 @@
     };
 
     connectivity = {
+      ssh.trzsz.enable = true;
       tailscale = {
         # TODO: 换成主domain会更实用，当前看不出意图
         host = "homelab.tail50e8c0.ts.net";

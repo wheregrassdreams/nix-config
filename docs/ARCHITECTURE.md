@@ -149,14 +149,15 @@ SSH server adapter remains in `modules/system/nixos/`; platform-specific server
 behavior is not combined with the Home client package.
 
 The former `gui/` package group is named `desktop/`. Product boundaries follow
-the user capability rather than a strict GUI/CLI split. Finder preferences and
-archive extraction belong to `desktop.files`; keyboard mapping and pointer
-scrolling tools belong to `desktop.input`; Raycast belongs to
-`desktop.launcher`. `desktop.dock` configures a user's Dock through Home
-Manager, not the Darwin system activation phase. Host-specific applications
-without an established shared capability remain declared by that host instead
-of being grouped into a `workspace` catch-all. `networking/` is named
-`connectivity/`, with options under `my.connectivity`.
+the user capability rather than a strict GUI/CLI split. Finder preferences,
+archive extraction, and optional DiskTree filesystem usage browsing belong to
+`desktop.files`; DiskTree's macOS release derivation belongs to `overlays/`.
+Keyboard mapping and pointer scrolling tools belong to `desktop.input`; Raycast
+belongs to `desktop.launcher`. `desktop.dock` configures a user's Dock through
+Home Manager, not the Darwin system activation phase. Host-specific
+applications without an established shared capability remain declared by that
+host instead of being grouped into a `workspace` catch-all. `networking/` is
+named `connectivity/`, with options under `my.connectivity`.
 `desktop.launcher` imports Vicinae's official Home Manager module from the
 `vicinae` flake. It installs the flake package, writes settings, manages the
 macOS LaunchAgent, and installs the four used Raycast extensions (`brew`,

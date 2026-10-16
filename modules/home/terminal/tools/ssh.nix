@@ -10,6 +10,5 @@ in
 {
   home.packages = lib.optionals (!cfg.minimal) [
     pkgs.sshpass
-    pkgs.unstable.trzsz-ssh
   ];
 }
