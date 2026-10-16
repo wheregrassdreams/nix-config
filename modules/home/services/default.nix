@@ -8,6 +8,7 @@
 }:
 let
   cfg = config.my.services;
+  homebrew = config.my.homebrew;
   components = [
     {
       name = "mysql";
@@ -31,18 +32,16 @@ let
   modeOf =
     component: if component.settings.mode != null then component.settings.mode else cfg.defaultMode;
   enabledComponents = builtins.filter (component: component.settings.enable) components;
-  manualComponents = builtins.filter (component: modeOf component == "local-manual") enabledComponents;
+  manualComponents = builtins.filter (
+    component: modeOf component == "local-manual"
+  ) enabledComponents;
   daemonComponents = builtins.filter (
     component: modeOf component == "local-daemon"
   ) enabledComponents;
   enabledClient = component: component.enable && component.client.enable;
 in
 {
-  imports = [
-    ./options.nix
-  ]
-  ++ lib.optionals isDarwin [ ../homebrew ]
-  ++ repoLib.importAll ./.;
+  imports = lib.optionals isDarwin [ ../homebrew ] ++ repoLib.importAll ./.;
 
   config = lib.mkMerge [
     {
@@ -68,7 +67,7 @@ in
     })
     (lib.mkIf (pkgs.stdenv.isDarwin && daemonComponents != [ ]) {
       home.activation.manageHomebrewServices = lib.hm.dag.entryAfter [ "brewBundle" ] ''
-        brew=${lib.escapeShellArg "${config.my.homebrew.brewPrefix}/bin/brew"}
+        brew=${lib.escapeShellArg "${homebrew.brewPrefix}/bin/brew"}
         if [ -x "$brew" ]; then
           ${lib.concatMapStrings (component: ''
             "$brew" services start ${lib.escapeShellArg component.formula}

@@ -19,7 +19,6 @@ let
 in
 {
   imports = [
-    ./options.nix
     (repoLib.assertPlatform {
       package = "homebrew";
       platforms = [ "darwin" ];

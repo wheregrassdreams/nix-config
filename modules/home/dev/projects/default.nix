@@ -9,6 +9,7 @@
 }:
 let
   cfg = config.my.dev.projects;
+  paths = config.my.paths;
   remote = import ../../storage/remote/lib/targets.nix { inherit lib; };
   clients = import ../../storage/remote/lib/clients.nix { inherit lib pkgs; };
   target =
@@ -63,7 +64,7 @@ let
     '';
   };
   launchdEnvironment = {
-    NIX_CONFIG_PATH_PROJECTS = config.my.paths.personal.projects;
+    NIX_CONFIG_PATH_PROJECTS = paths.personal.projects;
     PROJECTS_INACTIVE_AFTER_DAYS = toString cfg.inactiveAfterDays;
     PROJECT_SNAPSHOT_REMOTE_SSH_HOST = if gitTarget == null then "" else gitTarget.sshHost;
     PROJECT_SNAPSHOT_REMOTE_ROOT = if gitTarget == null then "" else gitTarget.root;
@@ -75,14 +76,15 @@ let
   };
 in
 {
-  imports = [
-    ./options.nix
-    (repoLib.assertPlatform {
-      package = "dev.projects";
-      platforms = [ "darwin" ];
-    })
-  ]
-  ++ lib.optionals isDarwin (repoLib.importAll ./.);
+  imports =
+    lib.optionals (!isDarwin) [ ./options.nix ]
+    ++ [
+      (repoLib.assertPlatform {
+        package = "dev.projects";
+        platforms = [ "darwin" ];
+      })
+    ]
+    ++ lib.optionals isDarwin (repoLib.importAll ./.);
 
   config = lib.mkIf isDarwin {
     home.packages = [

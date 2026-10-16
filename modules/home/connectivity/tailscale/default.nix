@@ -5,9 +5,5 @@
   ...
 }:
 {
-  imports = [
-    ./options.nix
-  ]
-  ++ lib.optionals isDarwin [ ../../homebrew ]
-  ++ repoLib.importAll ./.;
+  imports = lib.optionals isDarwin [ ../../homebrew ] ++ repoLib.importAll ./.;
 }
