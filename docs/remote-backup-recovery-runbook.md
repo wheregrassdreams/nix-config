@@ -36,6 +36,13 @@ the code, repository-scoped credential, and host-key pin passed, but Home
 Manager activation and scheduled LaunchAgent delivery have not passed runtime
 acceptance. WSL runtime push/list/check/restore also remains pending.
 
+The latest MacBook evaluation confirms the declared alias and SOPS secret path
+with mode `0400`, but activation is currently blocked before the dry-run can
+show file changes: `just build-home` and `nh home switch --dry` both fail while
+building the unrelated `backup-check` helper because ShellCheck reports
+`SC1091` for its dynamic S3 environment-file path. That helper is outside this
+Gitea task; no S3/Restic files were changed and `just switch-home` was not run.
+
 The SSH alias declares `ssh.gitea.wheregrassdreams.top:30222` with strict host
 key checking. The current trusted ED25519 pin is
 `SHA256:lm73ciwBKxXsLoh9sdOtb9xcsEsWkOtB0G/RiEaiggs`. Recover the private key by
