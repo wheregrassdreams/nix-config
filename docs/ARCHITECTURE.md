@@ -122,8 +122,11 @@ Within a package:
 
 `terminal.shell` owns Zsh, prompts, shell integrations, `direnv`, and Atuin.
 Atuin is selected as an optional shell-history feature. In the current host
-configuration it records locally, owns `Ctrl-R`, leaves the up-arrow behavior
-alone, and has automatic sync disabled.
+configuration it owns `Ctrl-R`, leaves the up-arrow behavior alone, and
+automatically syncs to the declared self-hosted endpoint
+`https://atuin.wheregrassdreams.top`. Server availability, account
+registration, and a client sync round-trip are still pending runtime
+verification.
 Zsh prioritizes the Home Manager profile in `PATH`, so editors and terminals
 resolve declared tools and language servers before unmanaged copies.
 
@@ -178,11 +181,15 @@ worktrees. Its scanner is read-only; activity age is a review hint, never an
 automatic cleanup decision. On Darwin it runs a weekly inventory and a
 six-hourly local Git snapshot job. Snapshots live outside the project tree,
 include tracked and non-ignored untracked files, and expire after 30 days.
-An optional Git target stores one `snapshots` branch per project in a separate
-bare repository, provisioned through a host SSH alias. The branch contains a
-single chronological timeline with source metadata in commit trailers; it
-does not retain the project's source history. Retention compacts that branch
-and synchronizes it with a lease.
+An optional Git target stores one `snapshots` branch per project. The
+`sshBare` provisioner creates filesystem-rooted bare repositories through a
+host SSH alias; the `gitea` provisioner creates private repositories through
+the HTTPS API and pushes Git data through a host SSH alias. The current
+MacBook declaration selects Gitea, but its organization, automation account,
+token, SSH key enrollment, and first remote snapshot are not yet verified.
+Each branch contains a single chronological timeline with source metadata in
+commit trailers; it does not retain the project's source history. Retention
+compacts that branch and synchronizes it with a lease.
 `dev.langs.go` uses the pinned `pkgs.unstable.go_1_27` package and sets
 `GOTOOLCHAIN=local`, so Go uses the Nix-managed 1.27 toolchain instead of
 downloading a second toolchain at first invocation. Go manages its module and
@@ -306,11 +313,12 @@ Its explicitly imported `lib/targets.nix` provides shared target lookup,
 backend access, and path joining. `lib/clients.nix` exposes Git/OpenSSH and
 Restic client wiring, including Restic's native S3 and rclone-backed WebDAV
 connections. Products retain their own operations and runtime behavior. Git
-targets support the `sshBare` project-snapshot provisioner. Synchronization
-products, iCloud, and Syncthing are deferred until they have concrete
-directory and conflict semantics. Data-owning capabilities register concrete
-paths with `my.storage.backup.datasets` when a backup repository and policy
-are configured; `my.paths.personal` continues to own the notes path itself.
+targets support the `sshBare` and `gitea` project-snapshot provisioners.
+Synchronization products, iCloud, and Syncthing are deferred until they have
+concrete directory and conflict semantics. Data-owning capabilities register
+concrete paths with `my.storage.backup.datasets` when a backup repository and
+policy are configured; `my.paths.personal` continues to own the notes path
+itself.
 
 ## Machine autonomy
 

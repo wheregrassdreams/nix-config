@@ -47,14 +47,18 @@ corruption, an unavailable remote, or a missing/mismatched timeline.
 Repository discovery uses bounded `fastwalk` workers. Candidate signal scans
 retain the depth and result limits of the original inventory behavior.
 
-Remote snapshot transfer uses the Git CLI and the caller's normal SSH config
-and agent. The `sshBare` provisioner creates the target repository
-idempotently. Each project has one chronological `refs/heads/snapshots`
-branch; commits record source metadata in trailers and chain to prior snapshot
-commits. Retention compaction rewrites only this isolated branch, using
-force-with-lease for remote updates. Failed pushes leave local snapshots
-available for retry. See the package README for configuration, restore syntax,
-metadata, and retention behavior.
+Remote snapshot transfer uses the Git CLI and configured SSH identity. The
+`sshBare` provisioner retains its filesystem-rooted bare repository behavior.
+The `gitea` provisioner creates a private repository idempotently through the
+Gitea HTTPS API, verifies existing repository privacy and token push access,
+then pushes over SSH. It reads the API token from an external runtime file and
+does not delete repositories. Gitea repository names are deterministic sanitized
+`<host-id>-<project-id>` names in the configured organization. Each project has
+one chronological `refs/heads/snapshots` branch; commits record source metadata
+in trailers and chain to prior snapshot commits. Retention compaction rewrites
+only this isolated branch, using force-with-lease for remote updates. Failed
+pushes leave local snapshots available for retry. See the package README for
+configuration, restore syntax, metadata, and retention behavior.
 
 The local transport experiment used temporary repositories and credentials on
 loopback only. SSH used a temporary ed25519 key and `sshd`; HTTPS used a

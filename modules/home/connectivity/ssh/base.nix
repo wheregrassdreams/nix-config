@@ -15,6 +15,12 @@
         controlPersist = "30m";
         extraOptions.StrictHostKeyChecking = "ask";
       };
+      matchBlocks.gitea-backups = {
+        hostname = "gitea.wheregrassdreams.top";
+        user = "git";
+        identityFile = "~/.ssh/homelab-backups";
+        identitiesOnly = true;
+      };
     };
   };
 }

@@ -1,4 +1,5 @@
 {
+  config,
   flake,
   identity,
   lib,
@@ -61,6 +62,29 @@ in
   my = {
     inherit identity;
     paths.personal.windows = "/mnt/c";
+
+    storage.remote.targets = {
+      homelab-s3 = {
+        backend.s3 = {
+          endpoint = "http://192.168.3.250:8333";
+          bucket = "home-backups";
+          prefix = "nix-config";
+        };
+      };
+      homelab-gitea-backups = {
+        backend.git = {
+          sshHost = "gitea-backups";
+        };
+        provisioner = {
+          kind = "gitea";
+          gitea = {
+            apiUrl = "https://gitea.wheregrassdreams.top";
+            organization = "homelab-backups";
+            tokenFile = "${config.home.homeDirectory}/.config/nix-config/secrets/gitea-backup-token";
+          };
+        };
+      };
+    };
 
     terminal.shell = {
       prompt.enable = true;

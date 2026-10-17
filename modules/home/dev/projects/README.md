@@ -42,9 +42,9 @@ reporting success.
 
 ## Optional remote snapshots
 
-Remote endpoints are registered under `my.storage.remote.targets`. A Git target uses
-an SSH alias from the host's SSH configuration and an absolute server
-directory. The `sshBare` provisioner creates a private bare repository per
+Remote endpoints are registered under `my.storage.remote.targets`. A Git target
+uses an SSH alias from the host's SSH configuration. The `sshBare` provisioner
+also requires an absolute server directory and creates a bare repository per
 host and project on the first snapshot:
 
 ```nix
@@ -64,6 +64,33 @@ hostname, user, and identity. The remote repository path is
 `<root>/<host-id>/<project-id>.git`. Project IDs derive from the normalized
 local repository path; `projectIdOverrides` can preserve an ID after a move.
 The project source's `origin` is never used as a snapshot destination.
+
+For Gitea, the provisioner creates a private repository for each host/project
+through the HTTPS API, then pushes through the configured SSH alias:
+
+```nix
+my.storage.remote.targets.project-snapshots = {
+  backend.git.sshHost = "gitea-backups";
+  provisioner = {
+    kind = "gitea";
+    gitea = {
+      apiUrl = "https://gitea.example";
+      organization = "project-backups";
+      tokenFile = "${config.home.homeDirectory}/.config/nix-config/secrets/gitea-token";
+    };
+  };
+};
+
+my.dev.projects.snapshots.remote.target = "project-snapshots";
+```
+
+The token file must be provisioned outside Git with owner-only permissions.
+The SSH alias must name the Git server and select a dedicated private key; add
+the server host key to `known_hosts` only after verifying its fingerprint
+through a trusted channel. For the current homelab target, the organization,
+bot/team permissions, token file, SSH key enrollment, and server host-key
+verification are still outstanding. Do not treat the declared endpoint as an
+accepted backup until a real snapshot and isolated restore have succeeded.
 
 Each project repository has one `refs/heads/snapshots` timeline. Every commit
 stores the snapshot time, project ID, worktree ID, source branch, source HEAD,

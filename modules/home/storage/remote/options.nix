@@ -9,7 +9,8 @@ let
         description = "SSH config alias used by Git clients and provisioning.";
       };
       root = lib.mkOption {
-        type = lib.types.str;
+        type = lib.types.nullOr lib.types.str;
+        default = null;
         description = "Absolute directory under which remote bare repositories are created.";
       };
     };
@@ -46,10 +47,17 @@ let
           default = null;
         };
       };
-      provisioner.kind = lib.mkOption {
-        type = lib.types.nullOr (lib.types.enum [ "sshBare" ]);
-        default = null;
-        description = "Remote repository creation strategy, when supported.";
+      provisioner = {
+        kind = lib.mkOption {
+          type = lib.types.nullOr (lib.types.enum [ "sshBare" "gitea" ]);
+          default = null;
+          description = "Remote repository provisioning strategy.";
+        };
+        gitea = {
+          apiUrl = lib.mkOption { type = lib.types.str; default = ""; };
+          organization = lib.mkOption { type = lib.types.str; default = ""; };
+          tokenFile = lib.mkOption { type = lib.types.str; default = ""; };
+        };
       };
     };
   };
@@ -70,13 +78,38 @@ let
       {
         assertion =
           target.backend.git == null
-          || (target.backend.git.sshHost != "" && lib.hasPrefix "/" target.backend.git.root);
-        message = "my.storage.remote.targets.${name}.backend.git needs an SSH alias and absolute root path.";
+          || (
+            target.backend.git.sshHost != ""
+            && (
+              (target.provisioner.kind == "gitea" && target.backend.git.root == null)
+              || (target.provisioner.kind != "gitea" && target.backend.git.root != null && lib.hasPrefix "/" target.backend.git.root && target.backend.git.root != "/")
+            )
+          );
+        message = "my.storage.remote.targets.${name}.backend.git needs an SSH alias and a compatible root.";
+      }
+      {
+        assertion = target.provisioner.kind != "gitea" || (
+          target.backend.git != null
+          && target.backend.git.root == null
+          && builtins.match "https://[^/?#@]+(/[^?#]*)?" target.provisioner.gitea.apiUrl != null
+          && !(lib.hasInfix "\n" target.provisioner.gitea.apiUrl)
+          && builtins.match "[A-Za-z0-9][A-Za-z0-9_.-]*" target.provisioner.gitea.organization != null
+          && target.provisioner.gitea.organization != "."
+          && target.provisioner.gitea.organization != ".."
+          && target.provisioner.gitea.tokenFile != ""
+          && lib.hasPrefix "/" target.provisioner.gitea.tokenFile
+        );
+        message = "my.storage.remote.targets.${name}.provisioner.gitea needs a valid Git SSH target, HTTPS API base URL, organization path segment, and absolute external token file.";
       }
       {
         assertion =
-          target.backend.s3 == null || (target.backend.s3.endpoint != "" && target.backend.s3.bucket != "");
-        message = "my.storage.remote.targets.${name}.backend.s3 needs endpoint and bucket.";
+          target.backend.s3 == null
+          || (
+            builtins.match "https?://[^/?#@]+(/[^?#]*)?" target.backend.s3.endpoint != null
+            && target.backend.s3.bucket != ""
+            && !(lib.hasInfix "\n" target.backend.s3.endpoint)
+          );
+        message = "my.storage.remote.targets.${name}.backend.s3 needs an HTTP(S) endpoint without credentials, query, or fragment, and a bucket.";
       }
       {
         assertion =

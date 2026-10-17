@@ -25,6 +25,8 @@ in
       sshKeyPaths = [ sshPrivateKeyFile ];
     };
 
+    sops.defaultSopsFile = ../../../../secrets/common.yaml;
+
     home.sessionVariables = {
       SOPS_AGE_KEY_FILE = sopsAgeKeyFile;
       SOPS_AGE_SSH_PRIVATE_KEY_FILE = sshPrivateKeyFile;

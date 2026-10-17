@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -312,6 +313,150 @@ func remoteRepositoryURL(sshHost, root, hostID, projectID string) (string, strin
 	remotePath := filepath.ToSlash(filepath.Join(root, hostID, projectID+".git"))
 	remoteURL := (&url.URL{Scheme: "ssh", Host: sshHost, Path: remotePath}).String()
 	return remoteURL, remotePath, nil
+}
+
+func giteaRepositoryName(hostID, projectID string) (string, error) {
+	if !validProjectID(hostID) || !validProjectID(projectID) {
+		return "", errors.New("Gitea snapshot target requires valid host and project IDs")
+	}
+	sanitize := func(value string) string {
+		var result strings.Builder
+		separator := false
+		for _, r := range strings.ToLower(value) {
+			if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' {
+				result.WriteRune(r)
+				separator = false
+			} else if !separator && result.Len() > 0 {
+				result.WriteByte('-')
+				separator = true
+			}
+		}
+		return strings.Trim(result.String(), "-")
+	}
+	host := sanitize(hostID)
+	project := sanitize(projectID)
+	if host == "" || project == "" {
+		return "", errors.New("Gitea snapshot host and project IDs must contain letters or digits")
+	}
+	// Keep names readable while preventing punctuation normalization or length
+	// limits from merging different host/project pairs into one backup repo.
+	digest := sha256.Sum256([]byte(hostID + "\x00" + projectID))
+	suffix := hex.EncodeToString(digest[:])[:12]
+	maxPrefix := 100 - len(suffix) - 1
+	name := host + "-" + project
+	if len(name) > maxPrefix {
+		name = strings.TrimRight(name[:maxPrefix], "-")
+	}
+	return name + "-" + suffix, nil
+}
+
+func giteaRepositoryURL(sshHost, organization, hostID, projectID string) (string, string, error) {
+	if !validSSHHostAlias(sshHost) || !validProjectID(organization) {
+		return "", "", errors.New("Gitea snapshot target requires a valid SSH alias and organization")
+	}
+	name, err := giteaRepositoryName(hostID, projectID)
+	if err != nil {
+		return "", "", err
+	}
+	path := "/" + organization + "/" + name + ".git"
+	return (&url.URL{Scheme: "ssh", Host: sshHost, Path: path}).String(), path, nil
+}
+
+func provisionGiteaRepository(apiURL, organization, hostID, projectID, tokenFile string) error {
+	client := &http.Client{Timeout: 15 * time.Second}
+	return provisionGiteaRepositoryWithClient(client, apiURL, organization, hostID, projectID, tokenFile)
+}
+
+func provisionGiteaRepositoryWithClient(client *http.Client, apiURL, organization, hostID, projectID, tokenFile string) error {
+	if tokenFile == "" {
+		return errors.New("Gitea API token file is required")
+	}
+	if !validProjectID(organization) {
+		return errors.New("Gitea organization must be a valid single path segment")
+	}
+	base, err := url.Parse(strings.TrimRight(apiURL, "/"))
+	if err != nil || base.Scheme != "https" || base.Host == "" || base.User != nil || base.RawQuery != "" || base.Fragment != "" {
+		return errors.New("Gitea API URL must be an HTTPS base URL without credentials or query")
+	}
+	clientCopy := *client
+	previousRedirectPolicy := clientCopy.CheckRedirect
+	clientCopy.CheckRedirect = func(request *http.Request, via []*http.Request) error {
+		if request.URL.Scheme != "https" || !strings.EqualFold(request.URL.Host, base.Host) {
+			return errors.New("Gitea API redirect must remain on the same HTTPS host")
+		}
+		if previousRedirectPolicy != nil {
+			return previousRedirectPolicy(request, via)
+		}
+		if len(via) >= 10 {
+			return errors.New("too many Gitea API redirects")
+		}
+		return nil
+	}
+	client = &clientCopy
+	name, err := giteaRepositoryName(hostID, projectID)
+	if err != nil {
+		return err
+	}
+	tokenInfo, err := os.Stat(tokenFile)
+	if err != nil {
+		return fmt.Errorf("could not inspect Gitea API token file: %w", err)
+	}
+	if !tokenInfo.Mode().IsRegular() || tokenInfo.Mode().Perm()&0o077 != 0 {
+		return errors.New("Gitea API token file must be a regular file with owner-only permissions")
+	}
+	tokenBytes, err := os.ReadFile(tokenFile)
+	if err != nil {
+		return fmt.Errorf("could not read Gitea API token file: %w", err)
+	}
+	token := strings.TrimSpace(string(tokenBytes))
+	if token == "" || strings.ContainsAny(token, "\r\n") {
+		return errors.New("Gitea API token file is empty or invalid")
+	}
+	endpoint := *base
+	endpoint.Path = strings.TrimRight(base.Path, "/") + "/api/v1/orgs/" + url.PathEscape(organization) + "/repos"
+	payload, _ := json.Marshal(map[string]any{"name": name, "private": true, "auto_init": false})
+	request, err := http.NewRequest(http.MethodPost, endpoint.String(), strings.NewReader(string(payload)))
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Authorization", "token "+token)
+	request.Header.Set("Content-Type", "application/json")
+	response, err := client.Do(request)
+	if err != nil {
+		return fmt.Errorf("Gitea repository creation request failed: %w", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusCreated && response.StatusCode != http.StatusConflict {
+		return fmt.Errorf("Gitea repository creation returned HTTP %d", response.StatusCode)
+	}
+	repoURL := *base
+	repoURL.Path = strings.TrimRight(base.Path, "/") + "/api/v1/repos/" + url.PathEscape(organization) + "/" + url.PathEscape(name)
+	request, err = http.NewRequest(http.MethodGet, repoURL.String(), nil)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Authorization", "token "+token)
+	response, err = client.Do(request)
+	if err != nil {
+		return fmt.Errorf("Gitea repository verification request failed: %w", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("Gitea existing repository verification returned HTTP %d", response.StatusCode)
+	}
+	var existing struct {
+		Private     bool `json:"private"`
+		Permissions struct {
+			Push bool `json:"push"`
+		} `json:"permissions"`
+	}
+	if err := json.NewDecoder(io.LimitReader(response.Body, 1<<20)).Decode(&existing); err != nil {
+		return fmt.Errorf("Gitea existing repository response was invalid: %w", err)
+	}
+	if !existing.Private || !existing.Permissions.Push {
+		return errors.New("existing Gitea repository is not private or token lacks push permission")
+	}
+	return nil
 }
 
 func validSSHHostAlias(value string) bool {
@@ -1086,7 +1231,18 @@ func remoteForStore(store, sshHost, root, hostID string) (string, string, error)
 	return remoteRepositoryURL(sshHost, root, hostID, projectIDFromStore(store))
 }
 
+func remoteForStoreTarget(kind, sshHost, root, organization, hostID, projectID string) (string, string, error) {
+	if kind == "gitea" {
+		return giteaRepositoryURL(sshHost, organization, hostID, projectID)
+	}
+	return remoteRepositoryURL(sshHost, root, hostID, projectID)
+}
+
 func checkSnapshotsWithTarget(output io.Writer, snapshotRoot, sshHost, root, hostID string) error {
+	return checkSnapshotsWithProvisioner(output, snapshotRoot, "sshBare", sshHost, root, "", hostID)
+}
+
+func checkSnapshotsWithProvisioner(output io.Writer, snapshotRoot, kind, sshHost, root, organization, hostID string) error {
 	if err := checkSnapshotsUsing(output, snapshotRoot, "", queryRemoteSnapshotRefs); err != nil {
 		return err
 	}
@@ -1096,7 +1252,7 @@ func checkSnapshotsWithTarget(output io.Writer, snapshotRoot, sshHost, root, hos
 	}
 	var failures []string
 	for _, store := range stores {
-		remote, _, err := remoteForStore(store, sshHost, root, hostID)
+		remote, _, err := remoteForStoreTarget(kind, sshHost, root, organization, hostID, projectIDFromStore(store))
 		if err != nil {
 			failures = append(failures, err.Error())
 			continue
@@ -1124,6 +1280,10 @@ func checkSnapshotsWithTarget(output io.Writer, snapshotRoot, sshHost, root, hos
 }
 
 func listSnapshotsWithTarget(snapshotRoot, sshHost, root, hostID string) error {
+	return listSnapshotsWithProvisioner(snapshotRoot, "sshBare", sshHost, root, "", hostID)
+}
+
+func listSnapshotsWithProvisioner(snapshotRoot, kind, sshHost, root, organization, hostID string) error {
 	stores, err := filepath.Glob(filepath.Join(snapshotRoot, "*.git"))
 	if err != nil {
 		return err
@@ -1135,7 +1295,7 @@ func listSnapshotsWithTarget(snapshotRoot, sshHost, root, hostID string) error {
 		if err != nil {
 			continue
 		}
-		remote, _, err := remoteForStore(store, sshHost, root, hostID)
+		remote, _, err := remoteForStoreTarget(kind, sshHost, root, organization, hostID, projectIDFromStore(store))
 		if err != nil {
 			return err
 		}
@@ -1307,6 +1467,10 @@ func runSnapshot(args []string) int {
 	storeFlag := flags.String("snapshot-root", "", "snapshot storage; defaults to XDG data home")
 	remoteSSHHost := flags.String("remote-ssh-host", os.Getenv("PROJECT_SNAPSHOT_REMOTE_SSH_HOST"), "SSH config alias for the snapshot target")
 	remoteRoot := flags.String("remote-root", os.Getenv("PROJECT_SNAPSHOT_REMOTE_ROOT"), "absolute path for per-project remote repositories")
+	remoteKind := flags.String("remote-kind", os.Getenv("PROJECT_SNAPSHOT_REMOTE_KIND"), "remote provisioner: sshBare or gitea")
+	giteaAPIURL := flags.String("gitea-api-url", os.Getenv("PROJECT_SNAPSHOT_GITEA_API_URL"), "Gitea HTTPS API base URL")
+	giteaOrganization := flags.String("gitea-organization", os.Getenv("PROJECT_SNAPSHOT_GITEA_ORGANIZATION"), "Gitea organization for private snapshot repositories")
+	giteaTokenFile := flags.String("gitea-token-file", os.Getenv("PROJECT_SNAPSHOT_GITEA_TOKEN_FILE"), "external file containing the Gitea API token")
 	hostID := flags.String("host-id", os.Getenv("PROJECT_SNAPSHOT_HOST_ID"), "stable host identifier used in remote repository paths")
 	projectOverridesJSON := flags.String("project-id-overrides", os.Getenv("PROJECT_SNAPSHOT_PROJECT_ID_OVERRIDES_JSON"), "JSON object mapping normalized project paths to stable IDs")
 	projectIDFlag := flags.String("project-id", "", "project ID required for remote restore")
@@ -1330,10 +1494,21 @@ func runSnapshot(args []string) int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	remoteProvided := *remoteSSHHost != "" || *remoteRoot != "" || *hostID != ""
-	remoteEnabled := *remoteSSHHost != "" && *remoteRoot != "" && *hostID != ""
+	remoteProvided := *remoteKind != "" || *remoteSSHHost != "" || *remoteRoot != "" || *hostID != "" || *giteaAPIURL != "" || *giteaOrganization != "" || *giteaTokenFile != ""
+	if *remoteKind == "" {
+		*remoteKind = "sshBare"
+	}
+	remoteEnabled := *remoteSSHHost != "" && *hostID != ""
+	if *remoteKind == "sshBare" {
+		remoteEnabled = remoteEnabled && *remoteRoot != ""
+	} else if *remoteKind == "gitea" {
+		remoteEnabled = remoteEnabled && *giteaAPIURL != "" && *giteaOrganization != "" && *giteaTokenFile != "" && *remoteRoot == ""
+	} else {
+		fmt.Fprintln(os.Stderr, "--remote-kind must be sshBare or gitea")
+		return 2
+	}
 	if remoteProvided && !remoteEnabled {
-		fmt.Fprintln(os.Stderr, "remote snapshot target requires --remote-ssh-host, --remote-root, and --host-id together")
+		fmt.Fprintln(os.Stderr, "remote snapshot target requires SSH host and host ID plus provisioner-specific settings")
 		return 2
 	}
 	projectOverrides, err := decodeProjectOverrides(*projectOverridesJSON)
@@ -1348,7 +1523,7 @@ func runSnapshot(args []string) int {
 	if *check {
 		var err error
 		if remoteEnabled {
-			err = checkSnapshotsWithTarget(os.Stdout, backupRoot, *remoteSSHHost, *remoteRoot, *hostID)
+			err = checkSnapshotsWithProvisioner(os.Stdout, backupRoot, *remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID)
 		} else {
 			err = checkSnapshots(os.Stdout, backupRoot, "")
 		}
@@ -1361,7 +1536,7 @@ func runSnapshot(args []string) int {
 	if *list {
 		var err error
 		if remoteEnabled {
-			err = listSnapshotsWithTarget(backupRoot, *remoteSSHHost, *remoteRoot, *hostID)
+			err = listSnapshotsWithProvisioner(backupRoot, *remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID)
 		} else {
 			err = listSnapshots(backupRoot, "")
 		}
@@ -1383,7 +1558,7 @@ func runSnapshot(args []string) int {
 			fmt.Fprintln(os.Stderr, "remote restore requires a configured Git target and --project-id")
 			return 2
 		}
-		remote, _, err := remoteRepositoryURL(*remoteSSHHost, *remoteRoot, *hostID, *projectIDFlag)
+		remote, _, err := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID, *projectIDFlag)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
@@ -1506,9 +1681,11 @@ func runSnapshot(args []string) int {
 	}
 	if remoteEnabled {
 		for _, store := range stores {
-			remote, remotePath, remoteErr := remoteForStore(store, *remoteSSHHost, *remoteRoot, *hostID)
-			if remoteErr == nil {
+			remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID, projectIDFromStore(store))
+			if remoteErr == nil && *remoteKind == "sshBare" {
 				remoteErr = provisionSSHRepository(*remoteSSHHost, remotePath)
+			} else if remoteErr == nil {
+				remoteErr = provisionGiteaRepository(*giteaAPIURL, *giteaOrganization, *hostID, projectIDFromStore(store), *giteaTokenFile)
 			}
 			if remoteErr == nil {
 				_, _, remoteErr = syncSnapshotRefs(store, remote)

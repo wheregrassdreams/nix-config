@@ -2,6 +2,9 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,6 +12,162 @@ import (
 	"testing"
 	"time"
 )
+
+func TestSnapshotRemoteKindRequiresRemoteConfiguration(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	for _, name := range []string{
+		"PROJECT_SNAPSHOT_REMOTE_SSH_HOST",
+		"PROJECT_SNAPSHOT_REMOTE_ROOT",
+		"PROJECT_SNAPSHOT_REMOTE_KIND",
+		"PROJECT_SNAPSHOT_GITEA_API_URL",
+		"PROJECT_SNAPSHOT_GITEA_ORGANIZATION",
+		"PROJECT_SNAPSHOT_GITEA_TOKEN_FILE",
+		"PROJECT_SNAPSHOT_HOST_ID",
+	} {
+		t.Setenv(name, "")
+	}
+
+	if status := runSnapshot([]string{"--remote-kind", "gitea"}); status != 2 {
+		t.Fatalf("runSnapshot with an incomplete explicit remote target = %d, want 2", status)
+	}
+}
+
+func TestGiteaRepositoryNamingAndURL(t *testing.T) {
+	name, err := giteaRepositoryName("Mac_Book", "my.project_1")
+	if err != nil || !strings.HasPrefix(name, "mac-book-my-project-1-") {
+		t.Fatalf("giteaRepositoryName = %q, %v", name, err)
+	}
+	remote, path, err := giteaRepositoryURL("gitea-backups", "homelab-backups", "macbook", "abc123")
+	if err != nil || !strings.HasPrefix(remote, "ssh://gitea-backups/homelab-backups/macbook-abc123-") || !strings.HasSuffix(remote, ".git") || !strings.HasPrefix(path, "/homelab-backups/macbook-abc123-") {
+		t.Fatalf("giteaRepositoryURL = %q, %q, %v", remote, path, err)
+	}
+}
+
+func TestGiteaRepositoryNameIsCollisionResistantAndBounded(t *testing.T) {
+	first, err := giteaRepositoryName("mac_book", "project-name")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := giteaRepositoryName("mac-book", "project-name")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first == second {
+		t.Fatalf("distinct IDs produced the same Gitea repository name %q", first)
+	}
+
+	long, err := giteaRepositoryName(strings.Repeat("host", 40), strings.Repeat("project", 40))
+	if err != nil || len(long) > 100 {
+		t.Fatalf("long Gitea repository name = %q (%d bytes), %v", long, len(long), err)
+	}
+	if _, err := giteaRepositoryName("---", "project"); err == nil {
+		t.Fatal("expected punctuation-only host ID to be rejected")
+	}
+}
+
+func TestProvisionGiteaRepositoryCreateAndExisting(t *testing.T) {
+	token := filepath.Join(t.TempDir(), "token")
+	expectedRepo, err := giteaRepositoryName("macbook", "project")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(token, []byte("test-token\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	created := false
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "token test-token" {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		switch r.Method {
+		case http.MethodPost:
+			var payload struct {
+				Name    string `json:"name"`
+				Private bool   `json:"private"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil || payload.Name != expectedRepo || !payload.Private {
+				http.Error(w, "invalid create payload", http.StatusBadRequest)
+				return
+			}
+			if created {
+				w.WriteHeader(http.StatusConflict)
+				return
+			}
+			created = true
+			w.WriteHeader(http.StatusCreated)
+		case http.MethodGet:
+			if r.URL.Path != "/api/v1/repos/homelab-backups/"+expectedRepo {
+				http.NotFound(w, r)
+				return
+			}
+			_, _ = w.Write([]byte(`{"private":true,"permissions":{"push":true}}`))
+		default:
+			http.Error(w, "unexpected method", http.StatusMethodNotAllowed)
+		}
+	}))
+	defer server.Close()
+	for i := 0; i < 2; i++ {
+		if err := provisionGiteaRepositoryWithClient(server.Client(), server.URL, "homelab-backups", "macbook", "project", token); err != nil {
+			t.Fatalf("provision attempt %d: %v", i+1, err)
+		}
+	}
+}
+
+func TestProvisionGiteaRepositoryRejectsMissingPushAccess(t *testing.T) {
+	token := filepath.Join(t.TempDir(), "token")
+	if err := os.WriteFile(token, []byte("test-token"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+		_, _ = w.Write([]byte(`{"private":true,"permissions":{"push":false}}`))
+	}))
+	defer server.Close()
+	if err := provisionGiteaRepositoryWithClient(server.Client(), server.URL, "homelab-backups", "macbook", "project", token); err == nil || !strings.Contains(err.Error(), "push permission") {
+		t.Fatalf("expected push permission rejection, got %v", err)
+	}
+}
+
+func TestProvisionGiteaRepositoryRejectsAPIError(t *testing.T) {
+	token := filepath.Join(t.TempDir(), "token")
+	if err := os.WriteFile(token, []byte("test-token"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "forbidden", http.StatusForbidden)
+	}))
+	defer server.Close()
+	if err := provisionGiteaRepositoryWithClient(server.Client(), server.URL, "homelab-backups", "macbook", "project", token); err == nil || !strings.Contains(err.Error(), "HTTP 403") {
+		t.Fatalf("expected API error, got %v", err)
+	}
+}
+
+func TestProvisionGiteaRepositoryRejectsInvalidOrganization(t *testing.T) {
+	err := provisionGiteaRepositoryWithClient(&http.Client{}, "https://gitea.example", "../other-org", "macbook", "project", "unused")
+	if err == nil || !strings.Contains(err.Error(), "single path segment") {
+		t.Fatalf("expected invalid organization rejection, got %v", err)
+	}
+}
+
+func TestProvisionGiteaRepositoryRejectsCrossSchemeRedirect(t *testing.T) {
+	token := filepath.Join(t.TempDir(), "token")
+	if err := os.WriteFile(token, []byte("test-token"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "http://"+r.Host+r.URL.Path, http.StatusTemporaryRedirect)
+	}))
+	defer server.Close()
+	err := provisionGiteaRepositoryWithClient(server.Client(), server.URL, "homelab-backups", "macbook", "project", token)
+	if err == nil || !strings.Contains(err.Error(), "same HTTPS host") {
+		t.Fatalf("expected HTTPS redirect rejection, got %v", err)
+	}
+}
 
 func runGitTest(t *testing.T, directory string, args ...string) string {
 	t.Helper()

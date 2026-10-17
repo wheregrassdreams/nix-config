@@ -38,6 +38,47 @@ my.storage.backup.datasets.tmux-resurrect.paths = [
 ];
 ```
 
+## Homelab S3 readiness
+
+The `homelab-s3` target is currently endpoint metadata only. The MacBook's
+`tmux-resurrect` dataset remains disabled, and no repository, valuable-class
+policy, or backup secret is configured. Do not enable the dataset until the
+SeaweedFS endpoint and bucket have been verified with a Restic client.
+
+The repository needs two separately provisioned secret files through the
+existing Home Manager SOPS interface:
+
+- `config.sops.secrets."backup/restic-valuable".path`: generated Restic
+  repository password;
+- `config.sops.secrets."backup/s3-environment".path`: `AWS_ACCESS_KEY_ID` and
+  `AWS_SECRET_ACCESS_KEY` for a restricted S3 key with access to the selected
+  bucket/prefix.
+
+Neither secret is present in the current SOPS source. Add them only after their
+values and SOPS source are provisioned; do not substitute a sample value or a
+plaintext path. Once provisioned, declare the repository and its policy, then
+perform an isolated initialize, backup, list, and restore check before enabling
+the scheduled dataset.
+
+The standalone Home Manager output imports the pinned sops-nix Home Manager
+module. On macOS that module uses a LaunchAgent to materialize declared secrets
+at login and when Home Manager activates. This repository sets
+`sops.defaultSopsFile` to the encrypted `secrets/common.yaml`; a secret with a
+narrower recipient set should override `sopsFile` to its host-specific file.
+The machine must have the age key at `~/.config/sops/age/keys.txt` or an
+available unencrypted SSH key configured in `sops.age.sshKeyPaths`. SOPS
+materializes the secret under its user runtime mount and exposes the configured
+`.path` through a home-directory symlink; it does not put plaintext in the Nix
+store. Verify the actual launchd projection and Restic invocation on the Mac
+before enabling the dataset.
+
+Use a single-line encrypted value for the Restic password secret. The S3
+environment secret should decrypt to shell-compatible assignments for
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`; the Restic wrapper sources that
+file only for the command. Keep the S3 key restricted to the backup bucket and
+prefix. Do not store either value in Nix expressions, environment attributes,
+or a plaintext file tracked by Git.
+
 The default repository path is target prefix + host ID + repository ID. Set
 `repositoryPath` only to replace the backend-relative suffix. S3 credentials
 come from `environmentFile`; Restic's encryption password comes from

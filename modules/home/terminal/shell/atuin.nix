@@ -10,7 +10,10 @@ in
       enable = true;
       enableZshIntegration = true;
       flags = [ "--disable-up-arrow" ];
-      settings.auto_sync = false;
+      settings = {
+        auto_sync = true;
+        sync_address = "https://atuin.wheregrassdreams.top";
+      };
     };
   };
 }
