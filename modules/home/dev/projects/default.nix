@@ -71,12 +71,29 @@ let
     NIX_CONFIG_PATH_PROJECTS = paths.personal.projects;
     PROJECTS_INACTIVE_AFTER_DAYS = toString cfg.inactiveAfterDays;
     PROJECT_SNAPSHOT_REMOTE_SSH_HOST = if gitTarget == null then "" else gitTarget.sshHost;
-    PROJECT_SNAPSHOT_REMOTE_ROOT = if gitTarget == null || gitTarget.root == null then "" else gitTarget.root;
+    PROJECT_SNAPSHOT_REMOTE_ROOT =
+      if gitTarget == null || gitTarget.root == null then "" else gitTarget.root;
     PROJECT_SNAPSHOT_REMOTE_KIND = if gitTarget == null then "" else target.provisioner.kind;
-    PROJECT_SNAPSHOT_GITEA_API_URL = if gitTarget == null || target.provisioner.kind != "gitea" then "" else target.provisioner.gitea.apiUrl;
-    PROJECT_SNAPSHOT_GITEA_ORGANIZATION = if gitTarget == null || target.provisioner.kind != "gitea" then "" else target.provisioner.gitea.organization;
-    PROJECT_SNAPSHOT_GITEA_TOKEN_FILE = if gitTarget == null || target.provisioner.kind != "gitea" then "" else target.provisioner.gitea.tokenFile;
-    PROJECT_SNAPSHOT_GITEA_REPOSITORY = if gitTarget == null || target.provisioner.kind != "giteaPreprovisioned" then "" else target.provisioner.gitea.repository;
+    PROJECT_SNAPSHOT_GITEA_API_URL =
+      if gitTarget == null || target.provisioner.kind != "gitea" then
+        ""
+      else
+        target.provisioner.gitea.apiUrl;
+    PROJECT_SNAPSHOT_GITEA_ORGANIZATION =
+      if gitTarget == null || target.provisioner.kind != "gitea" then
+        ""
+      else
+        target.provisioner.gitea.organization;
+    PROJECT_SNAPSHOT_GITEA_TOKEN_FILE =
+      if gitTarget == null || target.provisioner.kind != "gitea" then
+        ""
+      else
+        target.provisioner.gitea.tokenFile;
+    PROJECT_SNAPSHOT_GITEA_REPOSITORY =
+      if gitTarget == null || target.provisioner.kind != "giteaPreprovisioned" then
+        ""
+      else
+        target.provisioner.gitea.repository;
     PROJECT_SNAPSHOT_HOST_ID = hostName;
     PROJECT_SNAPSHOT_PROJECT_ID_OVERRIDES_JSON = builtins.toJSON cfg.snapshots.remote.projectIdOverrides;
     XDG_DATA_HOME = config.xdg.dataHome;
@@ -90,16 +107,16 @@ in
     ++ [
       (repoLib.assertPlatform {
         package = "dev.projects";
-        platforms = [ "darwin" ];
+        platforms = [
+          "darwin"
+          "linux"
+        ];
       })
     ]
     ++ lib.optionals isDarwin (repoLib.importAll ./.);
 
-  config = lib.mkIf isDarwin {
-    home.packages = [
-      projectScan
-      projectSnapshot
-    ];
+  config = {
+    home.packages = lib.optionals isDarwin [ projectScan ] ++ [ projectSnapshot ];
 
     my.paths.exported."dev.projects.snapshots" = cfg.snapshots.directory;
 
@@ -113,11 +130,18 @@ in
         message = "my.dev.projects snapshots require a Git remote target.";
       }
       {
-        assertion = cfg.snapshots.remote.target == null || builtins.elem target.provisioner.kind [ "sshBare" "gitea" "giteaPreprovisioned" ];
+        assertion =
+          cfg.snapshots.remote.target == null
+          || builtins.elem target.provisioner.kind [
+            "sshBare"
+            "gitea"
+            "giteaPreprovisioned"
+          ];
         message = "my.dev.projects requires provisioner.kind = sshBare, gitea, or giteaPreprovisioned.";
       }
     ];
-
+  }
+  // lib.optionalAttrs isDarwin {
     launchd.agents.projects-scan = {
       enable = true;
       config = {

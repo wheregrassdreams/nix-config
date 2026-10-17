@@ -19,8 +19,9 @@ the first inventory as a quiet baseline, then notifies only when new review
 findings appear; it never removes or changes a project.
 
 `project-snapshot` stores Git snapshots outside the projects tree in
-`~/.local/share/project-snapshots` by default. Every six hours it snapshots
-dirty worktrees and clean branches whose push state cannot be established. A
+`~/.local/share/project-snapshots` by default. On Darwin, its LaunchAgent runs
+every six hours and snapshots dirty worktrees and clean branches whose push
+state cannot be established. A
 temporary Git index captures tracked and non-ignored untracked files without
 changing the source index, branch, or worktree. Clean branches synchronized
 with an upstream are skipped. Snapshot history retains 30 days.
@@ -39,6 +40,12 @@ check is read-only and does not download remote objects. Restore accepts only
 commits reachable from the retained timeline, rejects symlink or non-empty
 destinations, and verifies the restored HEAD and clean worktree before
 reporting success.
+
+On WSL, Home Manager installs the same `project-snapshot` one-shot command and
+configures the Gitea target, but it does not install the Darwin inventory
+scanner or enable a periodic snapshot job. Run the command explicitly with a
+reviewed source root, for example `project-snapshot --root /home/zane/projects`.
+This does not make the command infer which WSL directories should be backed up.
 
 ## Optional remote snapshots
 
@@ -94,8 +101,8 @@ conditionally materialize it with mode `0400` at
 
 On 2026-10-17, MacBook completed two-project push/list/check/restore acceptance;
 restored files were byte-identical and the synthetic refs were removed. WSL
-end-to-end acceptance is still pending. Do not enable its snapshot schedule
-until that round-trip succeeds.
+end-to-end acceptance is still pending. WSL has no scheduled snapshot job;
+verify the explicit one-shot path before relying on it.
 
 Each API-provisioned project repository has one `refs/heads/snapshots` timeline.
 The shared pre-provisioned repository stores each project at

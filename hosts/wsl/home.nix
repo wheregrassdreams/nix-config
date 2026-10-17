@@ -32,6 +32,7 @@ in
     flake.homeModules."terminal.tools"
     flake.homeModules."dev.kubernetes"
     flake.homeModules."dev.ci"
+    flake.homeModules."dev.projects"
     flake.homeModules."dev.tools"
     flake.homeModules."dev.langs.c"
     flake.homeModules."dev.langs.nix"
@@ -92,6 +93,7 @@ in
         };
       };
     };
+    dev.projects.snapshots.remote.target = "homelab-gitea-backups";
 
     terminal.shell = {
       prompt.enable = true;

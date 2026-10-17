@@ -179,7 +179,9 @@ live in `dev.ci`.
 inventory local Git repositories, candidate project directories, and linked
 worktrees. Its scanner is read-only; activity age is a review hint, never an
 automatic cleanup decision. On Darwin it runs a weekly inventory and a
-six-hourly local Git snapshot job. Snapshots live outside the project tree,
+six-hourly local Git snapshot job. WSL exposes the same `project-snapshot`
+one-shot command against its selected Gitea target but does not run an
+inventory scan or scheduled job. Snapshots live outside the project tree,
 include tracked and non-ignored untracked files, and expire after 30 days.
 An optional Git target stores one `snapshots` branch per project. The
 `sshBare` provisioner creates filesystem-rooted bare repositories through a
