@@ -1331,12 +1331,12 @@ func remoteForStore(store, sshHost, root, hostID string) (string, string, error)
 	return remoteRepositoryURL(sshHost, root, hostID, projectIDFromStore(store))
 }
 
-func remoteForStoreTarget(kind, sshHost, root, organization, hostID, projectID string) (string, string, error) {
+func remoteForStoreTarget(kind, sshHost, root, giteaTarget, hostID, projectID string) (string, string, error) {
 	if kind == "gitea" {
-		return giteaRepositoryURL(sshHost, organization, hostID, projectID)
+		return giteaRepositoryURL(sshHost, giteaTarget, hostID, projectID)
 	}
 	if kind == "giteaPreprovisioned" {
-		remote, err := giteaPreprovisionedRepositoryURL(sshHost, organization)
+		remote, err := giteaPreprovisionedRepositoryURL(sshHost, giteaTarget)
 		return remote, "", err
 	}
 	return remoteRepositoryURL(sshHost, root, hostID, projectID)
@@ -1353,7 +1353,7 @@ func checkSnapshotsWithTarget(output io.Writer, snapshotRoot, sshHost, root, hos
 	return checkSnapshotsWithProvisioner(output, snapshotRoot, "sshBare", sshHost, root, "", hostID)
 }
 
-func checkSnapshotsWithProvisioner(output io.Writer, snapshotRoot, kind, sshHost, root, organization, hostID string) error {
+func checkSnapshotsWithProvisioner(output io.Writer, snapshotRoot, kind, sshHost, root, giteaTarget, hostID string) error {
 	if err := checkSnapshotsUsing(output, snapshotRoot, "", queryRemoteSnapshotRefs); err != nil {
 		return err
 	}
@@ -1363,7 +1363,7 @@ func checkSnapshotsWithProvisioner(output io.Writer, snapshotRoot, kind, sshHost
 	}
 	var failures []string
 	for _, store := range stores {
-		remote, _, err := remoteForStoreTarget(kind, sshHost, root, organization, hostID, projectIDFromStore(store))
+		remote, _, err := remoteForStoreTarget(kind, sshHost, root, giteaTarget, hostID, projectIDFromStore(store))
 		if err != nil {
 			failures = append(failures, err.Error())
 			continue
@@ -1395,7 +1395,7 @@ func listSnapshotsWithTarget(snapshotRoot, sshHost, root, hostID string) error {
 	return listSnapshotsWithProvisioner(snapshotRoot, "sshBare", sshHost, root, "", hostID)
 }
 
-func listSnapshotsWithProvisioner(snapshotRoot, kind, sshHost, root, organization, hostID string) error {
+func listSnapshotsWithProvisioner(snapshotRoot, kind, sshHost, root, giteaTarget, hostID string) error {
 	stores, err := projectSnapshotStores(snapshotRoot)
 	if err != nil {
 		return err
@@ -1407,7 +1407,7 @@ func listSnapshotsWithProvisioner(snapshotRoot, kind, sshHost, root, organizatio
 		if err != nil {
 			continue
 		}
-		remote, _, err := remoteForStoreTarget(kind, sshHost, root, organization, hostID, projectIDFromStore(store))
+		remote, _, err := remoteForStoreTarget(kind, sshHost, root, giteaTarget, hostID, projectIDFromStore(store))
 		if err != nil {
 			return err
 		}
@@ -1627,6 +1627,10 @@ func runSnapshot(args []string) int {
 		fmt.Fprintln(os.Stderr, "remote snapshot target requires SSH host and host ID plus provisioner-specific settings")
 		return 2
 	}
+	giteaTarget := *giteaOrganization
+	if *remoteKind == "giteaPreprovisioned" {
+		giteaTarget = *giteaRepository
+	}
 	projectOverrides, err := decodeProjectOverrides(*projectOverridesJSON)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -1639,7 +1643,7 @@ func runSnapshot(args []string) int {
 	if *check {
 		var err error
 		if remoteEnabled {
-			err = checkSnapshotsWithProvisioner(os.Stdout, backupRoot, *remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID)
+			err = checkSnapshotsWithProvisioner(os.Stdout, backupRoot, *remoteKind, *remoteSSHHost, *remoteRoot, giteaTarget, *hostID)
 		} else {
 			err = checkSnapshots(os.Stdout, backupRoot, "")
 		}
@@ -1652,7 +1656,7 @@ func runSnapshot(args []string) int {
 	if *list {
 		var err error
 		if remoteEnabled {
-			err = listSnapshotsWithProvisioner(backupRoot, *remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID)
+			err = listSnapshotsWithProvisioner(backupRoot, *remoteKind, *remoteSSHHost, *remoteRoot, giteaTarget, *hostID)
 		} else {
 			err = listSnapshots(backupRoot, "")
 		}
@@ -1674,7 +1678,7 @@ func runSnapshot(args []string) int {
 			fmt.Fprintln(os.Stderr, "remote restore requires a configured Git target and --project-id")
 			return 2
 		}
-		remote, _, err := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaRepository, *hostID, *projectIDFlag)
+		remote, _, err := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, giteaTarget, *hostID, *projectIDFlag)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
@@ -1777,7 +1781,7 @@ func runSnapshot(args []string) int {
 					store, prepareErr = backupStore(backupRoot, target.repo, commonDir)
 				}
 				if prepareErr == nil {
-					remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaRepository, *hostID, projectID)
+					remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, giteaTarget, *hostID, projectID)
 					if remoteErr == nil && *remoteKind == "sshBare" {
 						remoteErr = provisionSSHRepository(*remoteSSHHost, remotePath)
 					} else if remoteErr == nil && *remoteKind == "gitea" {
@@ -1826,7 +1830,7 @@ func runSnapshot(args []string) int {
 				continue
 			}
 			projectID := projectIDFromStore(store)
-			remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaRepository, *hostID, projectID)
+			remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, giteaTarget, *hostID, projectID)
 			if remoteErr == nil && *remoteKind == "sshBare" {
 				remoteErr = provisionSSHRepository(*remoteSSHHost, remotePath)
 			} else if remoteErr == nil && *remoteKind == "gitea" {

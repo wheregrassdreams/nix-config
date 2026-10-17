@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -398,6 +399,122 @@ func TestSharedPreprovisionedRemoteKeepsProjectTimelinesSeparate(t *testing.T) {
 	if got, err := os.ReadFile(filepath.Join(destination, "tracked.txt")); err != nil || string(got) != "after\n" {
 		t.Fatalf("restored project snapshot = %q, %v", got, err)
 	}
+}
+
+func TestPreprovisionedListAndCheckUseRepositoryAndProjectRefs(t *testing.T) {
+	projects, firstRepo, storeRoot := makeSnapshotFixture(t)
+	secondRepo := filepath.Join(projects, "second-project")
+	if _, err := gitCommand(nil, "clone", "--quiet", firstRepo, secondRepo); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(secondRepo, "second.txt"), []byte("second\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, fixture := range []struct {
+		repo string
+		id   string
+	}{
+		{repo: firstRepo, id: "project-one"},
+		{repo: secondRepo, id: "project-two"},
+	} {
+		status, _, err := snapshotOneWithID(fixture.repo, fixture.repo, storeRoot, projects, 30, time.Now().UTC(), fixture.id)
+		if err != nil || status != "saved" {
+			t.Fatalf("snapshotOneWithID(%s) = %q, %v", fixture.id, status, err)
+		}
+	}
+	stores, err := projectSnapshotStores(storeRoot)
+	if err != nil || len(stores) != 2 {
+		t.Fatalf("projectSnapshotStores = %v, %v", stores, err)
+	}
+	remote := filepath.Join(t.TempDir(), "preprovisioned.git")
+	if _, err := gitCommand(nil, "init", "--bare", "--quiet", remote); err != nil {
+		t.Fatal(err)
+	}
+	for _, store := range stores {
+		if _, _, err := syncSnapshotRefsToRef(store, remote, projectRemoteRef("macbook", projectIDFromStore(store))); err != nil {
+			t.Fatalf("seed pre-provisioned remote for %s: %v", projectIDFromStore(store), err)
+		}
+	}
+	refs, err := bareGit(remote, nil, "for-each-ref", "--format=%(refname)", "refs/heads/nix-config-snapshots")
+	if err != nil || len(nonEmptyLines(refs.stdout)) != 2 {
+		t.Fatalf("remote project refs = %q, %v", refs.stdout, err)
+	}
+
+	sshWrapper := filepath.Join(t.TempDir(), "ssh-wrapper")
+	wrapper := "#!/bin/sh\ncase \"$*\" in\n  *git-upload-pack*) exec git-upload-pack \"$PROJECT_SNAPSHOT_TEST_REMOTE\" ;;\n  *git-receive-pack*) exec git-receive-pack \"$PROJECT_SNAPSHOT_TEST_REMOTE\" ;;\n  *) exit 2 ;;\nesac\n"
+	if err := os.WriteFile(sshWrapper, []byte(wrapper), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GIT_SSH_COMMAND", sshWrapper)
+	t.Setenv("PROJECT_SNAPSHOT_TEST_REMOTE", remote)
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	for _, name := range []string{
+		"PROJECT_SNAPSHOT_REMOTE_SSH_HOST",
+		"PROJECT_SNAPSHOT_REMOTE_ROOT",
+		"PROJECT_SNAPSHOT_REMOTE_KIND",
+		"PROJECT_SNAPSHOT_GITEA_API_URL",
+		"PROJECT_SNAPSHOT_GITEA_ORGANIZATION",
+		"PROJECT_SNAPSHOT_GITEA_TOKEN_FILE",
+		"PROJECT_SNAPSHOT_GITEA_REPOSITORY",
+		"PROJECT_SNAPSHOT_HOST_ID",
+	} {
+		t.Setenv(name, "")
+	}
+	commonArgs := []string{
+		"--snapshot-root", storeRoot,
+		"--remote-kind", "giteaPreprovisioned",
+		"--remote-ssh-host", "gitea-backups",
+		"--gitea-repository", "homelab-backups/nix-config-snapshots",
+		"--host-id", "macbook",
+	}
+	status, output := captureSnapshotRun(t, append(commonArgs, "--list")...)
+	if status != 0 || strings.Count(output, "remote=synced") != 2 {
+		t.Fatalf("pre-provisioned --list = status %d, output %q", status, output)
+	}
+	status, output = captureSnapshotRun(t, append(commonArgs, "--check")...)
+	if status != 0 || strings.Count(output, "remote=matches") != 2 {
+		t.Fatalf("pre-provisioned --check = status %d, output %q", status, output)
+	}
+
+	firstTip, err := bareGit(stores[0], nil, "rev-parse", "--verify", snapshotNamespace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondTip, err := bareGit(stores[1], nil, "rev-parse", "--verify", snapshotNamespace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstRef := projectRemoteRef("macbook", projectIDFromStore(stores[0]))
+	if _, err := bareGit(remote, nil, "update-ref", firstRef, strings.TrimSpace(secondTip.stdout)); err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(firstTip.stdout) == strings.TrimSpace(secondTip.stdout) {
+		t.Fatal("test snapshots unexpectedly have the same tip")
+	}
+	status, output = captureSnapshotRun(t, append(commonArgs, "--check")...)
+	if status != 1 || !strings.Contains(output, "remote=mismatch") {
+		t.Fatalf("pre-provisioned --check did not detect a mismatched project ref: status %d, output %q", status, output)
+	}
+}
+
+func captureSnapshotRun(t *testing.T, args ...string) (int, string) {
+	t.Helper()
+	read, write, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	previous := os.Stdout
+	os.Stdout = write
+	status := runSnapshot(args)
+	_ = write.Close()
+	os.Stdout = previous
+	output, err := io.ReadAll(read)
+	_ = read.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return status, string(output)
 }
 
 func TestProjectSnapshotStoresExcludeRestoreCache(t *testing.T) {
