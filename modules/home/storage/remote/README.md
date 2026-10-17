@@ -61,11 +61,13 @@ its write access to this repository. This pre-provisioned design needs no
 organization/team membership or API token: authorization is limited to this
 repository's deploy key.
 
-The MacBook's active Home Manager generation has not yet been verified against
-this branch. During the source-level E2E, the managed SSH alias and SOPS-projected
-key path were not present, so an isolated SSH config used the existing
-`~/.ssh/homelab-backups` key and the real `~/.ssh/known_hosts` file. Do not infer
-that scheduled LaunchAgent delivery has passed from the round trip alone.
+The MacBook Home Manager generation now includes the SOPS-projected key and
+managed SSH alias. A synthetic project passed push, list, remote consistency
+check, and remote restore through that command and alias; tracked and untracked
+payload hashes matched, then the synthetic ref was deleted. The loaded
+`org.nix-config.projects-snapshot` LaunchAgent has a six-hour interval. Its
+first timer-fired run has not yet been observed. WSL runtime validation is out
+of scope per the operator's instruction.
 
 The private key is recoverable from the single-recipient SOPS entry
 `backup/gitea-ssh-private-key`; local decryption succeeded and the derived
@@ -73,7 +75,7 @@ public key matched `~/.ssh/homelab-backups.pub`. Home Manager declares an
 owner-only `0400` projection at
 `~/.config/nix-config/secrets/backup-gitea-ssh-key` for both MacBook and WSL.
 The SSH alias `gitea-backups` pins `ssh.gitea.wheregrassdreams.top:30222` and
-requires strict host-key checking. The currently trusted ED25519 fingerprint
+sets `StrictHostKeyChecking yes`. The currently trusted ED25519 fingerprint
 is `SHA256:lm73ciwBKxXsLoh9sdOtb9xcsEsWkOtB0G/RiEaiggs`; on a replacement
 client, obtain the pinned entry from a trusted existing `known_hosts` copy or
 verify this fingerprint independently before adding it. Do not trust a fresh

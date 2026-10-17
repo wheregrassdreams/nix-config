@@ -28,13 +28,9 @@ and the synthetic refs were deleted afterward. A direct strict-host-key SSH
 authentication and remote read/write check also succeeded. At the end, the
 remote contained only its `main` branch.
 
-This E2E used the current Go source with an isolated temporary SSH alias, the
-existing `~/.ssh/homelab-backups` private key, and the real `~/.ssh/known_hosts`
-file. The active Home Manager generation did not yet contain the branch's
-`gitea-backups` alias, and the declared SOPS projection path was absent. Thus
-the code, repository-scoped credential, and host-key pin passed, but Home
-Manager activation and scheduled LaunchAgent delivery have not passed runtime
-acceptance. WSL runtime push/list/check/restore also remains pending.
+That initial source-level E2E used an isolated temporary SSH alias, the existing
+`~/.ssh/homelab-backups` key, and the real `~/.ssh/known_hosts`; it preceded
+Home Manager activation and did not verify scheduled delivery.
 
 The SOPS source stores the Gitea key as a nested YAML value at
 `backup.gitea-ssh-private-key`; sops-nix declarations use the matching path
@@ -44,13 +40,24 @@ age recipient. Restic and S3 secret projections are not declared until those
 credentials are provisioned, so the deferred Garage work does not block this
 Gitea key projection.
 
-The MacBook `just build-home` now succeeds. This build used
+The MacBook `just build-home` succeeds. This build used
 `NIX_CONFIG='sandbox = false'` because the existing Go test suite starts a local
 TLS test server and the Nix sandbox denied its localhost bind; `go test ./...`
-passes outside the sandbox. The build validates the activation package but does
-not activate it. The active Home Manager generation, LaunchAgent delivery, and
-scheduled remote push still need runtime acceptance. WSL runtime validation is
-out of scope per the operator's instruction.
+passes outside the sandbox. Home Manager was activated from a clean worktree so
+the unrelated dirty Zed settings edit was excluded. The key projection resolves
+to mode `0400`, its public-key fingerprint matches the enrolled deploy key, and
+`ssh -G gitea-backups` reports `StrictHostKeyChecking yes`. A strict-host-key
+`git ls-remote` succeeded against the private repository.
+
+After activation, a synthetic temporary project was pushed through the managed
+`project-snapshot` command and Gitea deploy key. `--list` reported the remote
+ref synced; `--check` matched the remote ref; `--restore-remote` restored both
+tracked and untracked payloads with matching SHA-256 hashes. The synthetic ref
+was deleted afterward, and the repository returned to its original `main`
+HEAD. The `org.nix-config.projects-snapshot` LaunchAgent is loaded with a six
+hour interval (`StartInterval = 21600`); it had not run on its own at the time
+of verification, so the first timer-fired run remains unobserved. WSL runtime
+validation is out of scope per the operator's instruction.
 
 The SSH alias declares `ssh.gitea.wheregrassdreams.top:30222` with strict host
 key checking. The current trusted ED25519 pin is

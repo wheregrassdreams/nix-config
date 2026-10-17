@@ -21,6 +21,7 @@
         user = "git";
         identityFile = "~/.config/nix-config/secrets/backup-gitea-ssh-key";
         identitiesOnly = true;
+        extraOptions.StrictHostKeyChecking = "yes";
       };
     };
   };
