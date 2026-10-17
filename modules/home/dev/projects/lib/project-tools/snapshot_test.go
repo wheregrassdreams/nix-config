@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -255,7 +256,7 @@ func TestSnapshotRemoteRoundTripAndOfflineRetry(t *testing.T) {
 	if err := os.RemoveAll(store); err != nil {
 		t.Fatal(err)
 	}
-	cache := filepath.Join(storeRoot, "remote-cache.git")
+	cache := filepath.Join(storeRoot, "remote-cache", "remote-cache.git")
 	if err := os.MkdirAll(cache, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -278,12 +279,9 @@ func TestSnapshotRemoteRoundTripAndOfflineRetry(t *testing.T) {
 	if err := restoreRemoteSnapshotFrom(storeRoot, remote, ref, destination); err != nil {
 		t.Fatal(err)
 	}
-	var checkOutput bytes.Buffer
-	if err := checkSnapshotsUsing(&checkOutput, storeRoot, remote, queryRemoteSnapshotRefs); err != nil {
-		t.Fatalf("snapshot check failed for healthy local and remote stores: %v\n%s", err, checkOutput.String())
-	}
-	if !strings.Contains(checkOutput.String(), "remote=matches") {
-		t.Fatalf("snapshot check did not report remote parity: %s", checkOutput.String())
+	stores, err := projectSnapshotStores(storeRoot)
+	if err != nil || len(stores) != 0 {
+		t.Fatalf("restore cache was enumerated as a project store: %v, error %v", stores, err)
 	}
 	for _, path := range []string{storeRoot, cache, filepath.Join(cache, "config")} {
 		info, err := os.Stat(path)
@@ -346,6 +344,110 @@ func TestSnapshotRemoteRoundTripAndOfflineRetry(t *testing.T) {
 	metadata := runGitTest(t, destination, "show", "-s", "--format=%(trailers:key=Source-HEAD,valueonly)", "HEAD")
 	if metadata == "" {
 		t.Fatal("snapshot commit should record the source HEAD in its trailers")
+	}
+}
+
+func TestProjectSnapshotStoresExcludeRestoreCache(t *testing.T) {
+	root := t.TempDir()
+	projectStore := filepath.Join(root, "demo-project.git")
+	legacyCache := filepath.Join(root, "remote-cache.git")
+	for _, store := range []string{projectStore, legacyCache} {
+		if _, err := gitCommand(nil, "init", "--bare", "--quiet", store); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := gitCommand(nil, "init", "--bare", "--quiet", filepath.Join(root, "remote-cache", "remote-cache.git")); err != nil {
+		t.Fatal(err)
+	}
+	stores, err := projectSnapshotStores(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stores) != 1 || stores[0] != projectStore {
+		t.Fatalf("project stores = %v, want only %s", stores, projectStore)
+	}
+}
+
+func TestSnapshotSyncSeedsExistingRemoteBeforeAppend(t *testing.T) {
+	_, repo, storeRoot := makeSnapshotFixture(t)
+	status, _, err := snapshotOne(repo, repo, storeRoot, filepath.Dir(repo), 30, time.Now().UTC())
+	if err != nil || status != "saved" {
+		t.Fatalf("initial snapshot = %q, %v", status, err)
+	}
+	originalStore := findSnapshotStore(t, storeRoot)
+	remote := filepath.Join(t.TempDir(), "remote.git")
+	if _, err := gitCommand(nil, "init", "--bare", "--quiet", remote); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := syncSnapshotRefsValidated(originalStore, remote); err != nil {
+		t.Fatal(err)
+	}
+	originalTip, err := bareGit(remote, nil, "rev-parse", "--verify", snapshotNamespace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	emptyLocal := filepath.Join(t.TempDir(), "empty-local.git")
+	if _, err := gitCommand(nil, "init", "--bare", "--quiet", emptyLocal); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := syncSnapshotRefsValidated(emptyLocal, remote); err != nil {
+		t.Fatalf("seed empty local history: %v", err)
+	}
+	seeded, err := bareGit(emptyLocal, nil, "rev-parse", "--verify", snapshotNamespace)
+	if err != nil || strings.TrimSpace(seeded.stdout) != strings.TrimSpace(originalTip.stdout) {
+		t.Fatalf("seeded tip = %q, want %q (error %v)", strings.TrimSpace(seeded.stdout), strings.TrimSpace(originalTip.stdout), err)
+	}
+	tree, err := bareGit(emptyLocal, nil, "rev-parse", snapshotNamespace+"^{tree}")
+	if err != nil {
+		t.Fatal(err)
+	}
+	appended, err := bareGit(emptyLocal, map[string]string{"GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@example.invalid", "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "test@example.invalid"}, "commit-tree", strings.TrimSpace(tree.stdout), "-p", strings.TrimSpace(seeded.stdout), "-m", "appended snapshot")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := bareGit(emptyLocal, nil, "update-ref", snapshotNamespace, strings.TrimSpace(appended.stdout), strings.TrimSpace(seeded.stdout)); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := syncSnapshotRefsValidated(emptyLocal, remote); err != nil {
+		t.Fatalf("push appended timeline: %v", err)
+	}
+	parents, err := bareGit(remote, nil, "rev-list", "--parents", "-n", "1", snapshotNamespace)
+	if err != nil || !strings.Contains(parents.stdout, strings.TrimSpace(originalTip.stdout)) {
+		t.Fatalf("remote timeline lost prior tip %s: %q, error %v", strings.TrimSpace(originalTip.stdout), parents.stdout, err)
+	}
+}
+
+func TestSnapshotSyncRejectsUnrelatedRemoteHistory(t *testing.T) {
+	remote := filepath.Join(t.TempDir(), "remote.git")
+	local := filepath.Join(t.TempDir(), "local.git")
+	for _, store := range []string{remote, local} {
+		if _, err := gitCommand(nil, "init", "--bare", "--quiet", store); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for index, store := range []string{remote, local} {
+		tree, err := bareGit(store, nil, "mktree")
+		if err != nil {
+			t.Fatal(err)
+		}
+		commit, err := bareGit(store, map[string]string{"GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "test@example.invalid", "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "test@example.invalid"}, "commit-tree", strings.TrimSpace(tree.stdout), "-m", fmt.Sprintf("independent timeline %d", index))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := bareGit(store, nil, "update-ref", snapshotNamespace, strings.TrimSpace(commit.stdout)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	remoteBefore, err := bareGit(remote, nil, "rev-parse", snapshotNamespace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := syncSnapshotRefsValidated(local, remote); err == nil || !strings.Contains(err.Error(), "diverges") {
+		t.Fatalf("unrelated history sync error = %v, want divergence refusal", err)
+	}
+	remoteAfter, err := bareGit(remote, nil, "rev-parse", snapshotNamespace)
+	if err != nil || strings.TrimSpace(remoteAfter.stdout) != strings.TrimSpace(remoteBefore.stdout) {
+		t.Fatalf("remote tip changed after divergence refusal: %q, error %v", remoteAfter.stdout, err)
 	}
 }
 
