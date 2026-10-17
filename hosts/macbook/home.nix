@@ -76,12 +76,6 @@
   };
 
   sops.secrets = lib.mkIf (builtins.pathExists ../../secrets/users/remote-backups.yaml) {
-    "gitea-backup-token" = {
-      sopsFile = ../../secrets/users/remote-backups.yaml;
-      key = "gitea-backup-token";
-      path = "${config.home.homeDirectory}/.config/nix-config/secrets/gitea-backup-token";
-      mode = "0400";
-    };
     "backup/restic-valuable" = {
       sopsFile = ../../secrets/users/remote-backups.yaml;
       key = "backup/restic-valuable";
@@ -247,11 +241,9 @@
           sshHost = "gitea-backups";
         };
         provisioner = {
-          kind = "gitea";
+          kind = "giteaPreprovisioned";
           gitea = {
-            apiUrl = "https://gitea.wheregrassdreams.top";
-            organization = "homelab-backups";
-            tokenFile = "${config.home.homeDirectory}/.config/nix-config/secrets/gitea-backup-token";
+            repository = "homelab-backups/nix-config-snapshots";
           };
         };
       };

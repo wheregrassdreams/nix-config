@@ -24,6 +24,8 @@ let
       ""
     else if target.provisioner.kind == "gitea" then
       "--remote-kind gitea --remote-ssh-host ${lib.escapeShellArg gitTarget.sshHost} --gitea-api-url ${lib.escapeShellArg target.provisioner.gitea.apiUrl} --gitea-organization ${lib.escapeShellArg target.provisioner.gitea.organization} --gitea-token-file ${lib.escapeShellArg target.provisioner.gitea.tokenFile} --host-id ${lib.escapeShellArg hostName} --project-id-overrides ${lib.escapeShellArg (builtins.toJSON cfg.snapshots.remote.projectIdOverrides)}"
+    else if target.provisioner.kind == "giteaPreprovisioned" then
+      "--remote-kind giteaPreprovisioned --remote-ssh-host ${lib.escapeShellArg gitTarget.sshHost} --gitea-repository ${lib.escapeShellArg target.provisioner.gitea.repository} --host-id ${lib.escapeShellArg hostName} --project-id-overrides ${lib.escapeShellArg (builtins.toJSON cfg.snapshots.remote.projectIdOverrides)}"
     else
       "--remote-kind sshBare --remote-ssh-host ${lib.escapeShellArg gitTarget.sshHost} --remote-root ${lib.escapeShellArg gitTarget.root} --host-id ${lib.escapeShellArg hostName} --project-id-overrides ${lib.escapeShellArg (builtins.toJSON cfg.snapshots.remote.projectIdOverrides)}";
   projectTools =
@@ -74,6 +76,7 @@ let
     PROJECT_SNAPSHOT_GITEA_API_URL = if gitTarget == null || target.provisioner.kind != "gitea" then "" else target.provisioner.gitea.apiUrl;
     PROJECT_SNAPSHOT_GITEA_ORGANIZATION = if gitTarget == null || target.provisioner.kind != "gitea" then "" else target.provisioner.gitea.organization;
     PROJECT_SNAPSHOT_GITEA_TOKEN_FILE = if gitTarget == null || target.provisioner.kind != "gitea" then "" else target.provisioner.gitea.tokenFile;
+    PROJECT_SNAPSHOT_GITEA_REPOSITORY = if gitTarget == null || target.provisioner.kind != "giteaPreprovisioned" then "" else target.provisioner.gitea.repository;
     PROJECT_SNAPSHOT_HOST_ID = hostName;
     PROJECT_SNAPSHOT_PROJECT_ID_OVERRIDES_JSON = builtins.toJSON cfg.snapshots.remote.projectIdOverrides;
     XDG_DATA_HOME = config.xdg.dataHome;
@@ -110,8 +113,8 @@ in
         message = "my.dev.projects snapshots require a Git remote target.";
       }
       {
-        assertion = cfg.snapshots.remote.target == null || builtins.elem target.provisioner.kind [ "sshBare" "gitea" ];
-        message = "my.dev.projects requires provisioner.kind = \"sshBare\" or \"gitea\" for automatic repository creation.";
+        assertion = cfg.snapshots.remote.target == null || builtins.elem target.provisioner.kind [ "sshBare" "gitea" "giteaPreprovisioned" ];
+        message = "my.dev.projects requires provisioner.kind = sshBare, gitea, or giteaPreprovisioned.";
       }
     ];
 

@@ -49,7 +49,7 @@ let
       };
       provisioner = {
         kind = lib.mkOption {
-          type = lib.types.nullOr (lib.types.enum [ "sshBare" "gitea" ]);
+          type = lib.types.nullOr (lib.types.enum [ "sshBare" "gitea" "giteaPreprovisioned" ]);
           default = null;
           description = "Remote repository provisioning strategy.";
         };
@@ -57,6 +57,7 @@ let
           apiUrl = lib.mkOption { type = lib.types.str; default = ""; };
           organization = lib.mkOption { type = lib.types.str; default = ""; };
           tokenFile = lib.mkOption { type = lib.types.str; default = ""; };
+          repository = lib.mkOption { type = lib.types.str; default = ""; };
         };
       };
     };
@@ -81,7 +82,7 @@ let
           || (
             target.backend.git.sshHost != ""
             && (
-              (target.provisioner.kind == "gitea" && target.backend.git.root == null)
+              (builtins.elem target.provisioner.kind [ "gitea" "giteaPreprovisioned" ] && target.backend.git.root == null)
               || (target.provisioner.kind != "gitea" && target.backend.git.root != null && lib.hasPrefix "/" target.backend.git.root && target.backend.git.root != "/")
             )
           );
@@ -100,6 +101,14 @@ let
           && lib.hasPrefix "/" target.provisioner.gitea.tokenFile
         );
         message = "my.storage.remote.targets.${name}.provisioner.gitea needs a valid Git SSH target, HTTPS API base URL, organization path segment, and absolute external token file.";
+      }
+      {
+        assertion = target.provisioner.kind != "giteaPreprovisioned" || (
+          target.backend.git != null
+          && target.backend.git.root == null
+          && builtins.match "[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*" target.provisioner.gitea.repository != null
+        );
+        message = "my.storage.remote.targets.${name}.provisioner.gitea.repository must be owner/repository for a pre-provisioned repository target.";
       }
       {
         assertion =

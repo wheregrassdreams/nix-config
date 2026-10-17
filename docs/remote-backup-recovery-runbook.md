@@ -8,47 +8,28 @@ manager before storing any recovery secret here.
 
 ## Gitea project snapshots
 
-The private `homelab-backups` organization and `snapshot-writers` team already
-exist. The team has `repo.code=write`, includes all organization repositories,
-and can create organization repositories; it has no Owner or administrator
-role. Create one dedicated unprivileged account, `homelab-backup-bot`, and add
-it to this team. Do not use `zane`'s personal token or SSH key.
+The private `homelab-backups/nix-config-snapshots` repository already exists.
+The current client writes separate deterministic project refs in that one
+repository, so a repository-scoped deploy key avoids an API token and any
+organization-wide repository creation permission.
 
-1. As a Gitea administrator, create and activate `homelab-backup-bot`; do not
-   grant site-admin or organization-owner rights.
-2. Add the account to `homelab-backups/snapshot-writers`.
-3. Sign in as the bot and create a personal access token with exactly these
-   scopes: `write:organization`, `read:repository`. Gitea 1.27.1 scopes API
-   routes by their URL prefix: this provisioner POSTs `/orgs/{org}/repos` and
-   GETs `/repos/{owner}/{repo}` to create a private repository and verify its
-   privacy/push permission. Do not select `all`. Gitea's `write:organization`
-   scope covers organization API routes broadly, but the bot's organization
-   team membership still limits its effective role.
-4. Add the public key from `/Users/zanelu/.ssh/homelab-backups.pub` to the bot's
-   SSH keys. Its local private key is already present and is dedicated to this
-   use. Never copy or transmit the private half.
-5. Obtain the Gitea SSH host key fingerprint from a trusted operator channel.
+1. Confirm the repository is private. In its Gitea settings, add the public
+   key from `/Users/zanelu/.ssh/homelab-backups.pub` as a deploy key with write
+   access. Its local private key is dedicated to this use and must never be
+   copied or transmitted.
+2. Obtain the Gitea SSH host key fingerprint from a trusted operator channel.
    Compare it with `ssh-keyscan -p 30222 ssh.gitea.wheregrassdreams.top` output
    before accepting it. Then connect once as the configured `gitea-backups`
    alias and accept the verified key so `StrictHostKeyChecking=ask` has a
    trusted entry. The private endpoint and port match the Gitea SSH Service;
    the HTTPS API host does not carry SSH.
-6. Store the API token in OpenBao at the agreed KV path
-   `homelab/apps/nix-config-backups/gitea`, then place its workstation copy as
-   `gitea-backup-token` in the encrypted SOPS file described below. Configure
-   Home Manager to materialize it at
-   `~/.config/nix-config/secrets/gitea-backup-token` with owner-only mode. The
-   snapshot tool rejects a token file readable by group or others.
-7. Validate API provisioning with a disposable test project: run
-   `project-snapshot --help` to confirm the installed command's flags, then
-   invoke its remote snapshot path against a synthetic repository. Confirm it
-   creates one private repository below `homelab-backups`, pushes the
-   `snapshots` branch, and can list/check that snapshot. Remove only the test
-   repository after recording the successful read-back. Do not enable the
-   LaunchAgent schedule until this check and host-key trust both pass.
-
-The scopes follow Gitea's official [token-scope reference](https://docs.gitea.com/1.27/development/oauth2-provider/#scopes)
-and [organization repository API](https://docs.gitea.com/api/operations/create-org-repo/).
+3. Validate the repository-scoped key from the MacBook using the configured
+   `gitea-backups` alias. Against a synthetic Git repository, push one test
+   project timeline, verify its hashed ref with `git ls-remote`, fetch it into
+   an empty bare repository, and confirm the snapshot commit is readable. Test
+   a second synthetic project and confirm it writes a distinct ref in the same
+   repository. Do not enable the LaunchAgent schedule until both read-backs and
+   host-key trust pass.
 
 ## Garage S3 and Restic
 
@@ -98,8 +79,8 @@ After the storage operator confirms the gate is open:
    sops secrets/users/remote-backups.yaml
    ```
 
-   Store these YAML string keys in the encrypted file: `gitea-backup-token`,
-   `backup/s3-environment` (two shell-compatible assignments named
+   Store these YAML string keys in the encrypted file: `backup/s3-environment`
+   (two shell-compatible assignments named
    `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`), and
    `backup/restic-valuable` (the Restic password). When an Atuin account is
    authorized and registered, also store its recovery key as `atuin/sync-key`.
@@ -108,16 +89,16 @@ After the storage operator confirms the gate is open:
    `sops filestatus secrets/users/remote-backups.yaml` reports encrypted and
    `sops --decrypt secrets/users/remote-backups.yaml >/dev/null` succeeds; do
    not print decrypted values. Never commit a plaintext staging file.
-5. The MacBook declaration already conditionally projects the three SOPS
-   entries from `../../secrets/users/remote-backups.yaml` to owner-only files
+5. The MacBook declaration already conditionally projects the SOPS entries
+   from `../../secrets/users/remote-backups.yaml` to owner-only files
    under `~/.config/nix-config/secrets/`. Those declarations become active
    only when the encrypted source exists. The valuable Restic repository and
    policy are also declared, with automatic initialization disabled. After
    creating the encrypted source, evaluate the MacBook Home Manager output and
    confirm the projected file paths and modes. Do not enable an existing
    dataset until the isolated check below succeeds.
-6. On the MacBook, activate the reviewed nix-config branch and confirm all
-   three projected secret files exist with owner-only permissions. Run an isolated Restic
+6. On the MacBook, activate the reviewed nix-config branch and confirm both
+   projected secret files exist with owner-only permissions. Run an isolated Restic
    test under a unique temporary repository path and a synthetic file: init,
    back up, list snapshots, restore to an empty staging directory, and compare
    the restored file hash. Remove only that test repository after verification.

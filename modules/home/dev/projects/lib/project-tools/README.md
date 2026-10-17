@@ -53,12 +53,15 @@ The `gitea` provisioner creates a private repository idempotently through the
 Gitea HTTPS API, verifies existing repository privacy and token push access,
 then pushes over SSH. It reads the API token from an external runtime file and
 does not delete repositories. Gitea repository names are deterministic sanitized
-`<host-id>-<project-id>` names in the configured organization. Each project has
-one chronological `refs/heads/snapshots` branch; commits record source metadata
-in trailers and chain to prior snapshot commits. Retention compaction rewrites
-only this isolated branch, using force-with-lease for remote updates. Failed
-pushes leave local snapshots available for retry. See the package README for
-configuration, restore syntax, metadata, and retention behavior.
+`<host-id>-<project-id>` names in the configured organization. The
+`giteaPreprovisioned` provisioner instead writes all projects into one existing
+private repository and needs only a repository-scoped write deploy key. It uses
+a separate deterministic `refs/heads/nix-config-snapshots/<hash>` branch per
+host/project pair so local snapshot stores do not share a timeline. Each project timeline
+chains snapshot commits; retention compaction rewrites only that branch, using
+force-with-lease for remote updates. Failed pushes leave local snapshots
+available for retry. See the package README for configuration, restore syntax,
+metadata, and retention behavior.
 
 The local transport experiment used temporary repositories and credentials on
 loopback only. SSH used a temporary ed25519 key and `sshd`; HTTPS used a

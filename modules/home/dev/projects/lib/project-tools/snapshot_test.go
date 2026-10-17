@@ -24,6 +24,7 @@ func TestSnapshotRemoteKindRequiresRemoteConfiguration(t *testing.T) {
 		"PROJECT_SNAPSHOT_GITEA_API_URL",
 		"PROJECT_SNAPSHOT_GITEA_ORGANIZATION",
 		"PROJECT_SNAPSHOT_GITEA_TOKEN_FILE",
+		"PROJECT_SNAPSHOT_GITEA_REPOSITORY",
 		"PROJECT_SNAPSHOT_HOST_ID",
 	} {
 		t.Setenv(name, "")
@@ -31,6 +32,22 @@ func TestSnapshotRemoteKindRequiresRemoteConfiguration(t *testing.T) {
 
 	if status := runSnapshot([]string{"--remote-kind", "gitea"}); status != 2 {
 		t.Fatalf("runSnapshot with an incomplete explicit remote target = %d, want 2", status)
+	}
+}
+
+func TestGiteaPreprovisionedTargetAndProjectRefs(t *testing.T) {
+	remote, err := giteaPreprovisionedRepositoryURL("gitea-backups", "homelab-backups/nix-config-snapshots")
+	if err != nil || remote != "ssh://gitea-backups/homelab-backups/nix-config-snapshots.git" {
+		t.Fatalf("giteaPreprovisionedRepositoryURL = %q, %v", remote, err)
+	}
+	if _, err := giteaPreprovisionedRepositoryURL("gitea-backups", "../owner/repo"); err == nil {
+		t.Fatal("expected invalid pre-provisioned repository path to fail")
+	}
+	first := projectRemoteRef("macbook", "projects/one")
+	second := projectRemoteRef("macbook", "projects/two")
+	otherHost := projectRemoteRef("wsl", "projects/one")
+	if first == second || first == otherHost || !strings.HasPrefix(first, "refs/heads/nix-config-snapshots/") {
+		t.Fatalf("project-specific remote refs are invalid or collided: %q %q", first, second)
 	}
 }
 
@@ -344,6 +361,42 @@ func TestSnapshotRemoteRoundTripAndOfflineRetry(t *testing.T) {
 	metadata := runGitTest(t, destination, "show", "-s", "--format=%(trailers:key=Source-HEAD,valueonly)", "HEAD")
 	if metadata == "" {
 		t.Fatal("snapshot commit should record the source HEAD in its trailers")
+	}
+}
+
+func TestSharedPreprovisionedRemoteKeepsProjectTimelinesSeparate(t *testing.T) {
+	projects, repo, storeRoot := makeSnapshotFixture(t)
+	status, _, err := snapshotOne(repo, repo, storeRoot, projects, 30, time.Now().UTC())
+	if err != nil || status != "saved" {
+		t.Fatalf("snapshotOne = %q, %v", status, err)
+	}
+	store := findSnapshotStore(t, storeRoot)
+	remote := filepath.Join(t.TempDir(), "remote.git")
+	if _, err := gitCommand(nil, "init", "--bare", "--quiet", remote); err != nil {
+		t.Fatal(err)
+	}
+	for _, projectID := range []string{"first-project", "second-project"} {
+		if _, _, err := syncSnapshotRefsToRef(store, remote, projectRemoteRef("macbook", projectID)); err != nil {
+			t.Fatalf("sync for %s: %v", projectID, err)
+		}
+	}
+	refs, err := bareGit(remote, nil, "for-each-ref", "--format=%(refname)", "refs/heads/nix-config-snapshots")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := nonEmptyLines(refs.stdout); len(got) != 2 {
+		t.Fatalf("shared repository contains %d project refs, want 2: %q", len(got), refs.stdout)
+	}
+	tip, err := bareGit(store, nil, "rev-parse", "--verify", snapshotNamespace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	destination := filepath.Join(t.TempDir(), "restored")
+	if err := restoreRemoteSnapshotFromRef(storeRoot, remote, projectRemoteRef("macbook", "first-project"), strings.TrimSpace(tip.stdout), destination); err != nil {
+		t.Fatalf("restore from project ref: %v", err)
+	}
+	if got, err := os.ReadFile(filepath.Join(destination, "tracked.txt")); err != nil || string(got) != "after\n" {
+		t.Fatalf("restored project snapshot = %q, %v", got, err)
 	}
 }
 

@@ -24,7 +24,7 @@
         target = lib.mkOption {
           type = lib.types.nullOr lib.types.str;
           default = null;
-          description = "Registered Git target for per-project off-device snapshot repositories.";
+          description = "Registered Git target for off-device project snapshots.";
         };
         projectIdOverrides = lib.mkOption {
           type = lib.types.attrsOf lib.types.str;

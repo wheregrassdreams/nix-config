@@ -168,7 +168,11 @@ func remoteSnapshotRefs(remote string) (map[string]string, error) {
 }
 
 func queryRemoteSnapshotRefs(remote string) (map[string]string, error) {
-	result, err := gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "ls-remote", "--refs", remote, snapshotNamespace)
+	return queryRemoteRef(remote, snapshotNamespace)
+}
+
+func queryRemoteRef(remote, targetRef string) (map[string]string, error) {
+	result, err := gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "ls-remote", "--refs", remote, targetRef)
 	if err != nil {
 		return nil, err
 	}
@@ -178,16 +182,15 @@ func queryRemoteSnapshotRefs(remote string) (map[string]string, error) {
 			continue
 		}
 		object, ref, ok := strings.Cut(line, "\t")
-		if ok && ref == snapshotNamespace {
+		if ok && ref == targetRef {
 			refs[ref] = object
 		}
 	}
 	return refs, nil
 }
 
-// syncSnapshotRefs updates only the dedicated project snapshots branch. Each
-// project has its own remote bare repository; a lease prevents overwriting a
-// concurrent update made through another client.
+// syncSnapshotRefs updates only the configured snapshot branch. A lease
+// prevents overwriting a concurrent update made through another client.
 func syncSnapshotRefs(gitDir, remote string) (synced, pending int, err error) {
 	if remote == "" {
 		return 0, 0, nil
@@ -199,21 +202,25 @@ func syncSnapshotRefs(gitDir, remote string) (synced, pending int, err error) {
 }
 
 func syncSnapshotRefsValidated(gitDir, remote string) (synced, pending int, err error) {
+	return syncSnapshotRefsToRef(gitDir, remote, snapshotNamespace)
+}
+
+func syncSnapshotRefsToRef(gitDir, remote, remoteRef string) (synced, pending int, err error) {
 	local, err := bareGit(gitDir, nil, "rev-parse", "--verify", snapshotNamespace)
 	if err != nil {
 		local = gitResult{}
 	}
 	localObject := strings.TrimSpace(local.stdout)
-	remoteRefs, err := queryRemoteSnapshotRefs(remote)
+	remoteRefs, err := queryRemoteRef(remote, remoteRef)
 	if err != nil {
 		return 0, 1, err
 	}
-	remoteObject := remoteRefs[snapshotNamespace]
+	remoteObject := remoteRefs[remoteRef]
 	if remoteObject == localObject && localObject != "" {
 		return 1, 0, nil
 	}
 	if remoteObject != "" {
-		if _, err := bareGit(gitDir, nil, "fetch", "--quiet", "--no-tags", remote, snapshotNamespace); err != nil {
+		if _, err := bareGit(gitDir, nil, "fetch", "--quiet", "--no-tags", remote, remoteRef); err != nil {
 			return 0, 1, err
 		}
 		fetched, err := bareGit(gitDir, nil, "rev-parse", "--verify", "FETCH_HEAD")
@@ -244,7 +251,7 @@ func syncSnapshotRefsValidated(gitDir, remote string) (synced, pending int, err 
 			return 0, 1, fmt.Errorf("local snapshot history diverges from remote; refusing to replace remote timeline")
 		}
 	}
-	_, err = gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+gitDir, "push", "--no-follow-tags", remote, snapshotNamespace+":"+snapshotNamespace)
+	_, err = gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+gitDir, "push", "--no-follow-tags", remote, snapshotNamespace+":"+remoteRef)
 	if err != nil {
 		return 0, 1, err
 	}
@@ -252,19 +259,23 @@ func syncSnapshotRefsValidated(gitDir, remote string) (synced, pending int, err 
 }
 
 func syncCompactedSnapshotRefs(gitDir, remote, expectedRemote string) error {
-	remoteRefs, err := queryRemoteSnapshotRefs(remote)
+	return syncCompactedSnapshotRefsToRef(gitDir, remote, snapshotNamespace, expectedRemote)
+}
+
+func syncCompactedSnapshotRefsToRef(gitDir, remote, remoteRef, expectedRemote string) error {
+	remoteRefs, err := queryRemoteRef(remote, remoteRef)
 	if err != nil {
 		return err
 	}
-	if expectedRemote == "" || remoteRefs[snapshotNamespace] != expectedRemote {
+	if expectedRemote == "" || remoteRefs[remoteRef] != expectedRemote {
 		return fmt.Errorf("remote snapshot tip changed before retention compaction; refusing to replace remote timeline")
 	}
 	if _, err := bareGit(gitDir, nil, "rev-parse", "--verify", snapshotNamespace); err != nil {
-		_, err = gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+gitDir, "push", "--no-follow-tags", "--force-with-lease="+snapshotNamespace+":"+expectedRemote, remote, ":"+snapshotNamespace)
+		_, err = gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+gitDir, "push", "--no-follow-tags", "--force-with-lease="+remoteRef+":"+expectedRemote, remote, ":"+remoteRef)
 		return err
 	}
-	lease := "--force-with-lease=" + snapshotNamespace + ":" + expectedRemote
-	_, err = gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+gitDir, "push", "--no-follow-tags", lease, remote, snapshotNamespace+":"+snapshotNamespace)
+	lease := "--force-with-lease=" + remoteRef + ":" + expectedRemote
+	_, err = gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+gitDir, "push", "--no-follow-tags", lease, remote, snapshotNamespace+":"+remoteRef)
 	return err
 }
 
@@ -421,6 +432,23 @@ func giteaRepositoryURL(sshHost, organization, hostID, projectID string) (string
 	}
 	path := "/" + organization + "/" + name + ".git"
 	return (&url.URL{Scheme: "ssh", Host: sshHost, Path: path}).String(), path, nil
+}
+
+func giteaPreprovisionedRepositoryURL(sshHost, repository string) (string, error) {
+	if !validSSHHostAlias(sshHost) || len(strings.Split(repository, "/")) != 2 {
+		return "", errors.New("pre-provisioned Gitea target requires an SSH alias and owner/repository path")
+	}
+	for _, segment := range strings.Split(repository, "/") {
+		if !validProjectID(segment) {
+			return "", errors.New("pre-provisioned Gitea owner/repository must contain valid path segments")
+		}
+	}
+	return (&url.URL{Scheme: "ssh", Host: sshHost, Path: "/" + repository + ".git"}).String(), nil
+}
+
+func projectRemoteRef(hostID, projectID string) string {
+	digest := sha256.Sum256([]byte(hostID + "\x00" + projectID))
+	return "refs/heads/nix-config-snapshots/" + hex.EncodeToString(digest[:])[:24]
 }
 
 func provisionGiteaRepository(apiURL, organization, hostID, projectID, tokenFile string) error {
@@ -1235,14 +1263,18 @@ func restoreSnapshot(store, ref, destination string) error {
 	return nil
 }
 
-func restoreRemoteSnapshot(snapshotRoot, remote, ref, destination string) error {
+func restoreRemoteSnapshot(snapshotRoot, remote, remoteRef, ref, destination string) error {
 	if err := validateRemoteURL(remote); err != nil {
 		return err
 	}
-	return restoreRemoteSnapshotFrom(snapshotRoot, remote, ref, destination)
+	return restoreRemoteSnapshotFromRef(snapshotRoot, remote, remoteRef, ref, destination)
 }
 
 func restoreRemoteSnapshotFrom(snapshotRoot, remote, ref, destination string) error {
+	return restoreRemoteSnapshotFromRef(snapshotRoot, remote, snapshotNamespace, ref, destination)
+}
+
+func restoreRemoteSnapshotFromRef(snapshotRoot, remote, remoteRef, ref, destination string) error {
 	oldUmask := syscall.Umask(0o077)
 	defer syscall.Umask(oldUmask)
 
@@ -1269,7 +1301,7 @@ func restoreRemoteSnapshotFrom(snapshotRoot, remote, ref, destination string) er
 	if err := securePrivateGitTree(cache); err != nil {
 		return fmt.Errorf("could not secure remote snapshot cache: %w", err)
 	}
-	if _, err := gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+cache, "fetch", "--force", "--no-tags", remote, snapshotNamespace+":"+snapshotNamespace); err != nil {
+	if _, err := gitCommand(map[string]string{"GIT_TERMINAL_PROMPT": "0"}, "--git-dir="+cache, "fetch", "--force", "--no-tags", remote, remoteRef+":"+snapshotNamespace); err != nil {
 		return fmt.Errorf("could not fetch the remote snapshots timeline: %w", err)
 	}
 	if err := securePrivateGitTree(cache); err != nil {
@@ -1303,7 +1335,18 @@ func remoteForStoreTarget(kind, sshHost, root, organization, hostID, projectID s
 	if kind == "gitea" {
 		return giteaRepositoryURL(sshHost, organization, hostID, projectID)
 	}
+	if kind == "giteaPreprovisioned" {
+		remote, err := giteaPreprovisionedRepositoryURL(sshHost, organization)
+		return remote, "", err
+	}
 	return remoteRepositoryURL(sshHost, root, hostID, projectID)
+}
+
+func remoteRefForTarget(kind, hostID, projectID string) string {
+	if kind == "giteaPreprovisioned" {
+		return projectRemoteRef(hostID, projectID)
+	}
+	return snapshotNamespace
 }
 
 func checkSnapshotsWithTarget(output io.Writer, snapshotRoot, sshHost, root, hostID string) error {
@@ -1329,12 +1372,13 @@ func checkSnapshotsWithProvisioner(output io.Writer, snapshotRoot, kind, sshHost
 		if localErr != nil {
 			continue
 		}
-		remoteRefs, remoteErr := queryRemoteSnapshotRefs(remote)
+		remoteRef := remoteRefForTarget(kind, hostID, projectIDFromStore(store))
+		remoteRefs, remoteErr := queryRemoteRef(remote, remoteRef)
 		if remoteErr != nil {
 			failures = append(failures, "remote unavailable for "+projectIDFromStore(store)+": "+remoteErr.Error())
 			continue
 		}
-		if remoteRefs[snapshotNamespace] != strings.TrimSpace(local.stdout) {
+		if remoteRefs[remoteRef] != strings.TrimSpace(local.stdout) {
 			failures = append(failures, "remote snapshot timeline differs for "+projectIDFromStore(store))
 			fmt.Fprintf(output, "ERROR %s remote=mismatch\n", store)
 		} else {
@@ -1367,10 +1411,11 @@ func listSnapshotsWithProvisioner(snapshotRoot, kind, sshHost, root, organizatio
 		if err != nil {
 			return err
 		}
-		remoteRefs, remoteErr := queryRemoteSnapshotRefs(remote)
+		remoteRef := remoteRefForTarget(kind, hostID, projectIDFromStore(store))
+		remoteRefs, remoteErr := queryRemoteRef(remote, remoteRef)
 		state := "unavailable"
 		if remoteErr == nil {
-			if remoteRefs[snapshotNamespace] == strings.TrimSpace(tip.stdout) {
+			if remoteRefs[remoteRef] == strings.TrimSpace(tip.stdout) {
 				state = "synced"
 			} else {
 				state = "pending"
@@ -1535,10 +1580,11 @@ func runSnapshot(args []string) int {
 	storeFlag := flags.String("snapshot-root", "", "snapshot storage; defaults to XDG data home")
 	remoteSSHHost := flags.String("remote-ssh-host", os.Getenv("PROJECT_SNAPSHOT_REMOTE_SSH_HOST"), "SSH config alias for the snapshot target")
 	remoteRoot := flags.String("remote-root", os.Getenv("PROJECT_SNAPSHOT_REMOTE_ROOT"), "absolute path for per-project remote repositories")
-	remoteKind := flags.String("remote-kind", os.Getenv("PROJECT_SNAPSHOT_REMOTE_KIND"), "remote provisioner: sshBare or gitea")
+	remoteKind := flags.String("remote-kind", os.Getenv("PROJECT_SNAPSHOT_REMOTE_KIND"), "remote provisioner: sshBare, gitea, or giteaPreprovisioned")
 	giteaAPIURL := flags.String("gitea-api-url", os.Getenv("PROJECT_SNAPSHOT_GITEA_API_URL"), "Gitea HTTPS API base URL")
 	giteaOrganization := flags.String("gitea-organization", os.Getenv("PROJECT_SNAPSHOT_GITEA_ORGANIZATION"), "Gitea organization for private snapshot repositories")
 	giteaTokenFile := flags.String("gitea-token-file", os.Getenv("PROJECT_SNAPSHOT_GITEA_TOKEN_FILE"), "external file containing the Gitea API token")
+	giteaRepository := flags.String("gitea-repository", os.Getenv("PROJECT_SNAPSHOT_GITEA_REPOSITORY"), "pre-provisioned private Gitea repository as owner/repository")
 	hostID := flags.String("host-id", os.Getenv("PROJECT_SNAPSHOT_HOST_ID"), "stable host identifier used in remote repository paths")
 	projectOverridesJSON := flags.String("project-id-overrides", os.Getenv("PROJECT_SNAPSHOT_PROJECT_ID_OVERRIDES_JSON"), "JSON object mapping normalized project paths to stable IDs")
 	projectIDFlag := flags.String("project-id", "", "project ID required for remote restore")
@@ -1562,7 +1608,7 @@ func runSnapshot(args []string) int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	remoteProvided := *remoteKind != "" || *remoteSSHHost != "" || *remoteRoot != "" || *hostID != "" || *giteaAPIURL != "" || *giteaOrganization != "" || *giteaTokenFile != ""
+	remoteProvided := *remoteKind != "" || *remoteSSHHost != "" || *remoteRoot != "" || *hostID != "" || *giteaAPIURL != "" || *giteaOrganization != "" || *giteaTokenFile != "" || *giteaRepository != ""
 	if *remoteKind == "" {
 		*remoteKind = "sshBare"
 	}
@@ -1571,6 +1617,8 @@ func runSnapshot(args []string) int {
 		remoteEnabled = remoteEnabled && *remoteRoot != ""
 	} else if *remoteKind == "gitea" {
 		remoteEnabled = remoteEnabled && *giteaAPIURL != "" && *giteaOrganization != "" && *giteaTokenFile != "" && *remoteRoot == ""
+	} else if *remoteKind == "giteaPreprovisioned" {
+		remoteEnabled = *remoteSSHHost != "" && *hostID != "" && *giteaRepository != "" && *remoteRoot == ""
 	} else {
 		fmt.Fprintln(os.Stderr, "--remote-kind must be sshBare or gitea")
 		return 2
@@ -1626,12 +1674,12 @@ func runSnapshot(args []string) int {
 			fmt.Fprintln(os.Stderr, "remote restore requires a configured Git target and --project-id")
 			return 2
 		}
-		remote, _, err := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID, *projectIDFlag)
+		remote, _, err := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaRepository, *hostID, *projectIDFlag)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
 		}
-		if err := restoreRemoteSnapshot(backupRoot, remote, restoreRemote[0], expandUserPath(restoreRemote[1])); err != nil {
+		if err := restoreRemoteSnapshot(backupRoot, remote, remoteRefForTarget(*remoteKind, *hostID, *projectIDFlag), restoreRemote[0], expandUserPath(restoreRemote[1])); err != nil {
 			fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 			return 1
 		}
@@ -1729,14 +1777,14 @@ func runSnapshot(args []string) int {
 					store, prepareErr = backupStore(backupRoot, target.repo, commonDir)
 				}
 				if prepareErr == nil {
-					remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID, projectID)
+					remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaRepository, *hostID, projectID)
 					if remoteErr == nil && *remoteKind == "sshBare" {
 						remoteErr = provisionSSHRepository(*remoteSSHHost, remotePath)
-					} else if remoteErr == nil {
+					} else if remoteErr == nil && *remoteKind == "gitea" {
 						remoteErr = provisionGiteaRepository(*giteaAPIURL, *giteaOrganization, *hostID, projectID, *giteaTokenFile)
 					}
 					if remoteErr == nil {
-						_, _, remoteErr = syncSnapshotRefs(store, remote)
+						_, _, remoteErr = syncSnapshotRefsToRef(store, remote, remoteRefForTarget(*remoteKind, *hostID, projectID))
 					}
 					prepareErr = remoteErr
 				}
@@ -1777,14 +1825,15 @@ func runSnapshot(args []string) int {
 			if branchErr != nil {
 				continue
 			}
-			remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaOrganization, *hostID, projectIDFromStore(store))
+			projectID := projectIDFromStore(store)
+			remote, remotePath, remoteErr := remoteForStoreTarget(*remoteKind, *remoteSSHHost, *remoteRoot, *giteaRepository, *hostID, projectID)
 			if remoteErr == nil && *remoteKind == "sshBare" {
 				remoteErr = provisionSSHRepository(*remoteSSHHost, remotePath)
-			} else if remoteErr == nil {
+			} else if remoteErr == nil && *remoteKind == "gitea" {
 				remoteErr = provisionGiteaRepository(*giteaAPIURL, *giteaOrganization, *hostID, projectIDFromStore(store), *giteaTokenFile)
 			}
 			if remoteErr == nil {
-				_, _, remoteErr = syncSnapshotRefs(store, remote)
+				_, _, remoteErr = syncSnapshotRefsToRef(store, remote, remoteRefForTarget(*remoteKind, *hostID, projectID))
 			}
 			if remoteErr != nil {
 				failed++
@@ -1808,7 +1857,7 @@ func runSnapshot(args []string) int {
 		}
 		pruned += count
 		if count > 0 && remoteEnabled && remoteByStore[store] != "" {
-			if err := syncCompactedSnapshotRefs(store, remoteByStore[store], prePruneTip[store]); err != nil {
+			if err := syncCompactedSnapshotRefsToRef(store, remoteByStore[store], remoteRefForTarget(*remoteKind, *hostID, projectIDFromStore(store)), prePruneTip[store]); err != nil {
 				failed++
 				fmt.Fprintf(os.Stderr, "REMOTE ERROR publishing retention compaction %s: %v\n", store, err)
 			}

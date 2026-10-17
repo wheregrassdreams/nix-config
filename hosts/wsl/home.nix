@@ -1,5 +1,4 @@
 {
-  config,
   flake,
   identity,
   lib,
@@ -76,11 +75,9 @@ in
           sshHost = "gitea-backups";
         };
         provisioner = {
-          kind = "gitea";
+          kind = "giteaPreprovisioned";
           gitea = {
-            apiUrl = "https://gitea.wheregrassdreams.top";
-            organization = "homelab-backups";
-            tokenFile = "${config.home.homeDirectory}/.config/nix-config/secrets/gitea-backup-token";
+            repository = "homelab-backups/nix-config-snapshots";
           };
         };
       };
