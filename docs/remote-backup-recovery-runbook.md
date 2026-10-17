@@ -13,26 +13,38 @@ The current client writes separate deterministic project refs in that one
 repository, so a repository-scoped deploy key avoids an API token and any
 organization-wide repository creation permission.
 
-The active Host pin at acceptance was
-`main@sha1:071f1a9f6fad1cc67a8877c724e8218d93e4fe14`.
-The dedicated `/Users/zanelu/.ssh/homelab-backups.pub` key is enrolled on this
-repository with write access. The configured `gitea-backups` SSH alias
-authenticated successfully during the acceptance below, so its host-key trust
-also passed the runtime check.
+The dedicated `/Users/zanelu/.ssh/homelab-backups.pub` key is enrolled as the
+`nix-config-project-snapshots` deploy key on this repository. The single
+SOPS-recipient source at `secrets/users/remote-backups.yaml` decrypts locally;
+the recovered private key's public half matched that enrolled public key. The
+credential is repository-scoped, so this flow does not require organization or
+team membership, an account-wide key, or an API token.
 
-On 2026-10-17, the MacBook completed end-to-end acceptance against that Host
-pin: two synthetic project timelines were pushed to distinct host/project
-refs, `--list` reported both synced, `--check` reported both matching, and
-restoring each snapshot produced byte-identical files. The synthetic refs were
-removed after read-back. Gitea's `main` branch is now an empty default branch;
-the snapshot refs live under `refs/heads/nix-config-snapshots/`.
+On 2026-10-17, the current repository source completed a fresh MacBook synthetic
+round trip: two dirty project repositories were snapshotted and pushed to
+distinct deterministic refs, `--list` reported both as synced, `--check`
+matched both remote refs, remote restore returned both payloads byte-for-byte,
+and the synthetic refs were deleted afterward. A direct strict-host-key SSH
+authentication and remote read/write check also succeeded. At the end, the
+remote contained only its `main` branch.
 
-The MacBook acceptance is complete. WSL push/list/check/restore acceptance is
-still pending. Run the same two-project synthetic round-trip from WSL before
-enabling its scheduled snapshots. Keep the plaintext private key outside Git;
-the approved single-recipient SOPS ciphertext is stored in
-`secrets/users/remote-backups.yaml` and projected to both clients with mode
-`0400`. Do not add an account-wide key or API token.
+This E2E used the current Go source with an isolated temporary SSH alias, the
+existing `~/.ssh/homelab-backups` private key, and the real `~/.ssh/known_hosts`
+file. The active Home Manager generation did not yet contain the branch's
+`gitea-backups` alias, and the declared SOPS projection path was absent. Thus
+the code, repository-scoped credential, and host-key pin passed, but Home
+Manager activation and scheduled LaunchAgent delivery have not passed runtime
+acceptance. WSL runtime push/list/check/restore also remains pending.
+
+The SSH alias declares `ssh.gitea.wheregrassdreams.top:30222` with strict host
+key checking. The current trusted ED25519 pin is
+`SHA256:lm73ciwBKxXsLoh9sdOtb9xcsEsWkOtB0G/RiEaiggs`. Recover the private key by
+decrypting the SOPS entry `backup/gitea-ssh-private-key` only into a protected
+runtime file; the Home Manager declaration projects it with mode `0400` to
+`~/.config/nix-config/secrets/backup-gitea-ssh-key` on MacBook and WSL. For a
+replacement machine, restore the existing known-host entry from a trusted
+client or independently verify the pin above before adding it. Do not trust a
+fresh `ssh-keyscan` result alone. Never print the decrypted key or commit it.
 
 ## Garage S3 and Restic
 

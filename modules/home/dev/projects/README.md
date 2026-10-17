@@ -92,17 +92,18 @@ my.dev.projects.snapshots.remote.target = "project-snapshots";
 ```
 
 The repository must already exist and be private. The homelab deploy key is
-registered as a write deploy key, and the SSH host-key trust passed the
-MacBook's runtime acceptance. No Gitea API token or site-admin capability is
-needed in this mode. The private key is stored as the single-recipient
-SOPS-encrypted `backup/gitea-ssh-private-key` entry and both MacBook and WSL
-conditionally materialize it with mode `0400` at
+registered as a write deploy key; no Gitea API token or site-admin capability
+is needed in this mode. The private key is stored as the single-recipient
+SOPS-encrypted `backup/gitea-ssh-private-key` entry, and both MacBook and WSL
+declare an owner-only `0400` projection at
 `~/.config/nix-config/secrets/backup-gitea-ssh-key`.
 
-On 2026-10-17, MacBook completed two-project push/list/check/restore acceptance;
-restored files were byte-identical and the synthetic refs were removed. WSL
-end-to-end acceptance is still pending. WSL has no scheduled snapshot job;
-verify the explicit one-shot path before relying on it.
+On 2026-10-17, the current source passed two-project push/list/check/restore
+acceptance on MacBook; restored files were byte-identical and synthetic refs
+were removed. The active Home Manager generation did not yet contain the
+branch's SSH alias or key projection, so activation and scheduled delivery
+remain unverified. WSL runtime acceptance is also pending. WSL has no scheduled
+snapshot job; verify the explicit one-shot path before relying on it.
 
 Each API-provisioned project repository has one `refs/heads/snapshots` timeline.
 The shared pre-provisioned repository stores each project at

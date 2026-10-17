@@ -187,8 +187,10 @@ An optional Git target stores one `snapshots` branch per project. The
 `sshBare` provisioner creates filesystem-rooted bare repositories through a
 host SSH alias; the `gitea` provisioner creates private repositories through
 the HTTPS API and pushes Git data through a host SSH alias. The current
-MacBook declaration selects Gitea, but its organization, automation account,
-token, SSH key enrollment, and first remote snapshot are not yet verified.
+MacBook target uses a pre-provisioned private Gitea repository and
+repository-scoped deploy key. Source-level MacBook push/list/check/restore
+acceptance passed on 2026-10-17; Home Manager activation and WSL runtime
+acceptance remain pending.
 Each branch contains a single chronological timeline with source metadata in
 commit trailers; it does not retain the project's source history. Retention
 compacts that branch and synchronizes it with a lease.

@@ -53,16 +53,31 @@ scope. The `gitea` API provisioner remains available for deployments that prefer
 separate repositories. The `sshBare` provisioning behavior also remains
 available for filesystem-rooted bare-repository targets.
 
-The destination repository has been provisioned, but deploy-key enrollment has
-not been verified. Keep the private SSH key outside this repo at
-`~/.ssh/homelab-backups`; add only its public half as a write deploy key on
-`homelab-backups/nix-config-snapshots`. No account-wide SSH key or API token is
-needed. Do not reuse a personal credential or commit the private key.
-Before enabling scheduled snapshots, add the Gitea SSH host key to
-`~/.ssh/known_hosts` only after verifying its fingerprint through a trusted
-channel. The shared SSH policy uses `StrictHostKeyChecking=ask`; a first-use
-prompt cannot be answered by a LaunchAgent, so the scheduled push will fail
-closed until the host key is trusted.
+On 2026-10-17, the current source completed a two-project synthetic
+push/list/check/restore round trip. Both remote refs matched, both restored
+payloads were byte-identical, and the synthetic refs were removed. Gitea
+confirmed the `nix-config-project-snapshots` deploy key, and a real push proved
+its write access to this repository. This pre-provisioned design needs no
+organization/team membership or API token: authorization is limited to this
+repository's deploy key.
+
+The MacBook's active Home Manager generation has not yet been verified against
+this branch. During the source-level E2E, the managed SSH alias and SOPS-projected
+key path were not present, so an isolated SSH config used the existing
+`~/.ssh/homelab-backups` key and the real `~/.ssh/known_hosts` file. Do not infer
+that scheduled LaunchAgent delivery has passed from the round trip alone.
+
+The private key is recoverable from the single-recipient SOPS entry
+`backup/gitea-ssh-private-key`; local decryption succeeded and the derived
+public key matched `~/.ssh/homelab-backups.pub`. Home Manager declares an
+owner-only `0400` projection at
+`~/.config/nix-config/secrets/backup-gitea-ssh-key` for both MacBook and WSL.
+The SSH alias `gitea-backups` pins `ssh.gitea.wheregrassdreams.top:30222` and
+requires strict host-key checking. The currently trusted ED25519 fingerprint
+is `SHA256:lm73ciwBKxXsLoh9sdOtb9xcsEsWkOtB0G/RiEaiggs`; on a replacement
+client, obtain the pinned entry from a trusted existing `known_hosts` copy or
+verify this fingerprint independently before adding it. Do not trust a fresh
+`ssh-keyscan` result by itself.
 
 Atuin clients are configured to sync to `https://atuin.wheregrassdreams.top`.
 Register/login on each client after the Atuin server is provisioned; the user
