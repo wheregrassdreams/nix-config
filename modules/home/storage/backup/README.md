@@ -38,17 +38,19 @@ my.storage.backup.datasets.tmux-resurrect.paths = [
 ];
 ```
 
-## Homelab S3 readiness
+## Homelab S3 status: deferred
 
-The `homelab-s3` target is currently endpoint metadata only. The MacBook has a
-valuable-class Restic repository and policy declared, but its
+The `homelab-s3` target is currently endpoint metadata only and is unavailable.
+SeaweedFS was stopped because of the previously identified disk-health issue;
+Garage replacement is deferred until storage health is resolved. The MacBook
+has a valuable-class Restic repository and policy declared, but its
 `tmux-resurrect` and `codex-sessions` datasets remain disabled. The encrypted
 `secrets/users/remote-backups.yaml` file now exists and contains the
 single-recipient-encrypted Gitea deploy private key used by project snapshots.
-The S3 credentials and Restic repository password are still absent, so no Restic
-credential is materialized and no backup schedule is generated. Do not enable a
-dataset until the Garage endpoint and bucket have been verified with a Restic
-client.
+The S3 credentials and Restic repository password are intentionally absent, so
+no Restic credential is materialized and no backup schedule is generated. Keep
+both datasets disabled until the Garage endpoint, bucket, and storage health
+have been verified with a Restic client.
 
 The repository needs two separately provisioned secret files through the
 existing Home Manager SOPS interface:

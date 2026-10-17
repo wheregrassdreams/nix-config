@@ -1,7 +1,7 @@
 # Remote backup credential and acceptance runbook
 
-This runbook covers the remaining operator steps for the MacBook's Gitea
-project snapshots and Garage-backed Restic repository. It contains no
+This runbook covers the MacBook's active Gitea project snapshots and the
+deferred Garage-backed Restic repository. It contains no
 credentials. The exact single SOPS recipient below was compared with the
 workstation age identity; keep that identity recoverable from the password
 manager before storing any recovery secret here.
@@ -59,6 +59,11 @@ hour interval (`StartInterval = 21600`); it had not run on its own at the time
 of verification, so the first timer-fired run remains unobserved. WSL runtime
 validation is out of scope per the operator's instruction.
 
+A further managed-client smoke run on 2026-10-17 repeated push, list, remote
+consistency check, and remote restore for one temporary project. Tracked and
+untracked file bytes matched after restore; the exact synthetic ref was deleted
+and confirmed absent.
+
 The SSH alias declares `ssh.gitea.wheregrassdreams.top:30222` with strict host
 key checking. The current trusted ED25519 pin is
 `SHA256:lm73ciwBKxXsLoh9sdOtb9xcsEsWkOtB0G/RiEaiggs`. Recover the private key by
@@ -69,13 +74,14 @@ replacement machine, restore the existing known-host entry from a trusted
 client or independently verify the pin above before adding it. Do not trust a
 fresh `ssh-keyscan` result alone. Never print the decrypted key or commit it.
 
-## Garage S3 and Restic
+## Garage S3 and Restic: deferred
 
-Do not create backup credentials until Garage is healthy, its backing pool is
-healthy, and it has enough free space for the source data, a complete new
-repository, and rollback headroom. The earlier check found a degraded backup
-pool, so that gate is currently closed. Preserve SeaweedFS data and rollback
-until a complete Garage restore has been verified.
+SeaweedFS has been stopped because of the previously identified disk-health
+issue. Garage replacement and S3 acceptance are deferred until the backing
+storage health is resolved and there is enough free space for the source data,
+a complete new repository, and rollback headroom. Do not create backup
+credentials or enable datasets while this gate is closed. Preserve SeaweedFS
+data and rollback until a complete Garage restore has been verified.
 
 After the storage operator confirms the gate is open:
 

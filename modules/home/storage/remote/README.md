@@ -35,12 +35,15 @@ product's different consistency and recovery semantics.
 ## Homelab endpoints
 
 The MacBook and WSL host declarations register `homelab-s3` at
-`http://192.168.3.250:8333`, the currently declared SeaweedFS endpoint. The
-endpoint is intended to remain stable through the documented SeaweedFS-to-Garage
-cutover. S3 compatibility and client access from these hosts have not yet been
-end-to-end verified. Store S3 credentials in external secret files and pass
-those files to backup consumers; never put credentials in endpoint declarations
-or Git. The bucket contract is `home-backups` with the `nix-config/` prefix.
+`http://192.168.3.250:8333`, but this endpoint is currently unavailable:
+SeaweedFS was stopped because of the previously identified disk-health issue,
+and its replacement with Garage is deferred until storage health is resolved.
+The endpoint is intended to remain stable through that cutover. S3 compatibility
+and client access from these hosts have not yet been end-to-end verified. Do not
+enable Restic datasets or create credentials while this gate is closed. Store
+future S3 credentials in external secret files and pass those files to backup
+consumers; never put credentials in endpoint declarations or Git. The bucket
+contract is `home-backups` with the `nix-config/` prefix.
 
 Gitea is registered separately as `homelab-gitea-backups` with the
 `giteaPreprovisioned` provisioner. `project-snapshot` pushes all project
@@ -60,6 +63,11 @@ confirmed the `nix-config-project-snapshots` deploy key, and a real push proved
 its write access to this repository. This pre-provisioned design needs no
 organization/team membership or API token: authorization is limited to this
 repository's deploy key.
+
+A subsequent managed-client smoke test created one disposable project, pushed
+its snapshot, listed the synced ref, verified local and remote ref agreement,
+restored the remote commit, and compared tracked and untracked payload bytes.
+The temporary Gitea ref was deleted and confirmed absent afterward.
 
 The MacBook Home Manager generation now includes the SOPS-projected key and
 managed SSH alias. A synthetic project passed push, list, remote consistency
