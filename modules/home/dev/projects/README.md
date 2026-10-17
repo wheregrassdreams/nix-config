@@ -139,3 +139,12 @@ objects, encrypt Git objects at rest, or run restore drills. The private Git
 service's access controls and disk encryption protect stored snapshots; SSH
 protects transfer. File and state datasets use the separate `storage.backup`
 package.
+
+The MacBook also exports a minimal `homeConfigurations."zane@macbook-snapshots"`
+output for machines where the login account is `zane` rather than the desktop
+configuration's `zanelu`. It installs only core user context, SSH, the project
+inventory and snapshot capability, and its remote target. It uses
+`/Users/zane/Workspace/code/projects` and the existing SOPS-projected Gitea deploy key. Review/build this output
+separately; activating it requires confirming the target account's age identity
+can decrypt the existing secret and that the project root is correct. It does
+not replace `zanelu@macbook`.

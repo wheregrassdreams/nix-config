@@ -26,9 +26,16 @@ let
     name: _: import (hostRoot + "/${name}/host.nix") { inherit self; }
   ) hostEntries;
 
-  homeConfigurations = lib.mapAttrs' (
+  hostHomeConfigurations = lib.mapAttrs' (
     name: host: lib.nameValuePair "${host.identity.username}@${name}" (repoLib.mkHome host)
   ) hosts;
+  snapshotHome = hosts.macbook // {
+    identity = hosts.macbook.identity // { username = "zane"; };
+    homeModules = [ ../hosts/macbook/snapshot-home.nix ];
+  };
+  homeConfigurations = hostHomeConfigurations // {
+    "zane@macbook-snapshots" = repoLib.mkHome snapshotHome;
+  };
 in
 {
   flake = {

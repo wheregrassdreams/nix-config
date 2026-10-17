@@ -200,3 +200,19 @@ not used for the test. Registration is currently closed. No recovery key
 for the disposable account was retained; if a permanent account is later
 authorized, preserve its generated recovery key under `atuin/sync-key` in the
 approved single-recipient SOPS file before relying on it.
+
+## Alternate MacBook account review candidate (2026-10-18)
+
+The remote Mac read-only inventory reports login user `zane` (UID 502), while
+the canonical desktop output is `zanelu@macbook` and targets `/Users/zanelu`.
+Do not activate that output on the `zane` account. A separate minimal output,
+`homeConfigurations."zane@macbook-snapshots"`, is being prepared to target
+`/Users/zane` and only configure project inventory/snapshots, the Gitea SSH
+alias, shared path/secrets context, and their required remote target. It preserves the
+existing single-recipient SOPS source and does not change any credential.
+
+This is a review/build candidate only. Before activation, confirm from an
+interactive SSH session as `zane` that the existing age identity is present
+and can decrypt the existing SOPS key without displaying it, and confirm
+`/Users/zane/Workspace/code/projects` is the intended source root. No remote
+activation or scheduled-run acceptance is claimed by this source change.
