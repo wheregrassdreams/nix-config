@@ -65,9 +65,17 @@ The MacBook Home Manager generation now includes the SOPS-projected key and
 managed SSH alias. A synthetic project passed push, list, remote consistency
 check, and remote restore through that command and alias; tracked and untracked
 payload hashes matched, then the synthetic ref was deleted. The loaded
-`org.nix-config.projects-snapshot` LaunchAgent has a six-hour interval. Its
-first timer-fired run has not yet been observed. WSL runtime validation is out
-of scope per the operator's instruction.
+`org.nix-config.projects-snapshot` LaunchAgent has a six-hour interval. On
+2026-10-17, `launchctl kickstart` invoked the same LaunchAgent program: it
+saved 73 project snapshots, skipped 95, and reported 9 failures where old
+worktree `.git` pointers referenced missing Git worktree metadata directories;
+the launchd invocation exited 1. No source worktree was modified. A follow-up
+read-only `project-snapshot --check` verified object connectivity and matching
+Gitea refs for all 22 existing local snapshot stores. This proves the configured
+remote sync path works for the retained stores, but the periodic timer itself
+has not yet fired automatically, and the nine stale worktrees remain an
+inventory cleanup/recovery item. WSL runtime validation is out of scope per
+the operator's instruction.
 
 The private key is recoverable from the single-recipient SOPS entry
 `backup/gitea-ssh-private-key`; local decryption succeeded and the derived
