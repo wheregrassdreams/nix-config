@@ -75,6 +75,27 @@
     };
   };
 
+  sops.secrets = lib.mkIf (builtins.pathExists ../../secrets/users/remote-backups.yaml) {
+    "gitea-backup-token" = {
+      sopsFile = ../../secrets/users/remote-backups.yaml;
+      key = "gitea-backup-token";
+      path = "${config.home.homeDirectory}/.config/nix-config/secrets/gitea-backup-token";
+      mode = "0400";
+    };
+    "backup/restic-valuable" = {
+      sopsFile = ../../secrets/users/remote-backups.yaml;
+      key = "backup/restic-valuable";
+      path = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-restic-valuable";
+      mode = "0400";
+    };
+    "backup/s3-environment" = {
+      sopsFile = ../../secrets/users/remote-backups.yaml;
+      key = "backup/s3-environment";
+      path = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-s3-environment";
+      mode = "0400";
+    };
+  };
+
   my = {
     inherit identity;
     # desktop.files.disktree.enable = true;
@@ -177,19 +198,28 @@
 
     };
 
-    storage.backup.datasets = {
-      tmux-resurrect = {
-        enable = false;
-        paths = [ config.my.paths.exported."terminal.tmux.resurrect" ];
-        class = "valuable";
+    storage.backup = {
+      repositories.valuable = {
+        target = "homelab-s3";
+        initIfMissing = false;
+        passwordFile = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-restic-valuable";
+        environmentFile = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-s3-environment";
       };
-      codex-sessions = {
-        enable = false;
-        paths = [
-          "${config.home.homeDirectory}/.codex/sessions"
-          "${config.home.homeDirectory}/.codex/archived_sessions"
-        ];
-        class = "valuable";
+      policies.valuable.repository = "valuable";
+      datasets = {
+        tmux-resurrect = {
+          enable = false;
+          paths = [ config.my.paths.exported."terminal.tmux.resurrect" ];
+          class = "valuable";
+        };
+        codex-sessions = {
+          enable = false;
+          paths = [
+            "${config.home.homeDirectory}/.codex/sessions"
+            "${config.home.homeDirectory}/.codex/archived_sessions"
+          ];
+          class = "valuable";
+        };
       };
     };
 

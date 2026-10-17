@@ -40,10 +40,12 @@ my.storage.backup.datasets.tmux-resurrect.paths = [
 
 ## Homelab S3 readiness
 
-The `homelab-s3` target is currently endpoint metadata only. The MacBook's
-`tmux-resurrect` dataset remains disabled, and no repository, valuable-class
-policy, or backup secret is configured. Do not enable the dataset until the
-SeaweedFS endpoint and bucket have been verified with a Restic client.
+The `homelab-s3` target is currently endpoint metadata only. The MacBook has a
+valuable-class Restic repository and policy declared, but its
+`tmux-resurrect` and `codex-sessions` datasets remain disabled. The credential
+source is not present, so no secret is currently materialized and no schedule
+is generated. Do not enable a dataset until the Garage endpoint and bucket
+have been verified with a Restic client.
 
 The repository needs two separately provisioned secret files through the
 existing Home Manager SOPS interface:
@@ -54,11 +56,13 @@ existing Home Manager SOPS interface:
   `AWS_SECRET_ACCESS_KEY` for a restricted S3 key with access to the selected
   bucket/prefix.
 
-Neither secret is present in the current SOPS source. Add them only after their
-values and SOPS source are provisioned; do not substitute a sample value or a
-plaintext path. Once provisioned, declare the repository and its policy, then
-perform an isolated initialize, backup, list, and restore check before enabling
-the scheduled dataset.
+Neither secret is present in the current SOPS source. The MacBook declares the
+secret projections conditionally: they become active only when
+`secrets/users/remote-backups.yaml` exists. Add that file only after values
+have been provisioned and encrypted; do not substitute sample values or a
+plaintext source. The repository uses those fixed owner-only runtime paths and
+does not initialize a missing repository automatically. Perform an isolated
+initialize, backup, list, and restore check before enabling a scheduled dataset.
 
 The standalone Home Manager output imports the pinned sops-nix Home Manager
 module. On macOS that module uses a LaunchAgent to materialize declared secrets

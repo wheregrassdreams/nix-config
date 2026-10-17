@@ -106,14 +106,14 @@ After the storage operator confirms the gate is open:
    `sops filestatus secrets/users/remote-backups.yaml` reports encrypted and
    `sops --decrypt secrets/users/remote-backups.yaml >/dev/null` succeeds; do
    not print decrypted values. Never commit a plaintext staging file.
-5. Add Home Manager SOPS declarations for these three projected secret files
-   using
-   `sopsFile = ../../../../secrets/users/remote-backups.yaml`; keep the
-   existing token runtime path and set the materialized files to owner-only
-   permissions. Add the MacBook Restic repository with `target = "homelab-s3"`,
-   `passwordFile` and `environmentFile` from those SOPS declarations, and a
-   valuable-class policy. Do not enable an existing dataset until the isolated
-   check below succeeds.
+5. The MacBook declaration already conditionally projects the three SOPS
+   entries from `../../secrets/users/remote-backups.yaml` to owner-only files
+   under `~/.config/nix-config/secrets/`. Those declarations become active
+   only when the encrypted source exists. The valuable Restic repository and
+   policy are also declared, with automatic initialization disabled. After
+   creating the encrypted source, evaluate the MacBook Home Manager output and
+   confirm the projected file paths and modes. Do not enable an existing
+   dataset until the isolated check below succeeds.
 6. On the MacBook, activate the reviewed nix-config branch and confirm all
    three projected secret files exist with owner-only permissions. Run an isolated Restic
    test under a unique temporary repository path and a synthetic file: init,
