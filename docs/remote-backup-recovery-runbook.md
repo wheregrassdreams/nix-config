@@ -29,8 +29,10 @@ the snapshot refs live under `refs/heads/nix-config-snapshots/`.
 
 The MacBook acceptance is complete. WSL push/list/check/restore acceptance is
 still pending. Run the same two-project synthetic round-trip from WSL before
-enabling its scheduled snapshots. Keep the private SSH key outside Git; do not
-add an account-wide key or API token.
+enabling its scheduled snapshots. Keep the plaintext private key outside Git;
+the approved single-recipient SOPS ciphertext is stored in
+`secrets/users/remote-backups.yaml` and projected to both clients with mode
+`0400`. Do not add an account-wide key or API token.
 
 ## Garage S3 and Restic
 
