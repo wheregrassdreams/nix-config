@@ -84,14 +84,18 @@ my.storage.remote.targets.project-snapshots = {
 my.dev.projects.snapshots.remote.target = "project-snapshots";
 ```
 
-The repository must already exist and be private. Add the dedicated public SSH
-key as a write deploy key to that repository. No Gitea API token or site-admin
-capability is needed in this mode. The SSH alias must name the Git server and
-select the matching dedicated private key; add
-the server host key to `known_hosts` only after verifying its fingerprint
-through a trusted channel. For the current homelab target, deploy-key enrollment
-and server host-key verification are still outstanding. Do not treat the declared endpoint as an
-accepted backup until a real snapshot and isolated restore have succeeded.
+The repository must already exist and be private. The homelab deploy key is
+registered as a write deploy key, and the SSH host-key trust passed the
+MacBook's runtime acceptance. No Gitea API token or site-admin capability is
+needed in this mode. The private key is stored as the single-recipient
+SOPS-encrypted `backup/gitea-ssh-private-key` entry and both MacBook and WSL
+conditionally materialize it with mode `0400` at
+`~/.config/nix-config/secrets/backup-gitea-ssh-key`.
+
+On 2026-10-17, MacBook completed two-project push/list/check/restore acceptance;
+restored files were byte-identical and the synthetic refs were removed. WSL
+end-to-end acceptance is still pending. Do not enable its snapshot schedule
+until that round-trip succeeds.
 
 Each API-provisioned project repository has one `refs/heads/snapshots` timeline.
 The shared pre-provisioned repository stores each project at

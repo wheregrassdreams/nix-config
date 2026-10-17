@@ -42,10 +42,13 @@ my.storage.backup.datasets.tmux-resurrect.paths = [
 
 The `homelab-s3` target is currently endpoint metadata only. The MacBook has a
 valuable-class Restic repository and policy declared, but its
-`tmux-resurrect` and `codex-sessions` datasets remain disabled. The credential
-source is not present, so no secret is currently materialized and no schedule
-is generated. Do not enable a dataset until the Garage endpoint and bucket
-have been verified with a Restic client.
+`tmux-resurrect` and `codex-sessions` datasets remain disabled. The encrypted
+`secrets/users/remote-backups.yaml` file now exists and contains the
+single-recipient-encrypted Gitea deploy private key used by project snapshots.
+The S3 credentials and Restic repository password are still absent, so no Restic
+credential is materialized and no backup schedule is generated. Do not enable a
+dataset until the Garage endpoint and bucket have been verified with a Restic
+client.
 
 The repository needs two separately provisioned secret files through the
 existing Home Manager SOPS interface:
@@ -56,11 +59,11 @@ existing Home Manager SOPS interface:
   `AWS_SECRET_ACCESS_KEY` for a restricted S3 key with access to the selected
   bucket/prefix.
 
-Neither secret is present in the current SOPS source. The MacBook declares the
-secret projections conditionally: they become active only when
-`secrets/users/remote-backups.yaml` exists. Add that file only after values
-have been provisioned and encrypted; do not substitute sample values or a
-plaintext source. The repository uses those fixed owner-only runtime paths and
+Neither Restic secret is present in the current SOPS source. The MacBook's
+Restic projections and both hosts' Gitea key projections are conditional on
+`secrets/users/remote-backups.yaml` existing. Add the S3 and Restic values only
+after they have been provisioned and encrypted; do not substitute sample values
+or a plaintext source. The repository uses fixed owner-only runtime paths and
 does not initialize a missing repository automatically. Perform an isolated
 initialize, backup, list, and restore check before enabling a scheduled dataset.
 
