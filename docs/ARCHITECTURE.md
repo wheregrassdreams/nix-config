@@ -125,8 +125,11 @@ Atuin is selected as an optional shell-history feature. In the current host
 configuration it owns `Ctrl-R`, leaves the up-arrow behavior alone, and
 automatically syncs to the declared self-hosted endpoint
 `https://atuin.wheregrassdreams.top`. Server availability, account
-registration, and a client sync round-trip are still pending runtime
-verification.
+registration, and sync were verified on 2026-10-17 using disposable clients
+and synthetic history only. The managed Home Manager output evaluates to this
+endpoint with `auto_sync = true`; the endpoint's `/healthz` check returned 200
+over HTTPS with certificate verification enabled. The regular MacBook client
+remains logged out, and no existing shell history was imported.
 Zsh prioritizes the Home Manager profile in `PATH`, so editors and terminals
 resolve declared tools and language servers before unmanaged copies.
 

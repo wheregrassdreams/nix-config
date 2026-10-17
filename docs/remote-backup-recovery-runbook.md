@@ -155,12 +155,17 @@ The managed client declares `auto_sync = true` and only
 `https://atuin.wheregrassdreams.top` as its sync address. There is no
 `atuin import` command or shell-history import hook in this repository, so
 activation does not bulk-import existing shell history. The Atuin shell
-integration records commands entered after it is activated; do not enable it
-until the account's sync behavior and data scope are accepted. `atuin import`
-is a separate explicit CLI operation and must not be run for this acceptance.
+integration records commands entered after it is activated; `atuin import` is
+a separate explicit CLI operation and was not run for acceptance.
 
-The local client is currently not logged in. After an authorized account
-exists, log in interactively and preserve its generated sync recovery key under
-`atuin/sync-key` in the approved single-recipient SOPS file. Then run
-`atuin sync` and verify a synthetic command appears on a second client or after
-a clean login. Do not include real shell history in this test.
+On 2026-10-17 the Atuin service was Ready (1/1), its ESO credential was
+synced, and an isolated disposable account completed encrypted sync of a
+synthetic command between two clients. The managed MacBook Home Manager output
+evaluates to the endpoint above with `auto_sync = true`. A strict HTTPS request
+to `/healthz` returned 200; `/health` is not a supported health path and
+returns 404. The disposable test does not contain real shell history. The
+regular local client remains logged out, and its existing Atuin database was
+not used for the test. Registration is currently closed. No recovery key
+for the disposable account was retained; if a permanent account is later
+authorized, preserve its generated recovery key under `atuin/sync-key` in the
+approved single-recipient SOPS file before relying on it.
