@@ -82,18 +82,6 @@
       path = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-gitea-ssh-key";
       mode = "0400";
     };
-    "backup/restic-valuable" = {
-      sopsFile = ../../secrets/users/remote-backups.yaml;
-      key = "backup/restic-valuable";
-      path = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-restic-valuable";
-      mode = "0400";
-    };
-    "backup/s3-environment" = {
-      sopsFile = ../../secrets/users/remote-backups.yaml;
-      key = "backup/s3-environment";
-      path = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-s3-environment";
-      mode = "0400";
-    };
   };
 
   my = {

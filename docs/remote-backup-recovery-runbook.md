@@ -36,12 +36,21 @@ the code, repository-scoped credential, and host-key pin passed, but Home
 Manager activation and scheduled LaunchAgent delivery have not passed runtime
 acceptance. WSL runtime push/list/check/restore also remains pending.
 
-The latest MacBook evaluation confirms the declared alias and SOPS secret path
-with mode `0400`, but activation is currently blocked before the dry-run can
-show file changes: `just build-home` and `nh home switch --dry` both fail while
-building the unrelated `backup-check` helper because ShellCheck reports
-`SC1091` for its dynamic S3 environment-file path. That helper is outside this
-Gitea task; no S3/Restic files were changed and `just switch-home` was not run.
+The SOPS source stores the Gitea key as a nested YAML value at
+`backup.gitea-ssh-private-key`; sops-nix declarations use the matching path
+`backup/gitea-ssh-private-key`. The ciphertext was re-encrypted to correct the
+previous flat-key shape, preserving the decrypted key value and the same sole
+age recipient. Restic and S3 secret projections are not declared until those
+credentials are provisioned, so the deferred Garage work does not block this
+Gitea key projection.
+
+The MacBook `just build-home` now succeeds. This build used
+`NIX_CONFIG='sandbox = false'` because the existing Go test suite starts a local
+TLS test server and the Nix sandbox denied its localhost bind; `go test ./...`
+passes outside the sandbox. The build validates the activation package but does
+not activate it. The active Home Manager generation, LaunchAgent delivery, and
+scheduled remote push still need runtime acceptance. WSL runtime validation is
+out of scope per the operator's instruction.
 
 The SSH alias declares `ssh.gitea.wheregrassdreams.top:30222` with strict host
 key checking. The current trusted ED25519 pin is

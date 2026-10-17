@@ -59,13 +59,13 @@ existing Home Manager SOPS interface:
   `AWS_SECRET_ACCESS_KEY` for a restricted S3 key with access to the selected
   bucket/prefix.
 
-Neither Restic secret is present in the current SOPS source. The MacBook's
-Restic projections and both hosts' Gitea key projections are conditional on
-`secrets/users/remote-backups.yaml` existing. Add the S3 and Restic values only
-after they have been provisioned and encrypted; do not substitute sample values
-or a plaintext source. The repository uses fixed owner-only runtime paths and
-does not initialize a missing repository automatically. Perform an isolated
-initialize, backup, list, and restore check before enabling a scheduled dataset.
+Neither Restic secret is present in the current SOPS source. Only the Gitea
+deploy-key projection is declared from `secrets/users/remote-backups.yaml`.
+Add the S3 and Restic projections and values only after they have been
+provisioned and encrypted; do not substitute sample values or a plaintext
+source. The repository uses fixed owner-only runtime paths and does not
+initialize a missing repository automatically. Perform an isolated initialize,
+backup, list, and restore check before enabling a scheduled dataset.
 
 The standalone Home Manager output imports the pinned sops-nix Home Manager
 module. On macOS that module uses a LaunchAgent to materialize declared secrets

@@ -51,6 +51,7 @@ let
             export RESTIC_PASSWORD_FILE=${lib.escapeShellArg passwordFile}
             ${lib.optionalString (environmentFile != null) ''
               set -a
+              # shellcheck disable=SC1091 # SOPS provides this runtime-only file.
               . ${lib.escapeShellArg environmentFile}
               set +a
             ''}
