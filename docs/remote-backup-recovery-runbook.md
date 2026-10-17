@@ -59,6 +59,31 @@ hour interval (`StartInterval = 21600`); it had not run on its own at the time
 of verification, so the first timer-fired run remains unobserved. WSL runtime
 validation is out of scope per the operator's instruction.
 
+### MacBook LaunchAgent status refresh (2026-10-18)
+
+Read-only inspection found `org.nix-config.projects-snapshot` loaded with
+`StartInterval = 21600`, no `RunAtLoad`, and one invocation (`launchctl print`
+reported `runs = 1`, last exit code `1`). Its plist modification time was
+2026-10-17 20:54:48 +0800. The latest stdout completion was 2026-10-18
+03:00:26 +0800, with stderr last modified at 02:58:41 +0800; the interval and
+timing are consistent with the first six-hour timer firing after the agent was
+loaded. The retained launchd state does not include a trigger reason, so this
+timing is strong but not definitive proof that no one manually kickstarted
+that invocation. The plist's project-snapshot executable exists at its
+declared Nix store path.
+
+The invocation reached the normal end-of-run summary: `saved=82`,
+`skipped=119`, `failed=3`, `expired=0`; exit code 1 is expected from those
+failures, so scheduled-path acceptance is observed but the run is not clean.
+The latest three stderr entries report `could not inspect working tree` for
+`/Users/zanelu/Workspace/code/projects/homelab-exposure-controller-dev`,
+`/Users/zanelu/Workspace/code/projects/homelab-observability-status`, and
+`/Users/zanelu/Workspace/code/projects/worktrees/homelab/stark-merlin/homelab`.
+No project contents were opened or changed to diagnose them. The error log is
+append-only and also contains older errors, including an earlier incomplete
+remote-target configuration; those earlier entries are not attributed to
+this run. No real full snapshot was manually started for this verification.
+
 A further managed-client smoke run on 2026-10-17 repeated push, list, remote
 consistency check, and remote restore for one temporary project. Tracked and
 untracked file bytes matched after restore; the exact synthetic ref was deleted
