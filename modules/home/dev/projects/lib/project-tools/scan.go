@@ -113,6 +113,7 @@ type worktree struct {
 	Prunable       bool   `json:"prunable,omitempty"`
 	Locked         bool   `json:"locked,omitempty"`
 	Available      bool   `json:"available"`
+	Inspectable    bool   `json:"inspectable"`
 	Dirty          *bool  `json:"dirty"`
 	ChangedEntries *int   `json:"changedEntries"`
 	Primary        bool   `json:"primary"`
@@ -320,6 +321,7 @@ func parseWorktreePorcelain(output []byte, repoPath string, ctx context.Context,
 			}
 			return tree, nil
 		}
+		tree.Inspectable = true
 		count := len(nonEmptyLines(string(status)))
 		dirty := count > 0
 		tree.Dirty = &dirty

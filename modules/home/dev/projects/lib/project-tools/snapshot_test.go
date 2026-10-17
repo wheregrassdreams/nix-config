@@ -225,6 +225,70 @@ func makeSnapshotFixture(t *testing.T) (string, string, string) {
 	return projects, repo, storeRoot
 }
 
+func TestSnapshotSkipsInvalidWorktreesAndKeepsValidRepositoryCoverage(t *testing.T) {
+	projects, repo, storeRoot := makeSnapshotFixture(t)
+	secondRepo := filepath.Join(projects, "second-valid-project")
+	runGitTest(t, repo, "clone", "--quiet", repo, secondRepo)
+	if err := os.WriteFile(filepath.Join(secondRepo, "second-dirty.txt"), []byte("preserve this project\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	invalidPaths := make([]string, 0, 3)
+	for index := 1; index <= 3; index++ {
+		path := filepath.Join(projects, fmt.Sprintf("invalid-worktree-%d", index))
+		runGitTest(t, repo, "worktree", "add", "--quiet", "--detach", path, "HEAD")
+		pointerPath := filepath.Join(path, ".git")
+		if err := os.WriteFile(pointerPath, []byte("gitdir: /missing/worktree/metadata\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		invalidPaths = append(invalidPaths, path)
+	}
+
+	targets, err := allWorktrees(projects, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(targets) != 5 {
+		t.Fatalf("allWorktrees found %d targets, want two valid plus three invalid: %#v", len(targets), targets)
+	}
+	invalid := map[string]bool{}
+	validRepos := map[string]bool{}
+	covered := map[string]bool{}
+	for _, target := range targets {
+		if reason := snapshotSkipReason(target.entry); reason != "" {
+			invalid[canonical(target.path)] = true
+			if target.entry.Available && reason != "Git worktree metadata is unavailable" && !target.entry.Prunable {
+				t.Errorf("existing invalid worktree %s has unexpected skip reason %q", target.path, reason)
+			}
+			continue
+		}
+		if target.entry.Primary && target.entry.Inspectable {
+			validRepos[canonical(target.repo)] = true
+			status, _, err := snapshotOne(target.path, target.repo, storeRoot, projects, 30, time.Now().UTC())
+			if err != nil || status != "saved" {
+				t.Errorf("snapshot valid project %s = %q, %v", target.path, status, err)
+			} else {
+				covered[canonical(target.repo)] = true
+			}
+		}
+	}
+	if len(validRepos) != 2 {
+		t.Fatalf("found %d valid project repositories, want 2", len(validRepos))
+	}
+	if len(covered) != len(validRepos) {
+		t.Fatalf("only %d of %d valid projects were snapshotted", len(covered), len(validRepos))
+	}
+	for _, path := range invalidPaths {
+		if !invalid[canonical(path)] {
+			t.Errorf("invalid worktree %s was not skipped", path)
+		}
+	}
+
+	stores, err := projectSnapshotStores(storeRoot)
+	if err != nil || len(stores) != len(validRepos) {
+		t.Fatalf("snapshot stores = %v, want one store per valid project (%d), error %v", stores, len(validRepos), err)
+	}
+}
+
 func findSnapshotStore(t *testing.T, root string) string {
 	t.Helper()
 	stores, err := filepath.Glob(filepath.Join(root, "*.git"))

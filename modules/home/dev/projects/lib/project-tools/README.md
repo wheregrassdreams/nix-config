@@ -29,9 +29,12 @@ observations: `lastCommitAt` is the newest local commit timestamp,
 `lastFileActivityAt` is the newest modification time among tracked and
 non-ignored untracked files, and `activityAgeDays` is the age of the newer of
 those two signals relative to `scannedAt`. Activity is a review hint, not proof
-that a repository is unused. All configured remotes are listed with fetch and
-push URLs; URL credentials, query strings, and fragments are removed. The
-scanner does not infer repository ownership or a worktree destination.
+that a repository is unused. Each worktree reports whether Git could inspect
+its metadata. Snapshot runs skip unavailable, prunable, or uninspectable
+worktrees and continue with other valid worktrees. All configured remotes are
+listed with fetch and push URLs; URL credentials, query strings, and fragments
+are removed. The scanner does not infer repository ownership or a worktree
+destination.
 
 Check local snapshot object connectivity and, when configured, compare each
 project's local timeline with its remote:

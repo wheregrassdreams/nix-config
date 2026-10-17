@@ -89,6 +89,56 @@ consistency check, and remote restore for one temporary project. Tracked and
 untracked file bytes matched after restore; the exact synthetic ref was deleted
 and confirmed absent.
 
+### MacBook M1 Air profile and invalid worktrees (2026-10-18)
+
+Read-only inspection of `macbookm1air.local` (192.168.3.188, using its already
+trusted SSH host-key entry) found Determinate Nix 3.23.2 but no Home Manager
+profile generation: `~/.local/state/nix/profiles/` is empty, there is no
+`/nix/var/nix/profiles/per-user/zane`, and no `home-manager` executable is
+installed. The `org.nix-config.projects-snapshot` LaunchAgent is not loaded;
+its plist and log files are absent. This host has not received the Home Manager
+declaration, so the earlier 03:00 run belongs only to the previously recorded
+host state and is not evidence of scheduling on this machine.
+
+There is also an identity mismatch that must be resolved before giving this
+host a Home Manager activation command. The live macOS account is `zane` with
+home `/Users/zane`; `zanelu` does not exist. This repository declares
+`homeConfigurations.zanelu@macbook`, whose evaluated `home.username` is
+`zanelu` and `home.homeDirectory` is `/Users/zanelu`. No account or
+configuration identity was changed during this inspection. Do not activate
+the current output as `zane`; first review a change aligning the selected
+Home Manager identity with the actual Mac account, then build and inspect that
+exact output before activation.
+
+The three paths named in the preceding launchd log are now absent on this
+host when checked under its current home:
+
+- `/Users/zane/Workspace/code/projects/homelab-exposure-controller-dev`
+- `/Users/zane/Workspace/code/projects/homelab-observability-status`
+- `/Users/zane/Workspace/code/projects/worktrees/homelab/stark-merlin/homelab`
+
+The source failure was that an existing linked-worktree directory with a
+broken `.git` pointer was marked `Available` solely because the directory
+existed. A later `git status` failure then made the scheduled snapshot count
+the whole run as failed. The scanner now reports `inspectable`; snapshot skips
+unavailable, prunable, and uninspectable entries and continues to valid
+worktrees. A synthetic regression test creates three existing directories
+with broken Git metadata alongside two dirty, valid project repositories,
+verifies all three invalid entries are skipped, and confirms both valid
+projects still produce local snapshots. `go test ./... -count=1` passes, and
+`nix eval --raw '.#homeConfigurations."zanelu@macbook".activationPackage.drvPath'`
+evaluates the selected Home Manager generation without building or activating
+it. The runbook records no inspection of those real project contents and no
+remote snapshot writes for this check.
+
+After the Home Manager identity is reconciled, the remaining acceptance is to
+review/build the exact candidate, activate it on the Mac, verify the resulting
+generation and loaded LaunchAgent, then run only a synthetic project through
+the managed snapshot command and verify its remote ref. Wait one six-hour
+interval before claiming timer-triggered delivery. No Home Manager activation,
+LaunchAgent registration, snapshot run, OpenBao access, or sudo was performed
+on `macbookm1air.local` during this inspection.
+
 The SSH alias declares `ssh.gitea.wheregrassdreams.top:30222` with strict host
 key checking. The current trusted ED25519 pin is
 `SHA256:lm73ciwBKxXsLoh9sdOtb9xcsEsWkOtB0G/RiEaiggs`. Recover the private key by

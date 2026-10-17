@@ -40,6 +40,16 @@ type gitResult struct {
 	stderr string
 }
 
+func snapshotSkipReason(entry worktree) string {
+	if !entry.Available || entry.Prunable || entry.Bare {
+		return "unavailable or prunable worktree"
+	}
+	if !entry.Inspectable {
+		return "Git worktree metadata is unavailable"
+	}
+	return ""
+}
+
 func gitCommand(env map[string]string, args ...string) (gitResult, error) {
 	command := exec.Command("git", args...)
 	if env != nil {
@@ -1761,9 +1771,9 @@ func runSnapshot(args []string) int {
 	}
 	saved, skipped, failed := 0, 0, 0
 	for _, target := range targets {
-		if !target.entry.Available || target.entry.Prunable || target.entry.Bare {
+		if reason := snapshotSkipReason(target.entry); reason != "" {
 			skipped++
-			fmt.Printf("SKIP %s: unavailable or prunable worktree\n", target.path)
+			fmt.Printf("SKIP %s: %s\n", target.path, reason)
 			continue
 		}
 		projectID, idErr := projectIDForPath(target.repo, projectOverrides)
