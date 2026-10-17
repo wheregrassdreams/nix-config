@@ -1,4 +1,5 @@
 {
+  config,
   flake,
   identity,
   lib,
@@ -56,6 +57,15 @@ in
       (windowsOpen "open")
       (windowsOpen "xdg-open")
     ];
+  };
+
+  sops.secrets = lib.mkIf (builtins.pathExists ../../secrets/users/remote-backups.yaml) {
+    "backup/gitea-ssh-private-key" = {
+      sopsFile = ../../secrets/users/remote-backups.yaml;
+      key = "backup/gitea-ssh-private-key";
+      path = "${config.home.homeDirectory}/.config/nix-config/secrets/backup-gitea-ssh-key";
+      mode = "0400";
+    };
   };
 
   my = {

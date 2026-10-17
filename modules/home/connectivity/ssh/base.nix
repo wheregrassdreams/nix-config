@@ -19,7 +19,7 @@
         hostname = "ssh.gitea.wheregrassdreams.top";
         port = 30222;
         user = "git";
-        identityFile = "~/.ssh/homelab-backups";
+        identityFile = "~/.config/nix-config/secrets/backup-gitea-ssh-key";
         identitiesOnly = true;
       };
     };
