@@ -16,7 +16,8 @@
         extraOptions.StrictHostKeyChecking = "ask";
       };
       matchBlocks.gitea-backups = {
-        hostname = "gitea.wheregrassdreams.top";
+        hostname = "ssh.gitea.wheregrassdreams.top";
+        port = 30222;
         user = "git";
         identityFile = "~/.ssh/homelab-backups";
         identitiesOnly = true;

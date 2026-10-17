@@ -28,9 +28,11 @@ it to this team. Do not use `zane`'s personal token or SSH key.
    SSH keys. Its local private key is already present and is dedicated to this
    use. Never copy or transmit the private half.
 5. Obtain the Gitea SSH host key fingerprint from a trusted operator channel.
-   Compare it with `ssh-keyscan gitea.wheregrassdreams.top` output before
-   accepting it. Then connect once as the configured `gitea-backups` alias and
-   accept the verified key so `StrictHostKeyChecking=ask` has a trusted entry.
+   Compare it with `ssh-keyscan -p 30222 ssh.gitea.wheregrassdreams.top` output
+   before accepting it. Then connect once as the configured `gitea-backups`
+   alias and accept the verified key so `StrictHostKeyChecking=ask` has a
+   trusted entry. The private endpoint and port match the Gitea SSH Service;
+   the HTTPS API host does not carry SSH.
 6. Store the API token in OpenBao at the agreed KV path
    `homelab/apps/nix-config-backups/gitea`, then place its workstation copy as
    `gitea-backup-token` in the encrypted SOPS file described below. Configure
