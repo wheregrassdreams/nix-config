@@ -13,23 +13,24 @@ The current client writes separate deterministic project refs in that one
 repository, so a repository-scoped deploy key avoids an API token and any
 organization-wide repository creation permission.
 
-1. Confirm the repository is private. In its Gitea settings, add the public
-   key from `/Users/zanelu/.ssh/homelab-backups.pub` as a deploy key with write
-   access. Its local private key is dedicated to this use and must never be
-   copied or transmitted.
-2. Obtain the Gitea SSH host key fingerprint from a trusted operator channel.
-   Compare it with `ssh-keyscan -p 30222 ssh.gitea.wheregrassdreams.top` output
-   before accepting it. Then connect once as the configured `gitea-backups`
-   alias and accept the verified key so `StrictHostKeyChecking=ask` has a
-   trusted entry. The private endpoint and port match the Gitea SSH Service;
-   the HTTPS API host does not carry SSH.
-3. Validate the repository-scoped key from the MacBook using the configured
-   `gitea-backups` alias. Against a synthetic Git repository, push one test
-   project timeline, verify its hashed ref with `git ls-remote`, fetch it into
-   an empty bare repository, and confirm the snapshot commit is readable. Test
-   a second synthetic project and confirm it writes a distinct ref in the same
-   repository. Do not enable the LaunchAgent schedule until both read-backs and
-   host-key trust pass.
+The active Host pin at acceptance was
+`main@sha1:071f1a9f6fad1cc67a8877c724e8218d93e4fe14`.
+The dedicated `/Users/zanelu/.ssh/homelab-backups.pub` key is enrolled on this
+repository with write access. The configured `gitea-backups` SSH alias
+authenticated successfully during the acceptance below, so its host-key trust
+also passed the runtime check.
+
+On 2026-10-17, the MacBook completed end-to-end acceptance against that Host
+pin: two synthetic project timelines were pushed to distinct host/project
+refs, `--list` reported both synced, `--check` reported both matching, and
+restoring each snapshot produced byte-identical files. The synthetic refs were
+removed after read-back. Gitea's `main` branch is now an empty default branch;
+the snapshot refs live under `refs/heads/nix-config-snapshots/`.
+
+The MacBook acceptance is complete. WSL push/list/check/restore acceptance is
+still pending. Run the same two-project synthetic round-trip from WSL before
+enabling its scheduled snapshots. Keep the private SSH key outside Git; do not
+add an account-wide key or API token.
 
 ## Garage S3 and Restic
 
