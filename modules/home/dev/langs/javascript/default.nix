@@ -46,6 +46,7 @@ in
       pkgs.vtsls
       pkgs.eslint
       pkgs.tailwindcss-language-server
+      pkgs.vscode-langservers-extracted
     ];
 
     home.sessionVariables = {

@@ -29,22 +29,47 @@ in
 
     xdg.configFile."zed/keymap.json".source = ./keymap.json;
 
-    # Home Manager merges these into the existing Zed settings, preserving
-    # settings maintained by Zed or configured outside this package.
     programs.zed-editor = {
       enable = true;
       package = null;
       userSettings.lsp = {
-        basedpyright.binary.path = zedBin "basedpyright-langserver";
-        "bash-language-server".binary.path = zedBin "bash-language-server";
-        eslint.binary.path = zedBin "eslint";
+        basedpyright.binary = {
+          path = zedBin "basedpyright-langserver";
+          arguments = [ "--stdio" ];
+        };
+        "bash-language-server".binary = {
+          path = zedBin "bash-language-server";
+          arguments = [ "start" ];
+        };
+        eslint.binary = {
+          path = zedBin "vscode-eslint-language-server";
+          arguments = [ "--stdio" ];
+        };
         gopls.binary.path = zedBin "gopls";
-        "json-language-server".binary.path = zedBin "vscode-json-language-server";
-        "tailwindcss-language-server".binary.path = zedBin "tailwindcss-language-server";
-        vtsls.binary.path = zedBin "vtsls";
-        "vscode-css-language-server".binary.path = zedBin "vscode-css-language-server";
-        "vscode-html-language-server".binary.path = zedBin "vscode-html-language-server";
-        "yaml-language-server".binary.path = zedBin "yaml-language-server";
+        "json-language-server".binary = {
+          path = zedBin "vscode-json-language-server";
+          arguments = [ "--stdio" ];
+        };
+        "tailwindcss-language-server".binary = {
+          path = zedBin "tailwindcss-language-server";
+          arguments = [ "--stdio" ];
+        };
+        vtsls.binary = {
+          path = zedBin "vtsls";
+          arguments = [ "--stdio" ];
+        };
+        "vscode-css-language-server".binary = {
+          path = zedBin "vscode-css-language-server";
+          arguments = [ "--stdio" ];
+        };
+        "vscode-html-language-server".binary = {
+          path = zedBin "vscode-html-language-server";
+          arguments = [ "--stdio" ];
+        };
+        "yaml-language-server".binary = {
+          path = zedBin "yaml-language-server";
+          arguments = [ "--stdio" ];
+        };
       };
     };
   };
