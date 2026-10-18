@@ -41,110 +41,14 @@ commits reachable from the retained timeline, rejects symlink or non-empty
 destinations, and verifies the restored HEAD and clean worktree before
 reporting success.
 
-On WSL, Home Manager installs the same `project-snapshot` one-shot command and
-configures the Gitea target, but it does not install the Darwin inventory
-scanner or enable a periodic snapshot job. Run the command explicitly with a
-reviewed source root, for example `project-snapshot --root /home/zane/projects`.
-This does not make the command infer which WSL directories should be backed up.
-
 ## Optional remote snapshots
 
-Remote endpoints are registered under `my.storage.remote.targets`. A Git target
-uses an SSH alias from the host's SSH configuration. The `sshBare` provisioner
-also requires an absolute server directory and creates a bare repository per
-host and project on the first snapshot:
-
-```nix
-my.storage.remote.targets.project-snapshots = {
-  backend.git = {
-    sshHost = "snapshot-store";
-    root = "/srv/git/project-snapshots";
-  };
-  provisioner.kind = "sshBare";
-};
-
-my.dev.projects.snapshots.remote.target = "project-snapshots";
-```
-
-The host's `programs.ssh.matchBlocks.snapshot-store` supplies the actual
-hostname, user, and identity. The remote repository path is
-`<root>/<host-id>/<project-id>.git`. Project IDs derive from the normalized
-local repository path; `projectIdOverrides` can preserve an ID after a move.
-The project source's `origin` is never used as a snapshot destination.
-
-For Gitea, `gitea` creates and verifies one private repository per host/project
-through the HTTPS API. `giteaPreprovisioned` instead pushes to one existing
-private repository through a repository-scoped write deploy key, separating
-project timelines into deterministic hashed refs:
-
-```nix
-my.storage.remote.targets.project-snapshots = {
-  backend.git.sshHost = "gitea-backups";
-  provisioner = {
-    kind = "giteaPreprovisioned";
-    gitea = {
-      repository = "project-backups/nix-config-snapshots";
-    };
-  };
-};
-
-my.dev.projects.snapshots.remote.target = "project-snapshots";
-```
-
-The repository must already exist and be private. The homelab deploy key is
-registered as a write deploy key; no Gitea API token or site-admin capability
-is needed in this mode. The private key is stored as the single-recipient
-SOPS-encrypted `backup/gitea-ssh-private-key` entry, and both MacBook and WSL
-declare an owner-only `0400` projection at
-`~/.config/nix-config/secrets/backup-gitea-ssh-key`.
-
-On 2026-10-17, the current source passed two-project push/list/check/restore
-acceptance on MacBook; restored files were byte-identical and synthetic refs
-were removed. The active Home Manager generation did not yet contain the
-branch's SSH alias or key projection, so activation and scheduled delivery
-remain unverified. WSL runtime acceptance is also pending. WSL has no scheduled
-snapshot job; verify the explicit one-shot path before relying on it.
-
-Each API-provisioned project repository has one `refs/heads/snapshots` timeline.
-The shared pre-provisioned repository stores each project at
-`refs/heads/nix-config-snapshots/<stable-hash>` derived from both host and
-project IDs. Every commit
-stores the snapshot time, project ID, worktree ID, source branch, source HEAD,
-and snapshot reason in Git commit trailers. Commits chain only to earlier
-snapshots, not to the source repository's history. Tracked and non-ignored
-untracked files are included; ignored files are excluded.
-
-When entries expire, the local timeline is compacted to retained commits and
-the remote branch is updated using force-with-lease. Local Git garbage
-collection uses a two-week grace window for newly unreachable objects. Remote
-branch history follows the 30-day window; when the server physically removes
-unreachable objects depends on its own Git garbage-collection schedule. Failed
-remote operations leave local snapshots available for retry.
-
-Snapshots created by the previous per-worktree-ref format are kept in place,
-listed as `legacy-local`, and remain restorable by their old ref. They are not
-rewritten or pruned by the new timeline policy.
-
-Use `project-snapshot --list` to browse the timeline, then restore a selected
-commit hash (or the branch tip):
-
-```sh
-project-snapshot --restore STORE <commit> /path/to/new-restore-directory
-project-snapshot --restore-remote <commit> /path/to/new-restore-directory --project-id <project-id>
-```
-
-`project-snapshot --check` verifies local Git connectivity and compares the
-remote snapshots branch with the local branch tip. It does not download remote
-objects, encrypt Git objects at rest, or run restore drills. The private Git
-service's access controls and disk encryption protect stored snapshots; SSH
-protects transfer. File and state datasets use the separate `storage.backup`
-package.
-
-The MacBook also exports a minimal `homeConfigurations."zane@macbook-snapshots"`
-output for machines where the login account is `zane` rather than the desktop
-configuration's `zanelu`. It installs only core user context, SSH, the project
-inventory and snapshot capability, and its remote target. It uses
-`/Users/zane/Workspace/code/projects` and the existing SOPS-projected Gitea deploy key. Review/build this output
-separately; activating it requires confirming the target account's age identity
-can decrypt the existing secret and that the project root is correct. It does
-not replace `zanelu@macbook`.
+MacBook and WSL declare the `homelab-gitea-backups` target in their host
+configuration. `project-snapshot` writes per-project timelines to the existing
+private `homelab-backups/nix-config-snapshots` repository using a repository-
+scoped deploy key. Each host declares its `gitea-backups` SSH alias and projects
+the SOPS key at sops-nix's default
+`~/.config/sops-nix/secrets/backup/gitea-ssh-private-key` path with mode `0400`,
+independent of the nix-config checkout location. WSL runs snapshots on demand;
+Darwin also has a six-hour LaunchAgent. SSH requires a matching host key in the
+user's `known_hosts`.

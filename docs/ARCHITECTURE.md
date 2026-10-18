@@ -182,18 +182,14 @@ live in `dev.ci`.
 inventory local Git repositories, candidate project directories, and linked
 worktrees. Its scanner is read-only; activity age is a review hint, never an
 automatic cleanup decision. On Darwin it runs a weekly inventory and a
-six-hourly local Git snapshot job. WSL exposes the same `project-snapshot`
-one-shot command against its selected Gitea target but does not run an
-inventory scan or scheduled job. Snapshots live outside the project tree,
+six-hourly local Git snapshot job; WSL exposes the one-shot snapshot command.
+Snapshots live outside the project tree,
 include tracked and non-ignored untracked files, and expire after 30 days.
 An optional Git target stores one `snapshots` branch per project. The
 `sshBare` provisioner creates filesystem-rooted bare repositories through a
 host SSH alias; the `gitea` provisioner creates private repositories through
-the HTTPS API and pushes Git data through a host SSH alias. The current
-MacBook target uses a pre-provisioned private Gitea repository and
-repository-scoped deploy key. Source-level MacBook push/list/check/restore
-acceptance passed on 2026-10-17; Home Manager activation and WSL runtime
-acceptance remain pending.
+the HTTPS API and pushes Git data through a host SSH alias. MacBook and WSL use
+a pre-provisioned private Gitea repository declared by each host.
 Each branch contains a single chronological timeline with source metadata in
 commit trailers; it does not retain the project's source history. Retention
 compacts that branch and synchronizes it with a lease.

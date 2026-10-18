@@ -1,5 +1,5 @@
 creation_rules:
-  - path_regex: secrets/users/remote-backups\.yaml$
+  - path_regex: secrets/remote-backups\.yaml$
     age: "age1ashrrvn3qnlk08jqpfjud4f6c3yr5vrwa4jy5tgpdz9934f0uqkqhmanpz" # password-manager-backed workstation identity
   - path_regex: secrets/.*\.ya?ml$
     key_groups:

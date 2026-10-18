@@ -29,13 +29,7 @@ let
   hostHomeConfigurations = lib.mapAttrs' (
     name: host: lib.nameValuePair "${host.identity.username}@${name}" (repoLib.mkHome host)
   ) hosts;
-  snapshotHome = hosts.macbook // {
-    identity = hosts.macbook.identity // { username = "zane"; };
-    homeModules = [ ../hosts/macbook/snapshot-home.nix ];
-  };
-  homeConfigurations = hostHomeConfigurations // {
-    "zane@macbook-snapshots" = repoLib.mkHome snapshotHome;
-  };
+  homeConfigurations = hostHomeConfigurations;
 in
 {
   flake = {

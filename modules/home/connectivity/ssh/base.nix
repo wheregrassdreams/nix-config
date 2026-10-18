@@ -15,14 +15,6 @@
         controlPersist = "30m";
         extraOptions.StrictHostKeyChecking = "ask";
       };
-      matchBlocks.gitea-backups = {
-        hostname = "ssh.gitea.wheregrassdreams.top";
-        port = 30222;
-        user = "git";
-        identityFile = "~/.config/nix-config/secrets/backup-gitea-ssh-key";
-        identitiesOnly = true;
-        extraOptions.StrictHostKeyChecking = "yes";
-      };
     };
   };
 }

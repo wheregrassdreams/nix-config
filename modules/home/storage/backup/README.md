@@ -40,17 +40,9 @@ my.storage.backup.datasets.tmux-resurrect.paths = [
 
 ## Homelab S3 status: deferred
 
-The `homelab-s3` target is currently endpoint metadata only and is unavailable.
-SeaweedFS was stopped because of the previously identified disk-health issue;
-Garage replacement is deferred until storage health is resolved. The MacBook
-has a valuable-class Restic repository and policy declared, but its
-`tmux-resurrect` and `codex-sessions` datasets remain disabled. The encrypted
-`secrets/users/remote-backups.yaml` file now exists and contains the
-single-recipient-encrypted Gitea deploy private key used by project snapshots.
-The S3 credentials and Restic repository password are intentionally absent, so
-no Restic credential is materialized and no backup schedule is generated. Keep
-both datasets disabled until the Garage endpoint, bucket, and storage health
-have been verified with a Restic client.
+The `homelab-s3` endpoint is unavailable while storage health and its Garage
+replacement are unresolved. MacBook Restic datasets remain disabled, and S3
+credentials plus the repository password are not configured.
 
 The repository needs two separately provisioned secret files through the
 existing Home Manager SOPS interface:
@@ -61,13 +53,10 @@ existing Home Manager SOPS interface:
   `AWS_SECRET_ACCESS_KEY` for a restricted S3 key with access to the selected
   bucket/prefix.
 
-Neither Restic secret is present in the current SOPS source. Only the Gitea
-deploy-key projection is declared from `secrets/users/remote-backups.yaml`.
-Add the S3 and Restic projections and values only after they have been
-provisioned and encrypted; do not substitute sample values or a plaintext
-source. The repository uses fixed owner-only runtime paths and does not
-initialize a missing repository automatically. Perform an isolated initialize,
-backup, list, and restore check before enabling a scheduled dataset.
+Neither Restic secret is present in the current SOPS source. Add their
+projections only after the values have been provisioned and encrypted. The
+repository does not initialize itself automatically; verify an isolated
+initialize, backup, list, and restore before enabling a scheduled dataset.
 
 The standalone Home Manager output imports the pinned sops-nix Home Manager
 module. On macOS that module uses a LaunchAgent to materialize declared secrets
