@@ -1,3 +1,4 @@
+# shellcheck disable=SC2148,SC2034
 # ============================================================================
 # Functions
 # ============================================================================
@@ -16,77 +17,76 @@ function custom_edit_command_line() {
 }
 
 function tmux_edit_command_line() {
-  local tmpfile=$(mktemp /tmp/zshcmd.XXXXXX)
+  _tmux_float_edit_buffer
+}
+
+function _tmux_float_edit_buffer() {
+  local float_root tmpfile editor_status
+  float_root=${TMUX_FLOAT_LAB_ROOT:-$(tmux show-option -gqv @float-lab-root 2>/dev/null)}
+  [[ -n "$float_root" && -x "$float_root/bin/float-edit-file" ]] || return 1
+
+  tmpfile=$(mktemp "${TMPDIR:-/tmp}/tmux-float-edit.XXXXXX") || return
   print -r -- "$BUFFER" > "$tmpfile"
-
-  # 当前 pane 尺寸
-  local pane_width=$(tmux display -p -F "#{pane_width}")
-  local pane_height=$(tmux display -p -F "#{pane_height}")
-  local pane_top=$(tmux display -p -F "#{pane_top}")
-  local pane_left=$(tmux display -p -F "#{pane_left}")
-
-  # 当前光标在 pane 内的行号（从 0 开始）
-  local cursor_y=$(tmux display -p -F "#{cursor_y}")
-
-  # popup 尺寸（pane 的百分比）
-  local popup_width=$(( pane_width ))
-  local popup_height=$(( pane_height * 30 / 100 ))
-  local min_popup_height=10
-
-  if (( popup_height < min_popup_height )); then
-    popup_height=$min_popup_height
-  fi
-
-  local space_below=$(( pane_height - cursor_y ))
-
-  direction="down"
-  if (( space_below < popup_height + 2 )); then
-    direction="up"
-  fi
-
-  # 计算 popup 坐标：贴近当前 prompt 上方
-  local popup_x=$pane_left
-  local popup_y
-  if [[ $direction == "down" ]]; then
-    popup_y=$(( pane_top + cursor_y + popup_height + 1 ))
-  else
-    popup_y=$(( pane_top + cursor_y - 1 ))
-  fi
-
-  # 确保 popup 不越界
-  (( popup_y < pane_top )) && popup_y=$pane_top
-
-  # 打开 popup，标题为当前命令模式
-  tmux popup -E -T "Edit Command" \
-    -w ${popup_width} -h ${popup_height} \
-    -x ${popup_x} -y ${popup_y} \
-    "nvim  \
-      -c 'setlocal nonumber norelativenumber signcolumn=no laststatus=0 noruler noshowmode noshowcmd' \
-      -c 'set cmdheight=0' \
-      -c 'set noautowriteall' \
-      -c 'set noautowrite' \
-      -c 'set noautoread' \
-      -c 'autocmd VimEnter * lua vim.cmd(\"normal! GA\"); vim.wo.wrap = true' \
-      -c 'set statuscolumn=' \
-      -c 'set showtabline=0' \
-      -c 'set tabline=' \
-      -c 'setlocal winbar=' \
-    '$tmpfile'"
-
-  # 更新命令行内容
-  if [[ -f "$tmpfile" ]]; then
-    BUFFER=$(<"$tmpfile")
-  fi
-  rm -f "$tmpfile"
-
+  VISUAL=${VISUAL-} EDITOR=${EDITOR-} \
+    "$float_root/bin/float-edit-file" --output none --title 'Edit prompt' "$tmpfile"
+  editor_status=$?
+  (( editor_status == 130 )) && editor_status=0
+  [[ -f "$tmpfile" ]] && BUFFER=$(<"$tmpfile")
+  command rm -f -- "$tmpfile"
   CURSOR=${#BUFFER}
-
-  # 刷新 zle 状态
   zle reset-prompt
   zle redisplay
-  zle -I
   zle end-of-line
+  return $editor_status
+}
+
+function _tmux_float_editor_bridge_widget() {
+  local request
+  IFS= read -r -u "$1" request || return 0
+  [[ "$request" == edit ]] || return 0
+
+  tmux set-option -pu -t "$TMUX_PANE" @float-editor-ready 2>/dev/null || true
+  _tmux_float_edit_buffer
+  tmux set-option -p -t "$TMUX_PANE" @float-editor-ready on 2>/dev/null || true
+  zle -R
+}
+
+function _tmux_float_editor_bridge_init() {
+  [[ -n ${TMUX-} && -n ${TMUX_PANE-} ]] || return 0
+  local float_root
+  float_root=${TMUX_FLOAT_LAB_ROOT:-$(tmux show-option -gqv @float-lab-root 2>/dev/null)}
+  [[ -n "$float_root" && -x "$float_root/bin/float-edit-file" ]] || return 0
+
+  if [[ -z ${_TMUX_FLOAT_EDITOR_FIFO-} ]]; then
+    _TMUX_FLOAT_EDITOR_DIR=$(mktemp -d "${TMPDIR:-/tmp}/tmux-float-bridge.XXXXXX") || return 0
+    _TMUX_FLOAT_EDITOR_FIFO="$_TMUX_FLOAT_EDITOR_DIR/request"
+    command mkfifo "$_TMUX_FLOAT_EDITOR_FIFO" || return 0
+    exec {_TMUX_FLOAT_EDITOR_FD}<>"$_TMUX_FLOAT_EDITOR_FIFO"
+    zle -F -w "$_TMUX_FLOAT_EDITOR_FD" _tmux_float_editor_bridge_widget
+    tmux set-option -p -t "$TMUX_PANE" @float-editor-bridge "$_TMUX_FLOAT_EDITOR_FIFO" 2>/dev/null || true
+    tmux set-option -p -t "$TMUX_PANE" @float-editor-bridge-pid "$$" 2>/dev/null || true
+  fi
+  tmux set-option -p -t "$TMUX_PANE" @float-editor-ready on 2>/dev/null || true
+}
+
+function _tmux_float_editor_bridge_finish() {
+  [[ -n ${TMUX-} && -n ${TMUX_PANE-} ]] || return 0
+  tmux set-option -pu -t "$TMUX_PANE" @float-editor-ready 2>/dev/null || true
+}
+
+function _tmux_float_editor_bridge_cleanup() {
+  [[ -z ${TMUX_PANE-} ]] || {
+    tmux set-option -pu -t "$TMUX_PANE" @float-editor-ready 2>/dev/null || true
+    tmux set-option -pu -t "$TMUX_PANE" @float-editor-bridge 2>/dev/null || true
+    tmux set-option -pu -t "$TMUX_PANE" @float-editor-bridge-pid 2>/dev/null || true
+  }
+  [[ -z ${_TMUX_FLOAT_EDITOR_DIR-} ]] || command rm -rf -- "$_TMUX_FLOAT_EDITOR_DIR"
 }
 
 zle -N custom_edit_command_line
 bindkey '^o' custom_edit_command_line
+zle -N _tmux_float_editor_bridge_widget
+autoload -Uz add-zsh-hook
+add-zsh-hook zle-line-init _tmux_float_editor_bridge_init
+add-zsh-hook zle-line-finish _tmux_float_editor_bridge_finish
+add-zsh-hook zshexit _tmux_float_editor_bridge_cleanup
