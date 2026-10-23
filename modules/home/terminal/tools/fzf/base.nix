@@ -1,9 +1,10 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 {
   # TODO: 考虑拆分出样式、快捷键
   # 用到包的地方显式声明一下，如fd eza file ripgrep timg bat
   programs.fzf = {
     enable = true;
+    package = pkgs.unstable.fzf;
     # zsh loads this integration only when ZLE has a real TTY; the package
     # activation shell otherwise emits `can't change option: zle`.
     enableZshIntegration = false;
