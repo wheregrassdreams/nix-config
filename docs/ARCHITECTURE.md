@@ -97,10 +97,10 @@ Within a package:
 - A package owns its public options. Importing the package selects the
   capability; `enable` is for optional subfeatures, not the package itself.
 - When present, the package root's `options.nix` is imported automatically by
-  `repoLib.importAll ./.`; the scanner then collects other `.nix` configuration
+  `mylib.importAll ./.`; the scanner then collects other `.nix` configuration
   files recursively in deterministic path order.
 - If configuration collection is platform-gated, import the root options on
-  platforms where `repoLib.importAll` is skipped.
+  platforms where `mylib.importAll` is skipped.
 - Files and directories beginning with `_` are excluded from discovery and
   may still be imported explicitly by a consumer.
 - A child directory with its own `default.nix` is a separate package. Parent
@@ -110,7 +110,7 @@ Within a package:
   discovered as configuration.
 - Feature fragments read their package options from `config` and gate optional
   behavior with `lib.mkIf`.
-- Packages limited to one OS import `repoLib.assertPlatform` in their entry
+- Packages limited to one OS import `mylib.assertPlatform` in their entry
   point. Selecting one from an incompatible host fails evaluation with the
   package name and supported OS instead of silently producing a partial setup.
 - Keep small packages compact. Use source comments for non-obvious behavior;

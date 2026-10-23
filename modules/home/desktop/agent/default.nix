@@ -1,12 +1,12 @@
 {
-  repoLib,
+  mylib,
   ...
 }:
 {
   imports = [
-    (repoLib.assertPlatform {
+    (mylib.assertPlatform {
       package = "desktop.agent";
       platforms = [ "darwin" ];
     })
-  ] ++ repoLib.importAll ./.;
+  ] ++ mylib.importAll ./.;
 }

@@ -1,7 +1,7 @@
-{ repoLib, ... }:
+{ mylib, ... }:
 {
   imports = [
     ../shared
   ]
-  ++ repoLib.importAll ./.;
+  ++ mylib.importAll ./.;
 }

@@ -1,17 +1,17 @@
 {
   lib,
   isDarwin,
-  repoLib,
+  mylib,
   ...
 }:
 {
   imports =
     lib.optionals isDarwin [ ../../homebrew ]
     ++ [
-      (repoLib.assertPlatform {
+      (mylib.assertPlatform {
         package = "desktop.menubar";
         platforms = [ "darwin" ];
       })
     ]
-    ++ lib.optionals isDarwin (repoLib.importAll ./.);
+    ++ lib.optionals isDarwin (mylib.importAll ./.);
 }

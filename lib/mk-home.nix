@@ -3,7 +3,7 @@
   inputs,
   self ? null,
   overlays ? [ self.overlays.default ],
-  repoLib ? null,
+  mylib ? null,
 }:
 {
   system,
@@ -41,7 +41,7 @@ inputs.home-manager.lib.homeManagerConfiguration {
       isDarwin
       isWsl
       configRepoPath
-      repoLib
+      mylib
       ;
     flake = self;
   };

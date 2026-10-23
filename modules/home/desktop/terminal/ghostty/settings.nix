@@ -2,7 +2,7 @@
   config,
   lib,
   pkgs,
-  repoLib,
+  mylib,
   ...
 }:
 let
@@ -12,7 +12,7 @@ let
 in
 {
   imports = [
-    (repoLib.assertPlatform {
+    (mylib.assertPlatform {
       package = "desktop.terminal.ghostty";
       platforms = [ "darwin" ];
       when = [

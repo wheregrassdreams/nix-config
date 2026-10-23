@@ -1,7 +1,7 @@
 {
   lib,
   isDarwin,
-  repoLib,
+  mylib,
   ...
 }:
 {
@@ -9,10 +9,10 @@
     lib.optionals (!isDarwin) [ ./options.nix ]
     ++ lib.optionals isDarwin [ ../../homebrew ]
     ++ [
-      (repoLib.assertPlatform {
+      (mylib.assertPlatform {
         package = "connectivity.clash-verge";
         platforms = [ "darwin" ];
       })
     ]
-    ++ lib.optionals isDarwin (repoLib.importAll ./.);
+    ++ lib.optionals isDarwin (mylib.importAll ./.);
 }

@@ -1,7 +1,7 @@
-{ repoLib, ... }:
+{ mylib, ... }:
 {
   imports = [
     ../core
   ]
-  ++ repoLib.importAll ./.;
+  ++ mylib.importAll ./.;
 }

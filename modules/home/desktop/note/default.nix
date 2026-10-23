@@ -1,10 +1,10 @@
-{ repoLib, ... }:
+{ mylib, ... }:
 {
   imports = [
     ../../homebrew
-    (repoLib.assertPlatform {
+    (mylib.assertPlatform {
       package = "desktop.note";
       platforms = [ "darwin" ];
     })
-  ] ++ repoLib.importAll ./.;
+  ] ++ mylib.importAll ./.;
 }

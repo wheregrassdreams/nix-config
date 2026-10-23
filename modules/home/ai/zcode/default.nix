@@ -1,12 +1,12 @@
 {
   isDarwin,
   lib,
-  repoLib,
+  mylib,
   ...
 }:
 {
   imports = [
-    (repoLib.assertPlatform {
+    (mylib.assertPlatform {
       package = "ai.zcode";
       platforms = [ "darwin" ];
     })

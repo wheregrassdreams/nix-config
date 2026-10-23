@@ -1,14 +1,14 @@
 {
   lib,
   isDarwin,
-  repoLib,
+  mylib,
   ...
 }:
 {
   imports = [
-    (repoLib.assertPlatform {
+    (mylib.assertPlatform {
       package = "desktop.window-manager";
       platforms = [ "darwin" ];
     })
-  ] ++ lib.optionals isDarwin (repoLib.importAll ./.);
+  ] ++ lib.optionals isDarwin (mylib.importAll ./.);
 }

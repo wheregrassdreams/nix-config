@@ -6,7 +6,7 @@
   overlays,
 }:
 let
-  repoLib = {
+  mylib = {
     assertPlatform = import ./assert-platform.nix;
     discoverPackages = import ./discover-packages.nix { inherit lib; };
     importAll = import ./import-all.nix { inherit lib; };
@@ -16,7 +16,7 @@ let
         inputs
         self
         overlays
-        repoLib
+        mylib
         ;
     };
     mkHome = import ./mk-home.nix {
@@ -25,9 +25,9 @@ let
         inputs
         self
         overlays
-        repoLib
+        mylib
         ;
     };
   };
 in
-repoLib
+mylib

@@ -1,6 +1,6 @@
 {
   config,
-  repoLib,
+  mylib,
   lib,
   pkgs,
   ...
@@ -19,12 +19,12 @@ let
 in
 {
   imports = [
-    (repoLib.assertPlatform {
+    (mylib.assertPlatform {
       package = "homebrew";
       platforms = [ "darwin" ];
     })
   ]
-  ++ repoLib.importAll ./.;
+  ++ mylib.importAll ./.;
 
   config = {
     my.homebrew.brews = [ "mas" ];

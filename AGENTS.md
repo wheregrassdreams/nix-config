@@ -63,7 +63,7 @@ must be followed by host-appropriate boot, service, and recovery verification.
 - Keep small packages directly in their package directory. Use meaningful
   subdirectories such as `tmux/` or `zsh/` when they clarify ownership; do not
   create a generic `module/` directory.
-- Package entry points use `repoLib.importAll ./.`, which imports the package
+- Package entry points use `mylib.importAll ./.`, which imports the package
   root's `options.nix` when present, then collects other configuration `.nix`
   files below the package, excluding `default.nix`, `options.nix`, `_`-prefixed
   names, `lib/`, and child package directories. If collection is platform-gated,

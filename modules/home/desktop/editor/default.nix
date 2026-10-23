@@ -1,9 +1,9 @@
 {
   lib,
   isDarwin,
-  repoLib,
+  mylib,
   ...
 }:
 {
-  imports = lib.optionals isDarwin [ ../../homebrew ] ++ repoLib.importAll ./.;
+  imports = lib.optionals isDarwin [ ../../homebrew ] ++ mylib.importAll ./.;
 }

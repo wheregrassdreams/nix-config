@@ -4,7 +4,7 @@
   isDarwin,
   lib,
   pkgs,
-  repoLib,
+  mylib,
   ...
 }:
 let
@@ -70,9 +70,9 @@ let
 in
 {
   imports =
-    repoLib.importAll ./.
+    mylib.importAll ./.
     ++ lib.optionals isDarwin [
-      (repoLib.assertPlatform {
+      (mylib.assertPlatform {
         package = "storage.backup";
         platforms = [ "darwin" ];
       })

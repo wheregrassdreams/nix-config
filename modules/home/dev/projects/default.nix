@@ -4,7 +4,7 @@
   isDarwin,
   lib,
   pkgs,
-  repoLib,
+  mylib,
   ...
 }:
 let
@@ -105,7 +105,7 @@ in
   imports =
     lib.optionals (!isDarwin) [ ./options.nix ]
     ++ [
-      (repoLib.assertPlatform {
+      (mylib.assertPlatform {
         package = "dev.projects";
         platforms = [
           "darwin"

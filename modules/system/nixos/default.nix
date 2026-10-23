@@ -1,8 +1,8 @@
-{ repoLib, ... }:
+{ mylib, ... }:
 {
   imports = [
     ../shared
     ../services/nixos.nix
   ]
-  ++ repoLib.importAll ./.;
+  ++ mylib.importAll ./.;
 }

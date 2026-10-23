@@ -1,12 +1,12 @@
 {
   lib,
   isDarwin,
-  repoLib,
+  mylib,
   ...
 }:
 {
   imports = [
-    (repoLib.assertPlatform {
+    (mylib.assertPlatform {
       package = "desktop.launcher";
       platforms = [
         "darwin"
@@ -20,5 +20,5 @@
     ./macos/_vicinae.nix
   ]
   ++ lib.optionals (!isDarwin) [ ./linux/_vicinae.nix ]
-  ++ repoLib.importAll ./.;
+  ++ mylib.importAll ./.;
 }

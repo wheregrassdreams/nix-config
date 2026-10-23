@@ -1,5 +1,5 @@
-{ pkgs, repoLib, ... }:
+{ pkgs, mylib, ... }:
 {
-  imports = repoLib.importAll ./.;
+  imports = mylib.importAll ./.;
   home.packages = [ pkgs.unstable.cc-switch ];
 }

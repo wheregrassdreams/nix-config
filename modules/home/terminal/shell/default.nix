@@ -1,7 +1,7 @@
-{ inputs, repoLib, ... }:
+{ inputs, mylib, ... }:
 {
   imports = [
     inputs.nix-index-database.homeModules.nix-index
   ]
-  ++ repoLib.importAll ./.;
+  ++ mylib.importAll ./.;
 }

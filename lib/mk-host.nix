@@ -3,7 +3,7 @@
   overlays ? [ ],
   inputs,
   self ? null,
-  repoLib ? null,
+  mylib ? null,
 }:
 {
   system,
@@ -47,7 +47,7 @@ systemFunc {
       userName
       identity
       configRepoPath
-      repoLib
+      mylib
       ;
   };
   modules = [
@@ -78,7 +78,7 @@ systemFunc {
           isDarwin
           isWsl
           configRepoPath
-          repoLib
+          mylib
           ;
         flake = self;
       };

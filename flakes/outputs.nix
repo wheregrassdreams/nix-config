@@ -5,7 +5,7 @@ let
 
   overlays = [ self.overlays.default ];
 
-  repoLib = import ../lib {
+  mylib = import ../lib {
     lib = nixpkgs.lib;
     inherit
       nixpkgs
@@ -27,16 +27,16 @@ let
   ) hostEntries;
 
   hostHomeConfigurations = lib.mapAttrs' (
-    name: host: lib.nameValuePair "${host.identity.username}@${name}" (repoLib.mkHome host)
+    name: host: lib.nameValuePair "${host.identity.username}@${name}" (mylib.mkHome host)
   ) hosts;
   homeConfigurations = hostHomeConfigurations;
 in
 {
   flake = {
-    homeModules = repoLib.discoverPackages ../modules/home;
+    homeModules = mylib.discoverPackages ../modules/home;
     homeConfigurations = homeConfigurations;
     darwinModules.platform = import ../modules/system/darwin;
     nixosModules.platform = import ../modules/system/nixos;
-    lib = lib.extend (_: _: { nixConfig = lib.removeAttrs repoLib [ "mkHost" ]; });
+    lib = lib.extend (_: _: { nixConfig = lib.removeAttrs mylib [ "mkHost" ]; });
   };
 }
