@@ -13,6 +13,7 @@
     flake.homeModules.terminal
     flake.homeModules."terminal.shell"
     flake.homeModules."terminal.tmux"
+    flake.homeModules."staging.tmux-config"
     flake.homeModules."terminal.tools"
     flake.homeModules."dev.kubernetes"
     flake.homeModules."dev.ci"
@@ -96,7 +97,8 @@
         # { name = "shivammathur/php"; trusted = true; }
       ];
       brews = [
-        # "terminal-notifier"        # ghostty/kitty已经有这个功能了
+        "tmux"
+        "terminal-notifier"
         # "bendews/tap/apw"          # 暂时没有使用场景
         # "shivammathur/php/php@7.2" # 以前工作用到，现在不需要了
       ];

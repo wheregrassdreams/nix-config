@@ -33,7 +33,9 @@ let
 in
 {
   flake = {
-    homeModules = mylib.discoverPackages ../modules/home;
+    homeModules = mylib.discoverPackages ../modules/home // {
+      "staging.tmux-config" = inputs.staging-tmux-config.homeManagerModules.default;
+    };
     homeConfigurations = homeConfigurations;
     darwinModules.platform = import ../modules/system/darwin;
     nixosModules.platform = import ../modules/system/nixos;
