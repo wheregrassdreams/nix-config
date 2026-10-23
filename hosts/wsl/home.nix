@@ -32,7 +32,6 @@ in
     flake.homeModules."terminal.tools"
     flake.homeModules."dev.kubernetes"
     flake.homeModules."dev.ci"
-    flake.homeModules."dev.projects"
     flake.homeModules."dev.tools"
     flake.homeModules."dev.langs.c"
     flake.homeModules."dev.langs.nix"
@@ -60,20 +59,15 @@ in
     ];
   };
 
-  sops.secrets."backup/gitea-ssh-private-key".sopsFile = ../../secrets/remote-backups.yaml;
-
-  programs.ssh.matchBlocks.gitea-backups = {
-    hostname = "ssh.gitea.wheregrassdreams.top";
-    port = 30222;
-    user = "git";
-    identityFile = config.sops.secrets."backup/gitea-ssh-private-key".path;
-    identitiesOnly = true;
-    extraOptions.StrictHostKeyChecking = "yes";
-  };
+  # Reprise integration remains disabled until its remote is explicitly configured.
+  # sops.secrets."backup/gitea-ssh-private-key".sopsFile = ../../secrets/remote-backups.yaml;
 
   my = {
     inherit identity;
-    paths.personal.windows = "/mnt/c";
+    paths.personal = {
+      windows = "/mnt/c";
+      projects = "${config.home.homeDirectory}/Workspace/code/projects";
+    };
 
     storage.remote.targets = {
       homelab-s3 = {
@@ -83,19 +77,8 @@ in
           prefix = "nix-config";
         };
       };
-      homelab-gitea-backups = {
-        backend.git = {
-          sshHost = "gitea-backups";
-        };
-        provisioner = {
-          kind = "giteaPreprovisioned";
-          gitea = {
-            repository = "homelab-backups/nix-config-snapshots";
-          };
-        };
-      };
     };
-    dev.projects.snapshots.remote.target = "homelab-gitea-backups";
+    # dev.projects.snapshots.remote.target = "homelab-gitea-backups";
 
     terminal.shell = {
       prompt.enable = true;

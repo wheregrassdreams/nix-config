@@ -76,7 +76,10 @@
     };
   };
 
-  sops.secrets."backup/gitea-ssh-private-key".sopsFile = ../../secrets/remote-backups.yaml;
+  sops.secrets."backup/gitea-ssh-private-key" = {
+    sopsFile = ../../secrets/remote-backups.yaml;
+    mode = "0400";
+  };
 
   programs.ssh.matchBlocks.gitea-backups = {
     hostname = "ssh.gitea.wheregrassdreams.top";

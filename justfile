@@ -17,18 +17,6 @@ homebrew-drift-check:
 paths-report:
     bash "{{ repo }}/modules/home/core/paths/report.sh" "{{ repo }}"
 
-# Inventory repositories and review uninitialized, uncommitted, and inactive candidates.
-projects-scan:
-    project-scan
-
-# Snapshot dirty or not-provably-pushed worktrees into local storage.
-projects-snapshot *args:
-    project-snapshot {{ args }}
-
-# List retained snapshots; restore with project-snapshot --restore STORE REF DESTINATION.
-projects-snapshots:
-    project-snapshot --list
-
 # Discover skills without installing them.
 agent-skills-find query:
     bash "{{ repo }}/scripts/agent-skills.sh" find "{{ query }}"
