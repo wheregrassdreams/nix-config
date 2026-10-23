@@ -61,6 +61,10 @@ build-home:
 switch-home:
     bash "{{ repo }}/scripts/nix-target.sh" switch-home "{{ repo }}"
 
+# Same activation with a stable JSONL result for scripts and agent tools.
+switch-home-json:
+    bash "{{ repo }}/scripts/nix-target.sh" switch-home-json "{{ repo }}"
+
 # Use nix-fast-build for the current supported system output. Intended for CI or remote builders.
 fast-build:
     bash "{{ repo }}/scripts/nix-target.sh" fast-build "{{ repo }}"

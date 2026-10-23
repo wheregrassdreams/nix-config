@@ -11,6 +11,16 @@ die() {
 action="$1"
 repo="$2"
 
+json_escape() {
+  local value="$1"
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  value=${value//$'\n'/\\n}
+  value=${value//$'\r'/\\r}
+  value=${value//$'\t'/\\t}
+  printf '%s' "$value"
+}
+
 [[ -f "$repo/flake.nix" ]] || die "repository does not contain flake.nix: $repo"
 
 case "$(uname -s)" in
@@ -83,6 +93,53 @@ switch-home:*)
   exec nix run --inputs-from "$flake_repo" nixpkgs#nh -- home switch "$flake_repo" \
     --configuration "${current_user}@${canonical_host}" \
     --backup-extension hm-backup
+  ;;
+switch-home-json:*)
+  export NIX_CONFIG="${NIX_CONFIG:+$NIX_CONFIG$'\n'}accept-flake-config = true"
+
+  log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/nix-target"
+  mkdir -p "$log_dir"
+  log_file="$log_dir/switch-home.log"
+  target="${current_user}@${canonical_host}"
+  json_target="$(json_escape "$target")"
+  json_log_file="$(json_escape "$log_file")"
+
+  # Machine contract: one JSONL start event and one complete event, schema v1.
+  # Keep full nh output in one replaceable log file; stdout remains parseable.
+  printf '{"schema_version":1,"event":"start","action":"switch-home","target":"%s"}\n' \
+    "$json_target"
+
+  if nix run --inputs-from "$flake_repo" nixpkgs#nh -- home switch \
+    --json --no-nom "$flake_repo" \
+    --configuration "$target" \
+    --backup-extension hm-backup >"$log_file" 2>&1; then
+    command_status=0
+    result_status=success
+    error_json=null
+  else
+    command_status=$?
+    result_status=failure
+    error_json="\"nh exited with status $command_status\""
+  fi
+
+  generation="$(sed -nE 's/.*"out":"([^"]+)".*/\1/p' "$log_file" | tail -n 1)"
+  if [[ -z $generation && $command_status -eq 0 ]]; then
+    result_status=invalid_output
+    error_json='"nh completed but did not emit its expected JSON build result"'
+    command_status=1
+  fi
+
+  if [[ -n $generation ]]; then
+    generation_json="\"$(json_escape "$generation")\""
+  else
+    generation_json=null
+  fi
+
+  printf '{"schema_version":1,"event":"complete","action":"switch-home","target":"%s","status":"%s","exit_code":%d,"generation":%s,"log_file":"%s","error":%s}\n' \
+    "$json_target" "$result_status" "$command_status" "$generation_json" \
+    "$json_log_file" "$error_json"
+
+  exit "$command_status"
   ;;
 fast-build:darwin)
   exec nix run "$flake_repo#nix-fast-build" -- --no-nom --skip-cached --flake "$flake_repo#darwinConfigurations.${canonical_host}.system"
