@@ -39,7 +39,6 @@ in
     flake.homeModules."storage.remote"
     flake.homeModules."connectivity.ssh"
     flake.homeModules."connectivity.tailscale"
-    flake.homeModules.services
   ];
 
   home = {

@@ -62,7 +62,7 @@
     flake.homeModules."connectivity.clash-verge"
     flake.homeModules."connectivity.tailscale"
 
-    flake.homeModules.services
+    # Paused for reevaluation; see modules/home/services.
     flake.homeModules."storage.backup"
     flake.homeModules."storage.remote"
   ];

@@ -1,4 +1,7 @@
 { lib, ... }:
+/*
+The following service options are paused for reevaluation.
+
 let
   modeType = lib.types.nullOr (
     lib.types.enum [
@@ -19,6 +22,7 @@ let
     };
   };
 in
+*/
 {
   options.my.ssh = {
     server = {
@@ -35,6 +39,7 @@ in
     };
   };
 
+  /*
   options.my.services = {
     defaultMode = lib.mkOption {
       type = lib.types.enum [
@@ -49,4 +54,5 @@ in
     postgres = serviceComponent "PostgreSQL";
     redis = serviceComponent "Redis";
   };
+  */
 }
