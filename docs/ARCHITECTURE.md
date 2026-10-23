@@ -22,6 +22,10 @@ aggregate host registry and no profiles layer.
   and settings. This includes Home Manager username and locale.
 - `flakes/` owns flake output composition and input partitions. `flake.nix`
   declares the root inputs and imports this composition.
+- `flakes/staging/<name>/` holds temporary adapters for external projects
+  whose integration interfaces are still evolving. Hosts select adapters
+  explicitly; reevaluate them after the upstream APIs stabilize. This is a
+  local flake boundary, not a flake-parts partition.
 - `flakes/darwin/` and `flakes/nixos/` hold platform-only flake inputs. The
   matching flake-parts partition builds only that platform's system outputs;
   shared inputs and standalone Home outputs stay in the root graph.
@@ -178,21 +182,17 @@ is disabled.
 `dev/` is an organizational group. `dev/langs/` organizes one package per
 language; shared development utilities live in `dev.tools`, and local CI tools
 live in `dev.ci`.
-`dev.projects` consumes the host's `paths.personal.projects` contract to
-inventory local Git repositories, candidate project directories, and linked
-worktrees. Its scanner is read-only; activity age is a review hint, never an
-automatic cleanup decision. On Darwin it runs a weekly inventory and a
-six-hourly local Git snapshot job; WSL exposes the one-shot snapshot command.
-Snapshots live outside the project tree,
-include tracked and non-ignored untracked files, and expire after 30 days.
-An optional Git target stores one `snapshots` branch per project. The
-`sshBare` provisioner creates filesystem-rooted bare repositories through a
-host SSH alias; the `gitea` provisioner creates private repositories through
-the HTTPS API and pushes Git data through a host SSH alias. MacBook and WSL use
-a pre-provisioned private Gitea repository declared by each host.
-Each branch contains a single chronological timeline with source metadata in
-commit trailers; it does not retain the project's source history. Retention
-compacts that branch and synchronizes it with a lease.
+
+`dev.projects` bridges standalone Reprise through
+`flakes/staging/reprise`. The nix-config side resolves its storage target and
+passes concrete settings; the staging flake owns Reprise commands and user
+services. Reevaluate this boundary after Reprise's API stabilizes.
+
+`terminal.tmux` preserves the repository's original tmux configuration.
+`flakes/staging/tmux-config` is an adapter imported explicitly by the
+MacBook host, so other hosts retain the original configuration without the
+external integration.
+
 `dev.langs.go` uses the pinned `pkgs.unstable.go_1_27` package and sets
 `GOTOOLCHAIN=local`, so Go uses the Nix-managed 1.27 toolchain instead of
 downloading a second toolchain at first invocation. Go manages its module and
@@ -316,7 +316,7 @@ Its explicitly imported `lib/targets.nix` provides shared target lookup,
 backend access, and path joining. `lib/clients.nix` exposes Git/OpenSSH and
 Restic client wiring, including Restic's native S3 and rclone-backed WebDAV
 connections. Products retain their own operations and runtime behavior. Git
-targets support the `sshBare` and `gitea` project-snapshot provisioners.
+targets support the `sshBare` and `gitea` reprise-snapshot provisioners.
 Synchronization products, iCloud, and Syncthing are deferred until they have
 concrete directory and conflict semantics. Data-owning capabilities register
 concrete paths with `my.storage.backup.datasets` when a backup repository and
@@ -357,11 +357,9 @@ declare -> observe -> compare -> report or plan -> reconcile when authorized
   that packages must duplicate or maintain without a concrete operational use.
 
 The current Homebrew drift check is a read-only comparison between the
-Homebrew inventory and the generated Brewfile. `dev.projects` reports
-repository observations and snapshots selected worktrees under its own
-policy; `storage.backup` runs declared dataset backups and applies explicit
-retention. These remain bounded package-owned consumers, not a general
-machine-wide cleanup policy.
+Homebrew inventory and the generated Brewfile. `storage.backup` runs declared
+dataset backups and applies explicit retention. `dev.projects` runs inventory
+review and independent Git workspace snapshots under its own policy.
 
 `just paths-report` consumes the active host's `my.paths.exported` values and
 reports each registered path's disk usage or missing status. It does not scan
