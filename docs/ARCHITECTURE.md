@@ -146,11 +146,13 @@ extended utilities. `television` and media tools remain optional subfeatures.
 here for now. The `trash PATH...` command sends files to the platform's native
 trash: macOS uses its system Trash, while Linux uses the FreeDesktop trash.
 `act` belongs to `dev.ci`, not terminal tools.
-On Darwin, tmux-continuum owns periodic save and session restore, while the
-package's LaunchAgent starts the tmux server silently with the generated
-configuration. Ghostty attaches its first surface to that server. The
-resurrect snapshot directory is registered as
-`my.paths.exported."terminal.tmux.resurrect"`.
+The native `terminal.tmux` package retains the repository's original
+configuration and remains selected by WSL. The MacBook host comments out that
+package and selects `staging.tmux-config`, which owns the external tmux package,
+server LaunchAgent, configuration reload, and quickpane reconciliation. Ghostty
+uses the selected package from `programs.tmux.package`. The staging adapter
+exports its resurrect snapshot directory as
+`my.paths.exported."staging.tmux-config.resurrect"`.
 
 ### Connectivity and desktop
 
@@ -183,15 +185,16 @@ is disabled.
 language; shared development utilities live in `dev.tools`, and local CI tools
 live in `dev.ci`.
 
-`dev.projects` bridges standalone Reprise through
-`flakes/staging/reprise`. The nix-config side resolves its storage target and
-passes concrete settings; the staging flake owns Reprise commands and user
-services. Reevaluate this boundary after Reprise's API stabilizes.
+The `staging.reprise` Home Manager module is an explicit host-selected
+integration from `flakes/staging/reprise`. The staging flake owns project
+inventory and snapshot configuration, commands, and services. A small root
+bridge in `flakes/staging/reprise-bridge.nix` resolves the declared storage
+target and passes the concrete Git destination. Reevaluate this boundary after
+Reprise's API stabilizes.
 
 `terminal.tmux` preserves the repository's original tmux configuration.
-`flakes/staging/tmux-config` is an adapter imported explicitly by the
-MacBook host, so other hosts retain the original configuration without the
-external integration.
+`flakes/staging/tmux-config` is an adapter imported explicitly by the MacBook
+host; other hosts such as WSL continue to select `terminal.tmux`.
 
 `dev.langs.go` uses the pinned `pkgs.unstable.go_1_27` package and sets
 `GOTOOLCHAIN=local`, so Go uses the Nix-managed 1.27 toolchain instead of
@@ -316,7 +319,8 @@ Its explicitly imported `lib/targets.nix` provides shared target lookup,
 backend access, and path joining. `lib/clients.nix` exposes Git/OpenSSH and
 Restic client wiring, including Restic's native S3 and rclone-backed WebDAV
 connections. Products retain their own operations and runtime behavior. Git
-targets support the `sshBare` and `gitea` reprise-snapshot provisioners.
+targets support the `sshBare`, `gitea`, and `giteaPreprovisioned` snapshot
+provisioners used by the staging Reprise bridge.
 Synchronization products, iCloud, and Syncthing are deferred until they have
 concrete directory and conflict semantics. Data-owning capabilities register
 concrete paths with `my.storage.backup.datasets` when a backup repository and
@@ -358,8 +362,8 @@ declare -> observe -> compare -> report or plan -> reconcile when authorized
 
 The current Homebrew drift check is a read-only comparison between the
 Homebrew inventory and the generated Brewfile. `storage.backup` runs declared
-dataset backups and applies explicit retention. `dev.projects` runs inventory
-review and independent Git workspace snapshots under its own policy.
+dataset backups and applies explicit retention. The staging Reprise module
+runs inventory review and Git workspace snapshots under its own policy.
 
 `just paths-report` consumes the active host's `my.paths.exported` values and
 reports each registered path's disk usage or missing status. It does not scan

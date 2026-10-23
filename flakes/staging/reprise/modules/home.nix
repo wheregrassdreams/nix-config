@@ -1,5 +1,6 @@
 {
   config,
+  isDarwin,
   lib,
   pkgs,
   reprise,
@@ -8,15 +9,16 @@
 }:
 let
   cfg = config.my.staging.reprise;
+  remote = cfg.remote.resolved;
   remoteArgs =
-    if cfg.remote == null then
+    if remote == null then
       ""
-    else if cfg.remote.kind == "gitea" then
-      "--remote-kind gitea --remote-ssh-host ${lib.escapeShellArg cfg.remote.sshHost} --gitea-api-url ${lib.escapeShellArg cfg.remote.giteaApiUrl} --gitea-organization ${lib.escapeShellArg cfg.remote.giteaOrganization} --gitea-token-file ${lib.escapeShellArg cfg.remote.giteaTokenFile} --host-id ${lib.escapeShellArg cfg.hostId}"
-    else if cfg.remote.kind == "giteaPreprovisioned" then
-      "--remote-kind giteaPreprovisioned --remote-ssh-host ${lib.escapeShellArg cfg.remote.sshHost} --gitea-repository ${lib.escapeShellArg cfg.remote.giteaRepository} --host-id ${lib.escapeShellArg cfg.hostId}"
+    else if remote.kind == "gitea" then
+      "--remote-kind gitea --remote-ssh-host ${lib.escapeShellArg remote.sshHost} --gitea-api-url ${lib.escapeShellArg remote.giteaApiUrl} --gitea-organization ${lib.escapeShellArg remote.giteaOrganization} --gitea-token-file ${lib.escapeShellArg remote.giteaTokenFile} --host-id ${lib.escapeShellArg cfg.hostId}"
+    else if remote.kind == "giteaPreprovisioned" then
+      "--remote-kind giteaPreprovisioned --remote-ssh-host ${lib.escapeShellArg remote.sshHost} --gitea-repository ${lib.escapeShellArg remote.giteaRepository} --host-id ${lib.escapeShellArg cfg.hostId}"
     else
-      "--remote-kind sshBare --remote-ssh-host ${lib.escapeShellArg cfg.remote.sshHost} --remote-root ${lib.escapeShellArg cfg.remote.root} --host-id ${lib.escapeShellArg cfg.hostId}";
+      "--remote-kind sshBare --remote-ssh-host ${lib.escapeShellArg remote.sshHost} --remote-root ${lib.escapeShellArg remote.root} --host-id ${lib.escapeShellArg cfg.hostId}";
   projectScanNotify = pkgs.writeShellApplication {
     name = "project-scan-notify";
     runtimeInputs = [ pkgs.git ];
@@ -44,14 +46,13 @@ let
   serviceEnvironment = {
     NIX_CONFIG_PATH_PROJECTS = cfg.projectsPath;
     PROJECTS_INACTIVE_AFTER_DAYS = toString cfg.inactiveAfterDays;
-    PROJECT_SNAPSHOT_REMOTE_SSH_HOST = if cfg.remote == null then "" else cfg.remote.sshHost;
-    PROJECT_SNAPSHOT_REMOTE_ROOT = if cfg.remote == null then "" else cfg.remote.root;
-    PROJECT_SNAPSHOT_REMOTE_KIND = if cfg.remote == null then "" else cfg.remote.kind;
-    PROJECT_SNAPSHOT_GITEA_API_URL = if cfg.remote == null then "" else cfg.remote.giteaApiUrl;
-    PROJECT_SNAPSHOT_GITEA_ORGANIZATION =
-      if cfg.remote == null then "" else cfg.remote.giteaOrganization;
-    PROJECT_SNAPSHOT_GITEA_TOKEN_FILE = if cfg.remote == null then "" else cfg.remote.giteaTokenFile;
-    PROJECT_SNAPSHOT_GITEA_REPOSITORY = if cfg.remote == null then "" else cfg.remote.giteaRepository;
+    PROJECT_SNAPSHOT_REMOTE_SSH_HOST = if remote == null then "" else remote.sshHost;
+    PROJECT_SNAPSHOT_REMOTE_ROOT = if remote == null then "" else remote.root;
+    PROJECT_SNAPSHOT_REMOTE_KIND = if remote == null then "" else remote.kind;
+    PROJECT_SNAPSHOT_GITEA_API_URL = if remote == null then "" else remote.giteaApiUrl;
+    PROJECT_SNAPSHOT_GITEA_ORGANIZATION = if remote == null then "" else remote.giteaOrganization;
+    PROJECT_SNAPSHOT_GITEA_TOKEN_FILE = if remote == null then "" else remote.giteaTokenFile;
+    PROJECT_SNAPSHOT_GITEA_REPOSITORY = if remote == null then "" else remote.giteaRepository;
     PROJECT_SNAPSHOT_HOST_ID = cfg.hostId;
     XDG_DATA_HOME = cfg.xdgDataHome;
     XDG_STATE_HOME = cfg.xdgStateHome;
@@ -67,8 +68,8 @@ in
       repriseGiteaPolicy
     ];
   }
-  // lib.optionalAttrs pkgs.stdenv.isDarwin {
-    launchd.agents.reprise-daemon = lib.mkIf pkgs.stdenv.isDarwin {
+  // lib.optionalAttrs isDarwin {
+    launchd.agents.reprise-daemon = {
       enable = true;
       config = {
         Label = "org.nix-config.reprise-daemon";
@@ -85,7 +86,7 @@ in
       };
     };
 
-    launchd.agents.projects-scan = lib.mkIf pkgs.stdenv.isDarwin {
+    launchd.agents.projects-scan = {
       enable = true;
       config = {
         Label = "org.nix-config.projects-scan";
@@ -104,7 +105,7 @@ in
       };
     };
 
-    launchd.agents.projects-snapshot = lib.mkIf pkgs.stdenv.isDarwin {
+    launchd.agents.projects-snapshot = {
       enable = true;
       config = {
         Label = "org.nix-config.projects-snapshot";
@@ -118,7 +119,7 @@ in
     };
 
   }
-  // lib.optionalAttrs (!pkgs.stdenv.isDarwin) {
+  // lib.optionalAttrs (!isDarwin) {
     systemd.user.services.reprise-daemon = {
       Unit.Description = "Local reprise command daemon";
       Service = {

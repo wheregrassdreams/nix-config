@@ -58,9 +58,6 @@ in
     ];
   };
 
-  # Reprise integration remains disabled until its remote is explicitly configured.
-  # sops.secrets."backup/gitea-ssh-private-key".sopsFile = ../../secrets/remote-backups.yaml;
-
   my = {
     inherit identity;
     paths.personal = {
@@ -77,8 +74,6 @@ in
         };
       };
     };
-    # dev.projects.snapshots.remote.target = "homelab-gitea-backups";
-
     terminal.shell = {
       prompt.enable = true;
       atuin.enable = true;

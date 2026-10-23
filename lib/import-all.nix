@@ -9,7 +9,7 @@ let
     lib.hasSuffix ".nix" name && name != "default.nix" && name != "options.nix" && !isExcludedName name;
 
   collect =
-    directory: isRoot:
+    directory:
     let
       entries = builtins.readDir directory;
       names = builtins.attrNames entries;
@@ -20,16 +20,16 @@ let
         path = directory + "/${name}";
         entryType = entries.${name};
         isDirectory = entryType == "directory";
-        isPackage = !isRoot && isDirectory && builtins.pathExists (path + "/default.nix");
+        isPackage = isDirectory && builtins.pathExists (path + "/default.nix");
       in
       if isExcludedName name || isPackage then
         [ ]
       else if isDirectory then
-        collect path false
+        collect path
       else if entryType == "regular" && isModuleFile name then
         [ path ]
       else
         [ ]
     ) names;
 in
-lib.optional (builtins.pathExists optionsFile) optionsFile ++ collect packageRoot true
+lib.optional (builtins.pathExists optionsFile) optionsFile ++ collect packageRoot

@@ -7,7 +7,7 @@
 }:
 let
   cfg = config.my.desktop.terminal.ghostty;
-  tmux = lib.getExe pkgs.tmux;
+  tmux = lib.getExe config.programs.tmux.package;
   tmuxConfig = "${config.xdg.configHome}/tmux/tmux.conf";
 in
 {

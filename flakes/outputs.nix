@@ -30,10 +30,12 @@ let
     name: host: lib.nameValuePair "${host.identity.username}@${name}" (mylib.mkHome host)
   ) hosts;
   homeConfigurations = hostHomeConfigurations;
+  stagingReprise = import ./staging/reprise-bridge.nix { inherit inputs lib; };
 in
 {
   flake = {
     homeModules = mylib.discoverPackages ../modules/home // {
+      "staging.reprise" = stagingReprise;
       "staging.tmux-config" = inputs.staging-tmux-config.homeManagerModules.default;
     };
     homeConfigurations = homeConfigurations;

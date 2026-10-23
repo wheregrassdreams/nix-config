@@ -12,12 +12,12 @@
     flake.homeModules.core
     flake.homeModules.terminal
     flake.homeModules."terminal.shell"
-    flake.homeModules."terminal.tmux"
+    # Native terminal.tmux is disabled for this host; use the staging adapter below.
     flake.homeModules."staging.tmux-config"
     flake.homeModules."terminal.tools"
     flake.homeModules."dev.kubernetes"
     flake.homeModules."dev.ci"
-    flake.homeModules."dev.projects"
+    flake.homeModules."staging.reprise"
     flake.homeModules."dev.tools"
 
     flake.homeModules."dev.langs.c"
@@ -42,7 +42,6 @@
 
     flake.homeModules."ai.claude"
     flake.homeModules."ai.codex"
-    flake.homeModules."ai.cc-switch"
     flake.homeModules."ai.opencode"
     flake.homeModules."ai.agent-resources"
 
@@ -204,7 +203,7 @@
       datasets = {
         tmux-resurrect = {
           enable = false;
-          paths = [ config.my.paths.exported."terminal.tmux.resurrect" ];
+          paths = [ config.my.paths.exported."staging.tmux-config.resurrect" ];
           class = "valuable";
         };
         codex-sessions = {
@@ -250,7 +249,7 @@
       };
     };
 
-    dev.projects.snapshots.remote.target = "homelab-gitea-backups";
+    staging.reprise.remote.target = "homelab-gitea-backups";
     dev.tools.nh.enable = true;
 
     terminal.tools = {
@@ -277,9 +276,6 @@
 
   programs.bash.initExtra = lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500";
   programs.zsh.initContent = lib.mkAfter (lib.optionalString pkgs.stdenv.isDarwin "ulimit -s 65500");
-
-  my.terminal.tmux.inputMethod.command =
-    lib.mkIf config.my.desktop.input.keyboardMapping.enable "${config.my.homebrew.brewPrefix}/bin/im-select";
 
   targets.darwin.defaults = {
     ".GlobalPreferences"."com.apple.mouse.scaling" = -1.0;

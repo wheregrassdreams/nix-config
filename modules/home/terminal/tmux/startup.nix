@@ -5,7 +5,7 @@
   ...
 }:
 let
-  tmux = lib.getExe config.programs.tmux.package;
+  tmux = lib.getExe pkgs.tmux;
   tmuxConfig = "${config.xdg.configHome}/tmux/tmux.conf";
   startTmux = pkgs.writeShellApplication {
     name = "start-tmux-server";

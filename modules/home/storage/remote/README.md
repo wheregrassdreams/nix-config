@@ -23,10 +23,10 @@ backend-aware client configuration:
   or adds rclone for a WebDAV target.
 
 The client interface wires up executables and connection details; it does not
-choose operations or policy. `dev.projects` owns Git snapshot creation,
-provisioning, and retention. `storage.backup` owns Restic datasets, schedules,
-retention, checks, and restore behavior. Each product owns the paths and
-recovery semantics for its data.
+choose operations or policy. The staging Reprise integration owns Git snapshot
+creation, provisioning, and retention. `storage.backup` owns Restic datasets,
+schedules, retention, checks, and restore behavior. Each product owns the paths
+and recovery semantics for its data.
 
 Keep this shared surface limited to operations with multiple real consumers.
 Do not add a universal transfer command or job schema that hides each
