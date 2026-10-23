@@ -126,7 +126,9 @@ UID is permanently `1000`; rename the user without changing that UID. See
 
 ## Layout
 
-- `flakes/`: flake output composition and the development input partition.
+- `flake-parts/`: root flake output composition and partition inputs.
+- `integrations/staging/`: temporary external flake integrations selected by
+  hosts.
 - `hosts/<host>/host.nix`: host facts and selected capability packages. Hosts
   are discovered from these files; there is no aggregate host registry.
 - `hosts/<host>/{home,system}.nix`: host-local Home Manager and system settings.

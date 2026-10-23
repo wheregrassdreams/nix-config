@@ -1,5 +1,4 @@
-{ outputType }:
-{ inputs, ... }:
+{ inputs }:
 let
   inherit (inputs) self nixpkgs;
   inherit (nixpkgs) lib;
@@ -26,10 +25,7 @@ let
   hosts = lib.mapAttrs (
     name: _: import (hostRoot + "/${name}/host.nix") { inherit self; }
   ) hostEntries;
-  selectedHosts = lib.filterAttrs (_: host: host.outputType == outputType) hosts;
-  outputName = if outputType == "darwin" then "darwinConfigurations" else "nixosConfigurations";
-  configurations = lib.mapAttrs (_: mylib.mkHost) selectedHosts;
 in
 {
-  flake = lib.setAttrByPath [ outputName ] configurations;
+  inherit lib mylib hosts;
 }

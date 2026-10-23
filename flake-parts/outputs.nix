@@ -1,36 +1,12 @@
 { inputs, ... }:
 let
-  inherit (inputs) self nixpkgs;
-  inherit (nixpkgs) lib;
-
-  overlays = [ self.overlays.default ];
-
-  mylib = import ../lib {
-    lib = nixpkgs.lib;
-    inherit
-      nixpkgs
-      inputs
-      self
-      overlays
-      ;
-  };
-
-  hostRoot = ../hosts;
-  hostEntries = lib.filterAttrs (
-    name: type:
-    type == "directory"
-    && !lib.hasPrefix "_" name
-    && builtins.pathExists (hostRoot + "/${name}/host.nix")
-  ) (builtins.readDir hostRoot);
-  hosts = lib.mapAttrs (
-    name: _: import (hostRoot + "/${name}/host.nix") { inherit self; }
-  ) hostEntries;
+  inherit (import ./host-context.nix { inherit inputs; }) lib mylib hosts;
 
   hostHomeConfigurations = lib.mapAttrs' (
     name: host: lib.nameValuePair "${host.identity.username}@${name}" (mylib.mkHome host)
   ) hosts;
   homeConfigurations = hostHomeConfigurations;
-  stagingReprise = import ./staging/reprise-bridge.nix { inherit inputs lib; };
+  stagingReprise = import ../integrations/staging/reprise-bridge.nix { inherit inputs lib; };
 in
 {
   flake = {

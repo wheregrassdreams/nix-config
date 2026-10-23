@@ -7,18 +7,18 @@
   ];
 
   partitions.dev = {
-    extraInputsFlake = ./dev;
+    extraInputsFlake = ./partitions/dev;
     module = ./development.nix;
   };
 
   partitions.darwin = {
-    extraInputsFlake = ./darwin;
-    module = ./darwin-partition.nix;
+    extraInputsFlake = ./partitions/darwin;
+    module = import ./platform-outputs.nix { outputType = "darwin"; };
   };
 
   partitions.nixos = {
-    extraInputsFlake = ./nixos;
-    module = ./nixos-partition.nix;
+    extraInputsFlake = ./partitions/nixos;
+    module = import ./platform-outputs.nix { outputType = "nixos"; };
   };
 
   partitionedAttrs = {

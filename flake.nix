@@ -52,10 +52,10 @@
     # OpenAI Codex CLI release binaries with a dedicated Cachix cache.
     codex-cli-nix.url = "github:sadjow/codex-cli-nix";
 
-    # Temporary external integrations live in local staging flakes until their
+    # Temporary external integrations live in integrations/staging until their
     # public interfaces have stabilized.
     staging-reprise = {
-      url = "path:./flakes/staging/reprise";
+      url = "path:./integrations/staging/reprise";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
@@ -64,7 +64,7 @@
 
     # Temporary host-selected adapter for the standalone tmux configuration.
     staging-tmux-config = {
-      url = "path:./flakes/staging/tmux-config";
+      url = "path:./integrations/staging/tmux-config";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -94,7 +94,7 @@
       ];
 
       imports = [
-        ./flakes
+        ./flake-parts
       ];
     };
 }

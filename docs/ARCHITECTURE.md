@@ -7,10 +7,10 @@ flake discovers hosts from their local descriptors and builds system plus
 standalone Home outputs:
 
 ```text
-flake.nix -> flakes -> hosts -> package registries -> package configuration
+flake.nix -> flake-parts -> hosts -> package registries -> package configuration
 ```
 
-`flakes/outputs.nix` scans direct child directories of `hosts/` for
+`flake-parts/outputs.nix` scans direct child directories of `hosts/` for
 `host.nix`. The directory name becomes the output host name. There is no
 aggregate host registry and no profiles layer.
 
@@ -20,14 +20,14 @@ aggregate host registry and no profiles layer.
   output and builder. `userName` is derived from `identity.username`.
 - `hosts/<host>/home.nix` and `system.nix` own host-local values
   and settings. This includes Home Manager username and locale.
-- `flakes/` owns flake output composition and input partitions. `flake.nix`
-  declares the root inputs and imports this composition.
-- `flakes/staging/<name>/` holds temporary adapters for external projects
+- `flake-parts/` owns flake-parts output composition and input partitions.
+  `flake.nix` declares the root inputs and imports this composition.
+- `integrations/staging/<name>/` holds temporary child flakes for external projects
   whose integration interfaces are still evolving. Hosts select adapters
-  explicitly; reevaluate them after the upstream APIs stabilize. This is a
-  local flake boundary, not a flake-parts partition.
-- `flakes/darwin/` and `flakes/nixos/` hold platform-only flake inputs. The
-  matching flake-parts partition builds only that platform's system outputs;
+  explicitly; reevaluate them after the upstream APIs stabilize. These are
+  local flake boundaries, not flake-parts partitions.
+- `flake-parts/partitions/darwin/` and `nixos/` hold platform-only flake
+  inputs. The matching flake-parts partition builds only that platform's system outputs;
   shared inputs and standalone Home outputs stay in the root graph.
 - `overlays/` owns shared package-set extensions. `overlays/default.nix`
   discovers local overlay files and composes them with upstream overlays;
@@ -186,15 +186,15 @@ language; shared development utilities live in `dev.tools`, and local CI tools
 live in `dev.ci`.
 
 The `staging.reprise` Home Manager module is an explicit host-selected
-integration from `flakes/staging/reprise`. The staging flake owns project
+integration from `integrations/staging/reprise`. The staging flake owns project
 inventory and snapshot configuration, commands, and services. A small root
-bridge in `flakes/staging/reprise-bridge.nix` resolves the declared storage
-target and passes the concrete Git destination. Reevaluate this boundary after
+bridge in `integrations/staging/reprise-bridge.nix` resolves the declared
+storage target and passes the concrete Git destination. Reevaluate this boundary after
 Reprise's API stabilizes.
 
 `terminal.tmux` preserves the repository's original tmux configuration.
-`flakes/staging/tmux-config` is an adapter imported explicitly by the MacBook
-host; other hosts such as WSL continue to select `terminal.tmux`.
+`integrations/staging/tmux-config` is an adapter imported explicitly by the
+MacBook host; other hosts such as WSL continue to select `terminal.tmux`.
 
 `dev.langs.go` uses the pinned `pkgs.unstable.go_1_27` package and sets
 `GOTOOLCHAIN=local`, so Go uses the Nix-managed 1.27 toolchain instead of
@@ -394,10 +394,12 @@ not import Darwin or NixOS implementations.
 
 ## Flake partitions
 
-Development-only inputs stay in the `dev` partition under `flakes/dev/`;
-Darwin system inputs stay in `flakes/darwin/`; and NixOS system inputs stay in
-`flakes/nixos/`. The `darwinConfigurations` and `nixosConfigurations` output
-attributes are evaluated in their matching partitions. Shared Home Manager
+Development-only inputs stay in the `dev` partition under
+`flake-parts/partitions/dev/`; Darwin system inputs stay in
+`flake-parts/partitions/darwin/`; and NixOS system inputs stay in
+`flake-parts/partitions/nixos/`. The `darwinConfigurations` and
+`nixosConfigurations` output attributes are evaluated in their matching
+partitions. Shared Home Manager
 outputs and reusable capability registries remain in the root graph. This
 keeps platform builders and their inputs out of the other platform's system
 output evaluation without reorganizing product packages by OS. Shared overlays

@@ -7,11 +7,11 @@ This is a Nix flake for the MacBook and NixOS WSL. Read
 The composition chain is:
 
 ```text
-flake output -> flakes -> discovered hosts -> exported capability packages
+flake output -> flake-parts -> discovered hosts -> exported capability packages
 ```
 
 - `hosts/<host>/host.nix` marks a host and owns its machine facts and selected
-  packages. `flakes/outputs.nix` discovers these files and drives system plus
+  packages. `flake-parts/outputs.nix` discovers these files and drives system plus
   standalone Home Manager outputs; there is no aggregate host registry.
 - Each host owns its machine facts, local settings, and selected capability
   packages. There is no profiles layer.
@@ -23,8 +23,9 @@ flake output -> flakes -> discovered hosts -> exported capability packages
   tree.
 - `modules/home/` is Home Manager-only. `modules/system/` owns Darwin/NixOS
   behavior. Neither imports the other's implementation.
-- `flakes/` owns flake output composition and input partitions. Development-only
-  inputs live under `flakes/dev/`.
+- `flake-parts/` owns flake-parts output composition and input partitions.
+  Partition input flakes live under `flake-parts/partitions/`; temporary
+  external integrations live under `integrations/staging/`.
 - `resources/` holds versioned configuration deliberately deployed outside
   Nix. `resources/agents/` is the intended source for shared agent resources;
   `ai.agent-resources` manages the user-level `~/.agents/` directory. The
@@ -83,7 +84,8 @@ must be followed by host-appropriate boot, service, and recovery verification.
   `home.core` for shared identity, path, and secrets context.
 - Keep direct package dependencies stable and one-way. Add an integration
   package when reusable cross-package coordination is concrete.
-- Keep development-only inputs in the `dev` partition under `flakes/dev/`;
+- Keep development-only inputs in the `dev` partition under
+  `flake-parts/partitions/dev/`;
   do not move optional inputs into the root graph without a current
   base-output consumer.
 - `my.services` owns local processes and client tools only. It never owns

@@ -768,11 +768,11 @@
         "reprise": "reprise"
       },
       "locked": {
-        "path": "./flakes/staging/reprise",
+        "path": "./integrations/staging/reprise",
         "type": "path"
       },
       "original": {
-        "path": "./flakes/staging/reprise",
+        "path": "./integrations/staging/reprise",
         "type": "path"
       },
       "parent": []
@@ -785,11 +785,11 @@
         "tmux-config": "tmux-config"
       },
       "locked": {
-        "path": "./flakes/staging/tmux-config",
+        "path": "./integrations/staging/tmux-config",
         "type": "path"
       },
       "original": {
-        "path": "./flakes/staging/tmux-config",
+        "path": "./integrations/staging/tmux-config",
         "type": "path"
       },
       "parent": []
