@@ -2,7 +2,7 @@
 {
   imports = [
     ../shared
-    ../services/nixos.nix
+    # ../services/nixos.nix is paused for reevaluation.
   ]
   ++ mylib.importAll ./.;
 }
