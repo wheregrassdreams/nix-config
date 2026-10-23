@@ -251,6 +251,7 @@
     };
 
     dev.projects.snapshots.remote.target = "homelab-gitea-backups";
+    dev.tools.nh.enable = true;
 
     terminal.tools = {
       media.enable = true;
