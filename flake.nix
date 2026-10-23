@@ -52,8 +52,21 @@
     # OpenAI Codex CLI release binaries with a dedicated Cachix cache.
     codex-cli-nix.url = "github:sadjow/codex-cli-nix";
 
+    # Temporary external integrations live in local staging flakes until their
+    # public interfaces have stabilized.
+    staging-reprise = {
+      url = "path:./flakes/staging/reprise";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     # Official Vicinae package and Home Manager module, including macOS launchd support.
     vicinae.url = "git+https://github.com/vicinaehq/vicinae?rev=8c63ae2ef1d46592b2236ec077575280f718d659";
+
+    # Temporary host-selected adapter for the standalone tmux configuration.
+    staging-tmux-config = {
+      url = "path:./flakes/staging/tmux-config";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # sops-nix：用于管理 secrets（系统模块型工具）
     sops-nix = {

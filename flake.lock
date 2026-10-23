@@ -644,6 +644,28 @@
         "type": "github"
       }
     },
+    "reprise": {
+      "inputs": {
+        "nixpkgs": [
+          "staging-reprise",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792707174,
+        "narHash": "sha256-zQAXyEOUAtJB8z3T6FstuW0ezY07Rl/TBVbAqX2GS2M=",
+        "ref": "main",
+        "rev": "097138fe3ca88911ff5101c9bd2bcebcd6009504",
+        "revCount": 6,
+        "type": "git",
+        "url": "ssh://git@github.com/wheregrassdreams/reprise.git"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://git@github.com/wheregrassdreams/reprise.git"
+      }
+    },
     "root": {
       "inputs": {
         "affinity": "affinity",
@@ -657,6 +679,8 @@
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nur": "nur",
         "sops-nix": "sops-nix",
+        "staging-reprise": "staging-reprise",
+        "staging-tmux-config": "staging-tmux-config",
         "vicinae": "vicinae"
       }
     },
@@ -736,6 +760,40 @@
         "type": "github"
       }
     },
+    "staging-reprise": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ],
+        "reprise": "reprise"
+      },
+      "locked": {
+        "path": "./flakes/staging/reprise",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/staging/reprise",
+        "type": "path"
+      },
+      "parent": []
+    },
+    "staging-tmux-config": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "tmux-config": "tmux-config"
+      },
+      "locked": {
+        "path": "./flakes/staging/tmux-config",
+        "type": "path"
+      },
+      "original": {
+        "path": "./flakes/staging/tmux-config",
+        "type": "path"
+      },
+      "parent": []
+    },
     "systems": {
       "locked": {
         "lastModified": 1681028828,
@@ -779,6 +837,29 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "tmux-config": {
+      "inputs": {
+        "nixpkgs": [
+          "staging-tmux-config",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792737889,
+        "narHash": "sha256-CNIaHKqcb8m4pLwdsD1RbDn3/zQspzbAAdMzcu5bpTE=",
+        "ref": "tmux-config/packaging",
+        "rev": "f9383a92954cfa95812647857ddfb3072a832a5d",
+        "revCount": 111,
+        "submodules": true,
+        "type": "git",
+        "url": "ssh://git@github.com/wheregrassdreams/tmux-config.git"
+      },
+      "original": {
+        "ref": "tmux-config/packaging",
+        "type": "git",
+        "url": "ssh://git@github.com/wheregrassdreams/tmux-config.git"
       }
     },
     "treefmt-nix": {
