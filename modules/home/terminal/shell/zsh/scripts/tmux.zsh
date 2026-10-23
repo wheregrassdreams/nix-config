@@ -22,7 +22,7 @@ function tmux_edit_command_line() {
 
 function _tmux_float_edit_buffer() {
   local float_root tmpfile editor_status
-  float_root=${TMUX_FLOAT_LAB_ROOT:-$(tmux show-option -gqv @float-lab-root 2>/dev/null)}
+  float_root=${TMUX_CONFIG_ROOT:-$(tmux show-option -gqv @tmux-config-root 2>/dev/null)}
   [[ -n "$float_root" && -x "$float_root/bin/float-edit-file" ]] || return 1
 
   tmpfile=$(mktemp "${TMPDIR:-/tmp}/tmux-float-edit.XXXXXX") || return
@@ -54,7 +54,7 @@ function _tmux_float_editor_bridge_widget() {
 function _tmux_float_editor_bridge_init() {
   [[ -n ${TMUX-} && -n ${TMUX_PANE-} ]] || return 0
   local float_root
-  float_root=${TMUX_FLOAT_LAB_ROOT:-$(tmux show-option -gqv @float-lab-root 2>/dev/null)}
+  float_root=${TMUX_CONFIG_ROOT:-$(tmux show-option -gqv @tmux-config-root 2>/dev/null)}
   [[ -n "$float_root" && -x "$float_root/bin/float-edit-file" ]] || return 0
 
   if [[ -z ${_TMUX_FLOAT_EDITOR_FIFO-} ]]; then
@@ -86,7 +86,7 @@ function _tmux_float_editor_bridge_cleanup() {
 zle -N custom_edit_command_line
 bindkey '^o' custom_edit_command_line
 zle -N _tmux_float_editor_bridge_widget
-autoload -Uz add-zsh-hook
-add-zsh-hook zle-line-init _tmux_float_editor_bridge_init
-add-zsh-hook zle-line-finish _tmux_float_editor_bridge_finish
+autoload -Uz add-zsh-hook add-zle-hook-widget
+add-zle-hook-widget line-init _tmux_float_editor_bridge_init
+add-zle-hook-widget line-finish _tmux_float_editor_bridge_finish
 add-zsh-hook zshexit _tmux_float_editor_bridge_cleanup

@@ -4,12 +4,12 @@ let
 in
 {
   config = lib.mkIf cfg.integrations.nixIndex.enable {
-    # command-not-found handler to suggest nix way of installing stuff.
-    # FIXME: This ought to show new nix cli commands though:
-    # https://github.com/nix-community/nix-index/issues/191
+    # The Zsh package owns the command-not-found UX. Keep nix-index itself as
+    # the package database and query tool instead of sourcing its generic
+    # handler, whose output is noisy when a lookup returns no usable candidates.
     programs.nix-index = {
       enable = true;
-      enableZshIntegration = true;
+      enableZshIntegration = false;
     };
     programs.nix-index-database.comma.enable = true;
   };

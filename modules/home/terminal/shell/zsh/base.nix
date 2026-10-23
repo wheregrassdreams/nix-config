@@ -6,13 +6,19 @@
 }:
 let
   cfg = config.my.terminal.shell;
+  zshScripts = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".zsh" name) (
+    builtins.readDir ./scripts
+  );
+  zshScriptFiles = lib.mapAttrs' (
+    name: _:
+    lib.nameValuePair ".config/zsh/scripts/${name}" {
+      source = ./scripts + "/${name}";
+    }
+  ) zshScripts;
 in
 {
   config = {
-    home.file = {
-      ".config/zsh/scripts/edit-command-line.zsh".source = ./scripts/edit-command-line.zsh;
-      ".config/zsh/scripts/keybinds.zsh".source = ./scripts/keybinds.zsh;
-    };
+    home.file = zshScriptFiles;
 
     programs = {
       zsh = {
@@ -37,11 +43,12 @@ in
             fi
           '')
           ''
-            source ${config.xdg.configHome}/zsh/scripts/keybinds.zsh
-            source ${config.xdg.configHome}/zsh/scripts/edit-command-line.zsh
+            for script in ${config.xdg.configHome}/zsh/scripts/*.zsh(N); do
+              source "$script"
+            done
 
-            if [[ -o interactive && -o zle && -t 0 ]]; then
-              eval "$(${pkgs.fzf}/bin/fzf --zsh)"
+            if [[ -o zle && -t 0 ]]; then
+              eval "$(${pkgs.unstable.fzf}/bin/fzf --zsh)"
             fi
 
             # 对命令名启用模糊
@@ -65,7 +72,8 @@ in
             zstyle ':completion:*' list-colors "''${(s.:.)LS_COLORS}"
             zstyle ':completion:*' menu no
             zstyle ':fzf-tab:*' use-fzf-default-opts yes
-            zstyle ':fzf-tab:*' fzf-flags --no-sort --ansi --header '< > switch group' --min-height=6
+            zstyle ':fzf-tab:*' fzf-min-height 16
+            zstyle ':fzf-tab:*' fzf-flags --no-sort --ansi --header '< > switch group'
             zstyle ':fzf-tab:*' switch-group '<' '>'
             zstyle ':completion:*:descriptions' format '• %d'
             zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
@@ -122,6 +130,7 @@ in
           from-timestamp = ''date '+%Y-%m-%d %H:%M:%S' --date=@"''${1:0:10}" '';
           timestamp = "date '+%s' ";
           random = "cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1";
+          img = ''command timg --pixelation=kitty --upscale --center --title --frames=1 -- "$@"'';
         };
       };
 
@@ -135,66 +144,6 @@ in
         enable = true;
         enableZshIntegration = true;
       };
-
-      # Prompt configuration lives in ../prompt.nix.
-      /*
-        starship = {
-          enable = true;
-          enableZshIntegration = true;
-          settings = {
-            format = ''
-              $directory''${custom.git_branch_tail}
-              $character
-            '';
-
-            directory = {
-              style = "white";
-              truncation_length = 3;
-              format = "[$path]($style) ";
-            };
-
-            custom.git_branch_tail = {
-              command = "git rev-parse --abbrev-ref HEAD | awk -F/ '{print $NF}'";
-
-              when = "git rev-parse --is-inside-work-tree 2>/dev/null";
-
-              symbol = " ";
-              format = "[$symbol$output](dimmed) ";
-            };
-
-            character = {
-              success_symbol = "[➜](green)";
-              error_symbol = "[➜](red)";
-              vicmd_symbol = "[➜](yellow)";
-            };
-
-            python = {
-              symbol = " ";
-              style = "yellow";
-              version_format = "v\${raw}";
-              format = "[$symbol]($style)[$version](dimmed) ";
-            };
-
-            golang = {
-              symbol = " ";
-              style = "cyan";
-              format = "[$symbol$version](dimmed) ";
-            };
-
-            nodejs = {
-              symbol = " ";
-              style = "green";
-              format = "[$symbol]($style)[$version](dimmed) ";
-            };
-
-            rust = {
-              symbol = " ";
-              style = "red";
-              format = "[$symbol$version](dimmed) ";
-            };
-          };
-        };
-      */
     };
 
     home.sessionVariables.EDITOR = "nvim";

@@ -3,6 +3,9 @@
   imports = [ self.darwinModules.platform ];
 
   config = {
+    # Home Manager owns the user fpath and compinit; avoid initializing completions twice.
+    programs.zsh.enableGlobalCompInit = false;
+
     fonts.packages = [ pkgs.unstable.nerd-fonts.jetbrains-mono ];
 
     home-manager.backupFileExtension = "hm-backup";
