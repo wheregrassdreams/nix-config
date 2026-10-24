@@ -10,10 +10,7 @@ in
 {
   config = lib.mkIf cfg.enable {
     home.packages = [ pkgs.unstable.tea ];
-    programs.git.settings = {
-      # 不生效
-      # credential."https://git.wheregrassdreams.top".helper = "!tea login helper";
-    };
+    programs.git.settings.credential."https://git.wheregrassdreams.top".helper =
+      "!${pkgs.unstable.tea}/bin/tea logins helper";
   };
-
 }

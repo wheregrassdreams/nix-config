@@ -45,6 +45,25 @@ in
     mode = "0400";
   };
 
+  sops.secrets."gitea/token" = {
+    sopsFile = ../../secrets/hosts/macbook-remote.yaml;
+    mode = "0400";
+  };
+
+  sops.templates."tea-config.yml" = {
+    content = ''
+      logins:
+        - name: zane
+          url: https://git.wheregrassdreams.top
+          ssh_host: git.wheregrassdreams.top
+          user: zane
+          token: ${config.sops.placeholder."gitea/token"}
+          default: true
+    '';
+    path = "${homeDirectory}/Library/Application Support/tea/config.yml";
+    mode = "0400";
+  };
+
   # This host has a dedicated SSH identity for SOPS. It stays on the remote
   # machine and is converted to an age recipient in .sops.yaml.
   sops.age.keyFile = lib.mkForce null;
@@ -66,6 +85,7 @@ in
 
   my = {
     inherit identity;
+    git.gitea.enable = true;
     terminal.shell = {
       prompt.enable = true;
       direnv.enable = true;
