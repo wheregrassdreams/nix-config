@@ -40,12 +40,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Affinity 软件（依赖 unstable）
-    affinity = {
-      url = "github:mrshmllow/affinity-nix?shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # LLM agents / AI tooling（作为工具使用）
     llm-agents.url = "github:numtide/llm-agents.nix";
 
@@ -68,6 +62,19 @@
       flake = false;
     };
 
+    # Standalone flash plugin with a Nix-bundled Rust executable.
+    tmux-flash-rs = {
+      url = "git+ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git?ref=master";
+      flake = false;
+    };
+
+    # Standalone prompt cursor plugin; the overlay packages its TPM entrypoint
+    # and the tmux capability sources its Zsh adapter after keymap setup.
+    tmux-prompt-cursor = {
+      url = "git+ssh://git@github.com/wheregrassdreams/tmux-prompt-cursor.git?ref=main";
+      flake = false;
+    };
+
     # sops-nix：用于管理 secrets（系统模块型工具）
     sops-nix = {
       url = "github:Mic92/sops-nix?shallow=1";
@@ -78,6 +85,7 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     nur = {
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";

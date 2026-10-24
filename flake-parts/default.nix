@@ -21,10 +21,16 @@
     module = import ./platform-outputs.nix { outputType = "nixos"; };
   };
 
+  partitions.desktop = {
+    extraInputsFlake = ./partitions/desktop;
+    module = ./desktop-outputs.nix;
+  };
+
   partitionedAttrs = {
     devShells = "dev";
     formatter = "dev";
     packages = "dev";
+    desktop = "desktop";
     darwinConfigurations = "darwin";
     nixosConfigurations = "nixos";
   };
