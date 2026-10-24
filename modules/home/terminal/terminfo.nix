@@ -52,8 +52,8 @@ in
               /Applications/Ghostty.app/Contents/Resources/terminfo \
               /Applications/kitty.app/Contents/Resources/terminfo; do
               if [ ! -d "$directory" ]; then
-                echo "missing terminal description directory: $directory" >&2
-                exit 1
+                echo "skipping unavailable terminal descriptions: $directory" >&2
+                continue
               fi
               copy_directory "$directory"
             done
