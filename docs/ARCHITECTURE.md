@@ -16,10 +16,15 @@ aggregate host registry and no profiles layer.
 
 - `hosts/<host>/host.nix` owns `outputType` (`darwin` or `nixos`), host identity, machine facts, and
   capability selection. Its presence registers that host with the flake.
+- Host facts declared in `host.nix` are passed to the host's system and Home
+  modules by the host builders.
 - The system architecture remains in `system`; `outputType` selects the flake
   output and builder. `userName` is derived from `identity.username`.
 - `hosts/<host>/home.nix` and `system.nix` own host-local values
   and settings. This includes Home Manager username and locale.
+- Host-only system services and user agents stay with their host composition.
+  Extract an implementation into `modules/system/<platform>/` or an existing
+  Home capability package when another host or capability reuses it.
 - `flake-parts/` owns flake-parts output composition and input partitions.
   `flake.nix` declares the root inputs and imports this composition.
 - `integrations/staging/<name>/` holds temporary child flakes for external projects
@@ -27,8 +32,9 @@ aggregate host registry and no profiles layer.
   explicitly; reevaluate them after the upstream APIs stabilize. These are
   local flake boundaries, not flake-parts partitions.
 - `flake-parts/partitions/darwin/` and `nixos/` hold platform-only flake
-  inputs. The matching flake-parts partition builds only that platform's system outputs;
-  shared inputs and standalone Home outputs stay in the root graph.
+  inputs. The Darwin partition builds Darwin system and deploy outputs, while
+  the NixOS partition builds NixOS system outputs; shared inputs and standalone
+  Home outputs stay in the root graph.
 - `overlays/` owns shared package-set extensions. `overlays/default.nix`
   discovers local overlay files and composes them with upstream overlays;
   `pkgs.unstable` exposes rolling nixpkgs, while `pkgs.latestAgents` exposes
@@ -36,6 +42,11 @@ aggregate host registry and no profiles layer.
   Platform-only system builders and inputs remain in their partitions.
 - `modules/home/core/` is the shared Home context package. It owns identity,
   path contracts, and the common SOPS/age user environment.
+- `hosts/macbook-remote/` is the remote Apple Silicon Mac host. It reuses
+  existing Home capabilities and the Darwin platform module; its Tailscale
+  LaunchDaemon and Codex app-server LaunchAgent remain host-specific.
+- The Darwin partition exports the remote Mac `deploy-rs` node. Bootstrap and
+  seed workflows remain owned by `macbook-config`.
 
 ## Capability packages
 

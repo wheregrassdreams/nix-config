@@ -7,15 +7,21 @@ the standalone Neovim configuration in `resources/nvim`.
 
 | Target | Flake output |
 | --- | --- |
-| MacBook | `darwinConfigurations.macbook` |
+| Local MacBook | `darwinConfigurations.macbook` |
+| Remote MacBook | `darwinConfigurations.macbook-remote` |
 | NixOS WSL | `nixosConfigurations.wsl` |
 | MacBook Home Manager | `homeConfigurations.zanelu@macbook` |
+| Remote MacBook Home Manager | `homeConfigurations.zane@macbook-remote` |
 | WSL Home Manager | `homeConfigurations.zane@wsl` |
 
 ## Everyday use
 
-Run commands from the repository root. `just` selects the current MacBook or
-WSL target where appropriate.
+Run commands from the repository root. `just` selects the local MacBook or
+WSL target where appropriate. Deploy the remote Mac explicitly with deploy-rs:
+
+```zsh
+nix run .#deploy -- .#macbook-remote
+```
 
 ```zsh
 just check

@@ -13,7 +13,12 @@
 
   partitions.darwin = {
     extraInputsFlake = ./partitions/darwin;
-    module = import ./platform-outputs.nix { outputType = "darwin"; };
+    module = {
+      imports = [
+        (import ./platform-outputs.nix { outputType = "darwin"; })
+        ./deploy-outputs.nix
+      ];
+    };
   };
 
   partitions.nixos = {
@@ -33,5 +38,8 @@
     desktop = "desktop";
     darwinConfigurations = "darwin";
     nixosConfigurations = "nixos";
+    deploy = "darwin";
+    apps = "darwin";
+    checks = "darwin";
   };
 }

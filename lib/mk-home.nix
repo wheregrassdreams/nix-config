@@ -10,6 +10,7 @@
   identity,
   outputType,
   hostName,
+  hostFacts ? { },
   configRepoPath ? (
     if outputType == "darwin" then
       "/Users/${identity.username}/.dotfiles"
@@ -40,6 +41,7 @@ inputs.home-manager.lib.homeManagerConfiguration {
       hostName
       isDarwin
       isWsl
+      hostFacts
       configRepoPath
       mylib
       ;

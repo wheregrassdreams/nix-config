@@ -11,6 +11,11 @@
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew?shallow=1";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3.8.6";
+
+    deploy-rs = {
+      url = "github:serokell/deploy-rs?rev=45ba3f8c5cb28396fff71671806e2550b464ac86";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = _: { };

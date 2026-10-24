@@ -2,7 +2,7 @@
 
 ## Repository model
 
-This is a Nix flake for the MacBook and NixOS WSL. Read
+This is a Nix flake for the local MacBook, remote MacBook, and NixOS WSL. Read
 [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) before changing package boundaries.
 The composition chain is:
 
@@ -33,9 +33,10 @@ flake output -> flake-parts -> discovered hosts -> exported capability packages
 - `secrets/` holds encrypted SOPS data only.
 
 The canonical outputs are `darwinConfigurations.macbook`,
-`nixosConfigurations.wsl`, `homeConfigurations.zanelu@macbook`, and
-`homeConfigurations.zane@wsl`. The old
-`homeConfigurations.zanelu-macbook` alias has been removed.
+`darwinConfigurations.macbook-remote`, `nixosConfigurations.wsl`,
+`homeConfigurations.zanelu@macbook`,
+`homeConfigurations.zane@macbook-remote`, and `homeConfigurations.zane@wsl`.
+The old `homeConfigurations.zanelu-macbook` alias has been removed.
 
 ## Local development
 

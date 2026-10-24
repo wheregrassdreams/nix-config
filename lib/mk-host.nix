@@ -18,6 +18,7 @@
   ),
   stateVersion ? null,
   isWsl ? false,
+  hostFacts ? { },
   systemModules ? [ ],
   homeModules ? [ ],
 }:
@@ -44,6 +45,7 @@ systemFunc {
       stateVersion
       isDarwin
       isWsl
+      hostFacts
       userName
       identity
       configRepoPath
@@ -77,6 +79,7 @@ systemFunc {
           identity
           isDarwin
           isWsl
+          hostFacts
           configRepoPath
           mylib
           ;
