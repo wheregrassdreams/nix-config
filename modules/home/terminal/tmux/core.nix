@@ -18,8 +18,7 @@ in
       enable = true;
       baseIndex = 1;
       clock24 = true;
-      tmuxp.enable = true;
-      historyLimit = 10000;
+      historyLimit = 20000;
       keyMode = "vi";
       mouse = true;
       # The input-method consumer intercepts prefix when enabled so it can
@@ -38,6 +37,7 @@ in
           '';
         }
         tmuxPlugins.tmux-statusbar
+        tmuxPlugins.tmux-flash
         {
           plugin = tmuxPlugins.continuum;
           extraConfig = ''
@@ -51,7 +51,7 @@ in
         tmuxPlugins.vim-tmux-navigator
       ];
       extraConfig = ''
-        bind ',' run-shell 'tmux source-file ${config.xdg.configHome}/tmux/tmux.conf \; display-message -d 800 "config reloaded"'
+        # bind ',' run-shell 'tmux source-file ${config.xdg.configHome}/tmux/tmux.conf \; display-message -d 800 "config reloaded"'
         set -g allow-passthrough on
         set -g renumber-windows on
         set -g set-clipboard on
