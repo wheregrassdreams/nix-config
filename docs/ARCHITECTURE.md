@@ -146,13 +146,11 @@ extended utilities. `television` and media tools remain optional subfeatures.
 here for now. The `trash PATH...` command sends files to the platform's native
 trash: macOS uses its system Trash, while Linux uses the FreeDesktop trash.
 `act` belongs to `dev.ci`, not terminal tools.
-The native `terminal.tmux` package retains the repository's original
-configuration and remains selected by WSL. The MacBook host comments out that
-package and selects `staging.tmux-config`, which owns the external tmux package,
-server LaunchAgent, configuration reload, and quickpane reconciliation. Ghostty
-uses the selected package from `programs.tmux.package`. The staging adapter
-exports its resurrect snapshot directory as
-`my.paths.exported."staging.tmux-config.resurrect"`.
+`terminal.tmux` owns the tmux package, configuration, server LaunchAgent,
+configuration reload, and resurrect snapshot path on both MacBook and WSL.
+Ghostty uses the selected package from `programs.tmux.package`. The status bar
+is provided by the standalone `tmux-statusbar` plugin and its Nix overlay
+packages the optional Rust marquee renderer with the plugin.
 
 ### Connectivity and desktop
 
@@ -192,9 +190,10 @@ bridge in `integrations/staging/reprise-bridge.nix` resolves the declared
 storage target and passes the concrete Git destination. Reevaluate this boundary after
 Reprise's API stabilizes.
 
-`terminal.tmux` preserves the repository's original tmux configuration.
-`integrations/staging/tmux-config` is an adapter imported explicitly by the
-MacBook host; other hosts such as WSL continue to select `terminal.tmux`.
+`terminal.tmux` owns the shared tmux configuration and is selected by both
+MacBook and WSL. The temporary `integrations/staging/tmux-config` adapter has
+been removed; reusable plugin code is consumed through the local package's
+normal tmux plugin set.
 
 `dev.langs.go` uses the pinned `pkgs.unstable.go_1_27` package and sets
 `GOTOOLCHAIN=local`, so Go uses the Nix-managed 1.27 toolchain instead of

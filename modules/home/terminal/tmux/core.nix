@@ -37,7 +37,7 @@ in
             set -g @resurrect-capture-pane-contents 'on'
           '';
         }
-        tmuxPlugins.dotbar
+        tmuxPlugins.tmux-statusbar
         {
           plugin = tmuxPlugins.continuum;
           extraConfig = ''

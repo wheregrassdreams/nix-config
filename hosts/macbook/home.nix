@@ -12,8 +12,7 @@
     flake.homeModules.core
     flake.homeModules.terminal
     flake.homeModules."terminal.shell"
-    # Native terminal.tmux is disabled for this host; use the staging adapter below.
-    flake.homeModules."staging.tmux-config"
+    flake.homeModules."terminal.tmux"
     flake.homeModules."terminal.tools"
     flake.homeModules."dev.kubernetes"
     flake.homeModules."dev.ci"
@@ -99,7 +98,6 @@
         # { name = "shivammathur/php"; trusted = true; }
       ];
       brews = [
-        "tmux"
         "terminal-notifier"
         # "bendews/tap/apw"          # 暂时没有使用场景
         # "shivammathur/php/php@7.2" # 以前工作用到，现在不需要了
@@ -203,7 +201,7 @@
       datasets = {
         tmux-resurrect = {
           enable = false;
-          paths = [ config.my.paths.exported."staging.tmux-config.resurrect" ];
+          paths = [ config.my.paths.exported."terminal.tmux.resurrect" ];
           class = "valuable";
         };
         codex-sessions = {

@@ -12,7 +12,6 @@ in
   flake = {
     homeModules = mylib.discoverPackages ../modules/home // {
       "staging.reprise" = stagingReprise;
-      "staging.tmux-config" = inputs.staging-tmux-config.homeManagerModules.default;
     };
     homeConfigurations = homeConfigurations;
     darwinModules.platform = import ../modules/system/darwin;
