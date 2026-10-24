@@ -17,7 +17,6 @@ in
     flake.homeModules.core
     flake.homeModules.terminal
     flake.homeModules."terminal.shell"
-    flake.homeModules."terminal.tmux"
     flake.homeModules."terminal.tools"
     flake.homeModules.git
     flake.homeModules."connectivity.ssh"
