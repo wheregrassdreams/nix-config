@@ -15,6 +15,12 @@ Suggested layout:
 - `secrets/users/<user>.yaml`
 - `secrets/apps/<app>.yaml`
 
+`secrets/hosts/macbook-remote.yaml` contains credentials for the remote Mac.
+Its SOPS recipients are the local workstation SSH identity and the remote
+Mac's dedicated `~/.ssh/id_ed25519_sops` identity, both converted with
+`ssh-to-age`. The remote private key is generated and stays on that machine;
+it is not a GitHub authentication key.
+
 ## Add an age identity
 
 Run once on a machine that needs to decrypt secrets:

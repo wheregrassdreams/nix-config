@@ -1,6 +1,11 @@
 creation_rules:
   - path_regex: secrets/remote-backups\.yaml$
     age: "age1ashrrvn3qnlk08jqpfjud4f6c3yr5vrwa4jy5tgpdz9934f0uqkqhmanpz" # password-manager-backed workstation identity
+  - path_regex: secrets/hosts/macbook-remote\.yaml$
+    key_groups:
+      - age:
+          - "age1wn45027ydntyzw8e53qsym6yyyvgu7pt2tjxvacmzlquvmychvtqc69ld0" # local SSH identity converted with ssh-to-age
+          - "age1kgvd90lxt8ej74v64yhkhfwvrz64yfmru23q9rsexdt2a5qfdqdqulmc8v" # macbook-remote SSH identity converted with ssh-to-age
   - path_regex: secrets/.*\.ya?ml$
     key_groups:
       - age:

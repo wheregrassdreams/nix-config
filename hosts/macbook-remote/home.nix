@@ -4,6 +4,7 @@
   hostFacts,
   identity,
   inputs,
+  lib,
   pkgs,
   ...
 }:
@@ -11,6 +12,11 @@ let
   codex = inputs.codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.codex;
   homeDirectory = config.home.homeDirectory;
   proxyUrl = hostFacts.network.proxyUrl;
+  githubTokenPath = config.sops.secrets."github/token".path;
+  githubCredentialHelper = pkgs.writeShellScript "gh-git-credential" ''
+    export GH_TOKEN="$(<${githubTokenPath})"
+    exec ${pkgs.gh}/bin/gh auth git-credential "$@"
+  '';
 in
 {
   imports = [
@@ -32,6 +38,26 @@ in
 
   home.stateVersion = "25.11";
   home.enableNixpkgsReleaseCheck = false;
+  home.packages = [ pkgs.gh ];
+
+  sops.secrets."github/token" = {
+    sopsFile = ../../secrets/hosts/macbook-remote.yaml;
+    mode = "0400";
+  };
+
+  # This host has a dedicated SSH identity for SOPS. It stays on the remote
+  # machine and is converted to an age recipient in .sops.yaml.
+  sops.age.sshKeyPaths = lib.mkForce [ "${homeDirectory}/.ssh/id_ed25519_sops" ];
+  home.sessionVariables.SOPS_AGE_SSH_PRIVATE_KEY_FILE = lib.mkForce "${homeDirectory}/.ssh/id_ed25519_sops";
+
+  # Provide the SOPS-managed token to interactive GitHub CLI commands and to
+  # Git credential requests from tools launched outside an interactive shell.
+  programs.zsh.initContent = lib.mkAfter ''
+    if [[ -r ${lib.escapeShellArg githubTokenPath} ]]; then
+      export GH_TOKEN="$(<${lib.escapeShellArg githubTokenPath})"
+    fi
+  '';
+  programs.git.settings.credential."https://github.com".helper = "!${githubCredentialHelper}";
 
   my = {
     inherit identity;
