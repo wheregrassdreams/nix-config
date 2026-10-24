@@ -1,5 +1,6 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
@@ -21,6 +22,7 @@ in
       historyLimit = 20000;
       keyMode = "vi";
       mouse = true;
+      package = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.tmux;
       # The input-method consumer intercepts prefix when enabled so it can
       # reset the input method before entering tmux's prefix table.
       prefix = if interceptPrefix then "None" else inputMethod.prefixKey;

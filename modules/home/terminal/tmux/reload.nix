@@ -5,7 +5,7 @@
   ...
 }:
 let
-  tmux = "${pkgs.tmux}/bin/tmux";
+  tmux = "${config.programs.tmux.package}/bin/tmux";
   configFile = "${config.xdg.configHome}/tmux/tmux.conf";
   sessionVariables = [
     "PATH"

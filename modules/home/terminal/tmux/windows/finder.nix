@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -7,7 +8,7 @@ let
   finder = pkgs.writeShellApplication {
     name = "tmux-window-finder";
     runtimeInputs = [
-      pkgs.tmux
+      config.programs.tmux.package
       pkgs.fzf
       pkgs.coreutils
     ];
