@@ -17,10 +17,10 @@
   # 这里定义整个系统/用户配置所依赖的外部 flake。
   inputs = {
     # Stable nixpkgs：作为系统和 home-manager 的主 pkgs
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11?shallow=1";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
 
     # Unstable nixpkgs：用于个别需要新版本的软件
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable?shallow=1";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # Flake output composition and input partitions.
     flake-parts = {
@@ -30,13 +30,13 @@
 
     # Home Manager：用户态配置，必须与主 nixpkgs 保持一致
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11?shallow=1";
+      url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # Rust toolchain 管理（比 nixpkgs 自带的更新）
     fenix = {
-      url = "github:nix-community/fenix?shallow=1";
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -77,7 +77,7 @@
 
     # sops-nix：用于管理 secrets（系统模块型工具）
     sops-nix = {
-      url = "github:Mic92/sops-nix?shallow=1";
+      url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
