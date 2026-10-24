@@ -47,8 +47,13 @@ in
 
   # This host has a dedicated SSH identity for SOPS. It stays on the remote
   # machine and is converted to an age recipient in .sops.yaml.
+  sops.age.keyFile = lib.mkForce null;
   sops.age.sshKeyPaths = lib.mkForce [ "${homeDirectory}/.ssh/id_ed25519_sops" ];
-  home.sessionVariables.SOPS_AGE_SSH_PRIVATE_KEY_FILE = lib.mkForce "${homeDirectory}/.ssh/id_ed25519_sops";
+  home.sessionVariables = {
+    SOPS_AGE_KEY_FILE = lib.mkForce "";
+    SOPS_AGE_KEY_CMD = lib.mkForce "${pkgs.ssh-to-age}/bin/ssh-to-age -private-key -i ${homeDirectory}/.ssh/id_ed25519_sops";
+    SOPS_AGE_SSH_PRIVATE_KEY_FILE = lib.mkForce "";
+  };
 
   # Provide the SOPS-managed token to interactive GitHub CLI commands and to
   # Git credential requests from tools launched outside an interactive shell.
