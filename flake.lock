@@ -521,16 +521,16 @@
     "tmux-flash-rs": {
       "flake": false,
       "locked": {
-        "lastModified": 1792838077,
-        "narHash": "sha256-ckWWfczheegRLH724rSV33fM5GUsy01lxUt4naKx5zE=",
-        "ref": "master",
-        "rev": "639f56f042d8ad96bc7d2e0ac4bb30c4a23a5a75",
-        "revCount": 2,
+        "lastModified": 1792938520,
+        "narHash": "sha256-Xo1ewZJIBqHTHu0t7u2gebVJOGQWVpIW41T2Zl6dm/8=",
+        "ref": "refs/heads/master",
+        "rev": "5cb040c2f8e2d15eed1aa1347fd910e45a43d529",
+        "revCount": 3,
         "type": "git",
         "url": "ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git"
       },
       "original": {
-        "ref": "master",
+        "rev": "5cb040c2f8e2d15eed1aa1347fd910e45a43d529",
         "type": "git",
         "url": "ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git"
       }

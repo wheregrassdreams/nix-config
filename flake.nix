@@ -64,7 +64,7 @@
 
     # Standalone flash plugin with a Nix-bundled Rust executable.
     tmux-flash-rs = {
-      url = "git+ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git?ref=master";
+      url = "git+ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git?rev=5cb040c2f8e2d15eed1aa1347fd910e45a43d529";
       flake = false;
     };
 
