@@ -1,16 +1,19 @@
 { lib, ... }:
 {
   options.my.connectivity.clashVerge = {
+    scriptProfile = lib.mkOption {
+      type = lib.types.enum [ "tailnet" "custom-kernel" "disabled" ];
+      default = "tailnet";
+      description = ''
+        Clash Verge script profile: the standard Tailnet rules, the custom
+        Mihomo kernel integration, or no managed Script.js profile.
+      '';
+    };
+
     hostname = lib.mkOption {
       type = lib.types.str;
       default = "";
-      description = "Tailscale hostname used by the Clash Verge Script profile";
-    };
-
-    stateDir = lib.mkOption {
-      type = lib.types.str;
-      default = "./tailscale";
-      description = "State directory for the embedded Tailscale node";
+      description = "Hostname advertised by the embedded Tailscale node";
     };
 
     tailnetDomain = lib.mkOption {

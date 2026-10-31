@@ -10,7 +10,8 @@ function main(config) {
     name: proxyName,
     type: "tailscale",
     hostname: __CLASH_VERGE_HOSTNAME__,
-    "state-dir": __CLASH_VERGE_STATE_DIR__,
+    // Keep this relative to Mihomo's -d HomeDir for SAFE_PATHS validation.
+    "state-dir": "./tailscale",
     udp: true,
     "accept-routes": true,
   };
