@@ -1,7 +1,7 @@
 { ... }:
 let
   identity = {
-    username = "zanelu";
+    username = "zane";
     fullname = "Zane Lu";
     email = "lv2497712968@outlook.com";
   };

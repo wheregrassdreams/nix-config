@@ -90,6 +90,14 @@
 
   my = {
     inherit identity;
+    terminal.tmux.inputMethod.command =
+      lib.mkIf config.my.desktop.input.keyboardMapping.enable
+        "${config.my.homebrew.brewPrefix}/bin/im-select";
+    ai.codex.remote = {
+      host = "macbook.wheregrassdreams.top";
+      user = "zane";
+      hostKeyAlias = "macbookm1air";
+    };
     # desktop.files.disktree.enable = true;
     homebrew = {
       brewPrefix = "/opt/homebrew";
@@ -140,16 +148,15 @@
 
     connectivity = {
       ssh.trzsz.enable = true;
-      tailscale = {
-        # TODO: 换成主domain会更实用，当前看不出意图
-        host = "homelab.tail50e8c0.ts.net";
-      };
+      # tailscale = {
+      #   host = "homelab.tail50e8c0.ts.net";
+      # };
       clashVerge = {
-        # TODO: 优化命名，当前命名看不出意图，至少要表明是和tailscale的集成
-        hostname = "mihomo-${hostName}";
-        tailnetDomain = "wheregrassdreams.top";
-        tailnetCidr = "100.64.0.0/10";
-        dnsUpstream = "100.124.158.7";
+        scriptProfile = "custom-kernel";
+        hostname = "${hostName}";
+        # tailnetDomain = "wheregrassdreams.top";
+        # tailnetCidr = "100.64.0.0/10";
+        # dnsUpstream = "100.124.158.7";
       };
     };
 
