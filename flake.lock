@@ -50,6 +50,7 @@
       "original": {
         "owner": "sadjow",
         "repo": "codex-cli-nix",
+        "rev": "9cc2ad979387e317b7a2319ed4a1de6200abd21c",
         "type": "github"
       }
     },
@@ -521,16 +522,16 @@
     "tmux-flash-rs": {
       "flake": false,
       "locked": {
-        "lastModified": 1792938520,
-        "narHash": "sha256-Xo1ewZJIBqHTHu0t7u2gebVJOGQWVpIW41T2Zl6dm/8=",
+        "lastModified": 1792986142,
+        "narHash": "sha256-PvXtTIEcLFZwIxHjwxMVIe8FIK+OeY/RKlQNs8UU2a0=",
         "ref": "refs/heads/master",
-        "rev": "5cb040c2f8e2d15eed1aa1347fd910e45a43d529",
-        "revCount": 3,
+        "rev": "d51eca7b3f93d4e1c0a14c7bacb3a343284b2d4d",
+        "revCount": 6,
         "type": "git",
         "url": "ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git"
       },
       "original": {
-        "rev": "5cb040c2f8e2d15eed1aa1347fd910e45a43d529",
+        "rev": "d51eca7b3f93d4e1c0a14c7bacb3a343284b2d4d",
         "type": "git",
         "url": "ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git"
       }

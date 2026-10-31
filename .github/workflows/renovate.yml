@@ -1,0 +1,30 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renovate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Run Renovate
+        # renovatebot/github-action v46.3.10
+        uses: renovatebot/github-action@2804199d260ad00c1fae0e9e842888369391c776
+        with:
+          token: ${{ github.token }}
+          renovate-version: 44.198.3
+        env:
+          RENOVATE_REPOSITORIES: ${{ github.repository }}

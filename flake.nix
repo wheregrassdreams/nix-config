@@ -44,7 +44,7 @@
     llm-agents.url = "github:numtide/llm-agents.nix";
 
     # OpenAI Codex CLI release binaries with a dedicated Cachix cache.
-    codex-cli-nix.url = "github:sadjow/codex-cli-nix";
+    codex-cli-nix.url = "github:sadjow/codex-cli-nix/9cc2ad979387e317b7a2319ed4a1de6200abd21c";
 
     # Temporary external integrations live in integrations/staging until their
     # public interfaces have stabilized.
@@ -64,7 +64,7 @@
 
     # Standalone flash plugin with a Nix-bundled Rust executable.
     tmux-flash-rs = {
-      url = "git+ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git?rev=5cb040c2f8e2d15eed1aa1347fd910e45a43d529";
+      url = "git+ssh://git@github.com/wheregrassdreams/tmux-flash-rs.git?rev=d51eca7b3f93d4e1c0a14c7bacb3a343284b2d4d";
       flake = false;
     };
 

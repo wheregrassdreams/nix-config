@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["nix"],
+  "nix": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["nix"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["nix"],
+      "matchDepNames": ["codex-cli-nix"],
+      "enabled": true
+    }
+  ],
+  "automerge": false,
+  "prConcurrentLimit": 1
+}
