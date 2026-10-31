@@ -9,20 +9,25 @@ in
 {
   system = "aarch64-darwin";
   outputType = "darwin";
-  hostName = "macbookm1air";
+  hostName = "moon";
   inherit identity;
 
   hostFacts = {
     network.proxyUrl = "http://proxy.wheregrassdreams.top:18080";
+    # Keep Nix daemon downloads direct by default. Set true to route all daemon
+    # initiated Nix downloads through the host proxy; see readme.md.
+    network.nixDaemonProxyEnabled = false;
     deploy = {
       hostname = "macbook.wheregrassdreams.top";
       sshUser = identity.username;
       sshOpts = [
         "-A"
-        "-S"
-        "none"
         "-o"
         "ControlMaster=no"
+        "-o"
+        "ControlPath=none"
+        "-o"
+        "ControlPersist=no"
         "-o"
         "HostKeyAlias=macbookm1air"
       ];
