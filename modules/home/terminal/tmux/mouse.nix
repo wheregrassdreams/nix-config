@@ -1,18 +1,6 @@
 { ... }:
 {
   config.programs.tmux.extraConfig = ''
-    # Keep a mouse selection visible after releasing the button, and clear it
-    # when clicking elsewhere. tmux has separate vi and non-vi copy-mode tables.
-    bind -T copy-mode-vi MouseUp1Pane send -X clear-selection
-    bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection-no-clear
-    bind -T copy-mode MouseUp1Pane send -X clear-selection
-    bind -T copy-mode MouseDragEnd1Pane send -X copy-selection-no-clear
-
-    # tmux 3.8 keeps copy mode live as pane output changes when refresh-on is
-    # enabled. Start it whenever a pane enters copy mode; tmux pauses refresh
-    # while a selection is active and resumes when it is cleared.
-    set-hook -g pane-mode-entered[copy-mode-refresh] 'if-shell -F "#{==:#{pane_mode},copy-mode}" { send-keys -X refresh-on }'
-
     # Pass right-clicks through to applications that own the mouse. Otherwise
     # open the pane menu on release and keep it open after the button is released.
     #

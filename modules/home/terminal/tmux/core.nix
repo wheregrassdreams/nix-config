@@ -39,7 +39,12 @@ in
           '';
         }
         tmuxPlugins.tmux-statusbar
-        tmuxPlugins.tmux-flash
+        {
+          plugin = tmuxPlugins.tmux-flash;
+          extraConfig = ''
+            set -g @flash-prefix-keys 's'
+          '';
+        }
         {
           plugin = tmuxPlugins.continuum;
           extraConfig = ''
@@ -56,7 +61,6 @@ in
         # bind ',' run-shell 'tmux source-file ${config.xdg.configHome}/tmux/tmux.conf \; display-message -d 800 "config reloaded"'
         set -g allow-passthrough on
         set -g renumber-windows on
-        set -g set-clipboard on
         set -g focus-events on
       '';
     };

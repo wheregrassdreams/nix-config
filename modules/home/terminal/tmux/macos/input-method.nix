@@ -13,12 +13,11 @@ let
     )
   );
   selectEnglish = pkgs.writeShellScript "tmux-select-english" ''
-    exec ${
-      lib.escapeShellArgs [
-        cfg.command
-        "com.apple.keylayout.ABC"
-      ]
-    }
+    target=com.apple.keylayout.ABC
+    current=$(${lib.escapeShellArg cfg.command} 2>/dev/null) || exit 0
+    [ "$current" = "$target" ] && exit 0
+
+    ${lib.escapeShellArg cfg.command} "$target" >/dev/null 2>&1 || true
   '';
   runSelectEnglish = "run-shell -b ${lib.escapeShellArg "${selectEnglish}"}";
   prefixBinding = lib.optionalString hasPrefixEvent ''

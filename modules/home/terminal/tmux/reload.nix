@@ -6,6 +6,7 @@
 }:
 let
   tmux = "${config.programs.tmux.package}/bin/tmux";
+  tmuxBinDir = "${config.programs.tmux.package}/bin";
   configFile = "${config.xdg.configHome}/tmux/tmux.conf";
   sessionVariables = [
     "PATH"
@@ -21,9 +22,38 @@ let
     "TERM_PROGRAM"
   ];
   updateEnvironment = lib.concatStringsSep " " sessionVariables;
-  setGlobalEnvironment = lib.concatMapStringsSep "\n" (name: ''
-    ${tmux} set-environment -g ${name} "''${${name}-}"
-  '') sessionVariables;
+  setGlobalEnvironment = lib.concatMapStringsSep "\n" (
+    name:
+    if name == "PATH" then
+      ''
+        # run-shell uses a session PATH when one is set, overriding the global
+        # PATH. Keep tmux available in both scopes after refreshing the server.
+        ${tmux} set-environment -g PATH "${tmuxBinDir}:''${PATH-}"
+
+        while IFS= read -r session; do
+          session_env="$(${tmux} show-environment -t "$session" PATH 2>/dev/null || true)"
+          case "$session_env" in
+            PATH=*) session_path="''${session_env#PATH=}" ;;
+            *) session_path="''${PATH-}" ;;
+          esac
+          case ":$session_path:" in
+            *":${tmuxBinDir}:"*) ;;
+            *)
+              if [[ -n "$session_path" ]]; then
+                session_path="${tmuxBinDir}:$session_path"
+              else
+                session_path="${tmuxBinDir}"
+              fi
+              ;;
+          esac
+          ${tmux} set-environment -t "$session" PATH "$session_path"
+        done <<< "$(${tmux} list-sessions -F '#{session_id}')"
+      ''
+    else
+      ''
+        ${tmux} set-environment -g ${name} "''${${name}-}"
+      ''
+  ) sessionVariables;
 in
 {
   config = {

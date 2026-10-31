@@ -1,6 +1,6 @@
-{ }:
-{
-  prefix = [
+{ lib, ... }:
+let
+  bindings = [
     {
       key = "h";
       command = "select-pane -L";
@@ -78,7 +78,7 @@
       command = "kill-window";
     }
     {
-      key = "Space";
+      key = "Enter";
       command = "resize-pane -Z";
     }
     {
@@ -102,47 +102,22 @@
       repeat = true;
     }
   ];
+  keys = map (binding: binding.key) bindings;
+  render =
+    binding:
+    "bind -T prefix ${
+      lib.optionalString (binding.repeat or false) "-r "
+    }${binding.key} ${binding.command}";
+in
+{
+  config = {
+    assertions = [
+      {
+        assertion = builtins.length keys == builtins.length (lib.unique keys);
+        message = "tmux prefix bindings contain duplicate keys";
+      }
+    ];
 
-  copyMode = [
-    {
-      key = "v";
-      command = "send -X begin-selection";
-    }
-    {
-      key = "V";
-      command = "send -X select-line";
-    }
-    {
-      key = "C-v";
-      command = "send -X rectangle-toggle";
-    }
-    {
-      key = "q";
-      command = "send -X cancel";
-    }
-    {
-      key = "Escape";
-      command = "if-shell -F '#{selection_active}' 'send -X clear-selection' 'send -X cancel'";
-    }
-    {
-      key = "C-[";
-      command = "if-shell -F '#{selection_active}' 'send -X clear-selection' 'send -X cancel'";
-    }
-    {
-      key = "/";
-      command = ''command-prompt -i -p "Search down" "send -X search-forward-incremental \\\"%%%\\\""'';
-    }
-    {
-      key = "?";
-      command = ''command-prompt -i -p "Search up" "send -X search-backward-incremental \\\"%%%\\\""'';
-    }
-    {
-      key = "n";
-      command = "send -X search-again";
-    }
-    {
-      key = "N";
-      command = "send -X search-reverse";
-    }
-  ];
+    programs.tmux.extraConfig = lib.mkAfter (lib.concatMapStringsSep "\n" render bindings);
+  };
 }
