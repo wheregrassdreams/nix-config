@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
-  # Commands expected from a Unix-like distribution, independent of the
-  # per-user Home Manager profile.
+  # Commands expected from a Unix-like distribution, including repository
+  # bootstrap commands, independent of the per-user Home Manager profile.
   environment.systemPackages = with pkgs; [
     coreutils
     gnugrep
@@ -9,6 +9,7 @@
     gnutar
     findutils
     file
+    just
     tree
   ];
 }
