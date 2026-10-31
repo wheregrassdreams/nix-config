@@ -45,11 +45,7 @@ in
         legacy=${lib.escapeShellArg "${config.home.homeDirectory}/Library/Caches/goimports"}
 
         if [ -L "$legacy" ]; then
-          current=$(readlink "$legacy")
-          if [ "$current" != "$target" ]; then
-            echo "Go imports cache path already links to $current; expected $target" >&2
-            exit 1
-          fi
+          rm "$legacy"
         elif [ -e "$legacy" ]; then
           if [ -e "$target" ]; then
             echo "Both Go imports cache paths exist; refusing to overwrite either" >&2
