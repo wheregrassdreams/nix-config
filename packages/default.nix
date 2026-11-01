@@ -2,12 +2,12 @@
 let
   overlayFiles = lib.filterAttrs (
     name: type: type == "regular" && lib.hasSuffix ".nix" name && name != "default.nix"
-  ) (builtins.readDir ../overlays);
+  ) (builtins.readDir ../packages);
 
   localOverlays = lib.mapAttrs' (
     name: _:
     lib.nameValuePair (lib.removeSuffix ".nix" name) (
-      import (../overlays + "/${name}") { inherit inputs; }
+      import (../packages + "/${name}") { inherit inputs; }
     )
   ) overlayFiles;
 in
