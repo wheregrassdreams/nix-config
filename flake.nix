@@ -44,7 +44,7 @@
     llm-agents.url = "github:numtide/llm-agents.nix";
 
     # OpenAI Codex CLI release binaries with a dedicated Cachix cache.
-    codex-cli-nix.url = "github:sadjow/codex-cli-nix/f9eefb1b70318cf8f4a5925d1fd5ceb2dddb0f51";
+    codex-cli-nix.url = "github:sadjow/codex-cli-nix/8aba16f50c25eef6f6fa0a1a285ceff309573073";
 
     # Temporary external integrations live in integrations/staging until their
     # public interfaces have stabilized.
