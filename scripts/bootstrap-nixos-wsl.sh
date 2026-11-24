@@ -3,7 +3,7 @@
 # This script deliberately has no dependency on Git being preinstalled.
 set -Eeuo pipefail
 
-readonly DEFAULT_REPO="wheregrassdreams/dotfiles"
+readonly DEFAULT_REPO="wheregrassdreams/nix-config"
 readonly DEFAULT_BRANCH="nix-config"
 readonly DEFAULT_HOST="wsl"
 readonly DEFAULT_TARGET="/home/zane/nix-config"
