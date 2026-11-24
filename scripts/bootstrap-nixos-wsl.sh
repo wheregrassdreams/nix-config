@@ -32,7 +32,8 @@ Options:
   --target PATH       Final zane-owned checkout (default: $DEFAULT_TARGET)
   --source PATH       Use an existing local Git flake for the first installation
   --private           Authenticate with GitHub CLI before cloning a private repo
-  --skip-github-ssh   Do not configure zane's GitHub SSH key after first switch
+  --no-github-ssh     Do not configure zane's GitHub SSH key after first switch
+                      (private git+ssh flake inputs still need credentials)
   --repair            Repair checkout ownership, then reset the zane password
   -h, --help          Show this help
 EOF
@@ -41,6 +42,43 @@ EOF
 die() {
   printf 'error: %s\n' "$*" >&2
   exit 1
+}
+
+primary_user_for_uid_1000() {
+  getent passwd 1000 | cut -d: -f1
+}
+
+# NixOS-WSL images ship a UID 1000 account named `nixos`, while this flake
+# declares `zane` with UID 1000. `usermod -l` refuses while the account is in
+# use, so rewrite the account databases directly and keep the numeric identity:
+# DrvFS records UIDs rather than names.
+migrate_primary_user() {
+  local old_user old_group database
+
+  old_user="$(primary_user_for_uid_1000)"
+  [[ -n $old_user ]] || die "no account with UID 1000; this bootstrap expects the NixOS-WSL default user"
+  [[ $old_user == zane ]] && return 0
+  old_group="$(id -gn "$old_user")"
+
+  printf 'Renaming primary account %s -> zane (UID 1000 preserved)...\n' "$old_user"
+  for database in passwd shadow group; do
+    sudo cp -p "/etc/$database" "/etc/$database.bootstrap-backup"
+  done
+  sudo sed -i "s/^${old_user}:/zane:/" /etc/passwd /etc/shadow
+  sudo sed -i "s|:/home/${old_user}:|:/home/zane:|" /etc/passwd
+  # Rename the account's own group when it has one, then every membership list
+  # entry: wheel must not keep the old name or zane loses sudo.
+  if [[ $old_group == "$old_user" ]]; then
+    sudo sed -i "s/^${old_group}:/zane:/" /etc/group
+  fi
+  sudo sed -i -E "s/(^|[:,])${old_user}([:,]|$)/\1zane\2/g" /etc/group
+
+  # The current directory may be inside the home that is about to move.
+  cd /
+  if [[ -d /home/$old_user && ! -e /home/zane ]]; then
+    sudo mv "/home/$old_user" /home/zane
+  fi
+  printf 'Account renamed; reopen this WSL session after the switch to use /home/zane.\n'
 }
 
 cleanup() {
@@ -158,7 +196,12 @@ while [[ $# -gt 0 ]]; do
     private_repo=true
     shift
     ;;
+  --no-github-ssh)
+    skip_github_ssh=true
+    shift
+    ;;
   --skip-github-ssh)
+    printf 'warning: --skip-github-ssh is deprecated; use --no-github-ssh\n' >&2
     skip_github_ssh=true
     shift
     ;;
@@ -189,6 +232,7 @@ curl --proto '=https' --tlsv1.2 -fsSI --connect-timeout 10 https://github.com >/
 
 first_install=true
 source_dir=""
+primary_user="$(primary_user_for_uid_1000)"
 if [[ -e $target || -L $target ]]; then
   [[ -d $target && ! -L $target ]] || die "target must be a directory path: $target"
   if [[ -n "$(find "$target" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
@@ -215,8 +259,14 @@ if "$first_install"; then
 else
   printf '  mode: reuse existing checkout\n'
 fi
+if "$first_install" && [[ -n $primary_user && $primary_user != zane ]]; then
+  printf '  account: rename %s -> zane (UID 1000 preserved)\n' "$primary_user"
+fi
 if "$repair"; then
   printf '  repair: checkout ownership and zane password\n'
+fi
+if "$skip_github_ssh"; then
+  printf '  github ssh: skipped (private git+ssh flake inputs still need credentials)\n'
 fi
 if [[ -n $source_override ]]; then
   printf '  source: local checkout %s\n' "$source_override"
@@ -224,6 +274,10 @@ fi
 printf '\nThis will build, test, and switch the NixOS configuration. Continue? [y/N] '
 read -r answer
 [[ $answer =~ ^[Yy]([Ee][Ss])?$ ]] || die "cancelled"
+
+if "$first_install"; then
+  migrate_primary_user
+fi
 
 repo_url="https://github.com/$repo.git"
 nix_features=(--extra-experimental-features 'nix-command flakes')

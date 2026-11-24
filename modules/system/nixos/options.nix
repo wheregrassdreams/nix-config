@@ -24,6 +24,20 @@ let
 in
 */
 {
+  options.my.nix.cacheMirror = lib.mkOption {
+    type = lib.types.nullOr (
+      lib.types.enum [
+        "ustc"
+        "tuna"
+      ]
+    );
+    default = null;
+    description = ''
+      Optional mainland-China mirror of cache.nixos.org. The mirror serves
+      cache.nixos.org content, so its signing key is unchanged.
+    '';
+  };
+
   options.my.ssh = {
     server = {
       enable = lib.mkEnableOption "an SSH server";

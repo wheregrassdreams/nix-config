@@ -1,6 +1,17 @@
 {
+  config,
+  lib,
   ...
 }:
+let
+  mirrorHosts = {
+    ustc = "mirrors.ustc.edu.cn";
+    tuna = "mirrors.tuna.tsinghua.edu.cn";
+  };
+  cacheMirror = config.my.nix.cacheMirror;
+  cacheMirrorUrl = lib.optionalString (cacheMirror != null)
+    "https://${mirrorHosts.${cacheMirror}}/nix-channels/store";
+in
 {
   nix.settings = {
     builders-use-substitutes = true;
@@ -10,7 +21,7 @@
     ];
     max-jobs = "auto";
     cores = 0;
-    substituters = [
+    substituters = lib.optional (cacheMirror != null) cacheMirrorUrl ++ [
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
     ];

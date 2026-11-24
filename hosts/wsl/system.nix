@@ -9,6 +9,9 @@
 
   config = {
     home-manager.backupFileExtension = "hm-backup";
+    # cache.nixos.org is unreliable from mainland China; USTC mirrors it with
+    # the same signing key.
+    my.nix.cacheMirror = "ustc";
     system.stateVersion = "25.11";
     networking.hostName = hostName;
     time.timeZone = "Asia/Shanghai";
