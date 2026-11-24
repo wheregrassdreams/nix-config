@@ -3,7 +3,7 @@
   imports = [
     inputs.flake-parts.flakeModules.partitions
     ./outputs.nix
-    ../overlays/default.nix
+    ../packages/default.nix
   ];
 
   partitions.dev = {

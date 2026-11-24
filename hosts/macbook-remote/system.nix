@@ -71,6 +71,14 @@ in
     system.stateVersion = 5;
     time.timeZone = "Asia/Shanghai";
 
+    # Keep the remote Mac reachable. System sleep drops the Tailnet peer, so
+    # tsnet SSH/DNS dials to this host time out until it wakes again.
+    power.sleep = {
+      computer = "never";
+      display = "never";
+      harddisk = "never";
+    };
+
     environment.systemPackages = [
       pkgs.jq
       pkgs.tailscale

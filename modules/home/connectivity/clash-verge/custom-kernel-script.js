@@ -24,10 +24,33 @@ function main(config) {
   config.dns["prefer-tailscale"] = true;
   config.dns["tailscale-fallback"] = "sequential";
 
+  // With redir-host there is no fake-IP to preserve the tailnet domain for
+  // PREFERRED-BY, so the DNS answer must come from tsnet itself. Keep the
+  // tsnet transport in the main nameserver list (not only nameserver-policy)
+  // so prefer-tailscale records the answer source used by PREFERRED-BY.
+  const nameservers = Array.isArray(config.dns.nameserver)
+    ? config.dns.nameserver
+    : typeof config.dns.nameserver === "string"
+      ? [config.dns.nameserver]
+      : [];
+  const tailscaleNameserver = `tailscale://${proxyName}`;
+  if (!nameservers.includes(tailscaleNameserver)) {
+    nameservers.unshift(tailscaleNameserver);
+  }
+  config.dns.nameserver = nameservers;
+
   const rule = `PREFERRED-BY,${proxyName},${proxyName}`;
   config.rules = (config.rules || []).filter((r) => r !== rule);
-  const fallback = config.rules.findIndex((r) => /^(MATCH|FINAL),/i.test(r));
-  config.rules.splice(fallback < 0 ? config.rules.length : fallback, 0, rule);
+
+  // PREFERRED-BY must run before the 100.64/10 DIRECT rule (and before
+  // GEOIP/MATCH) or a real tailnet IP would bypass tsnet in redir-host mode.
+  const priority = config.rules.findIndex(
+    (r) =>
+      /^IP-CIDR,100\.64\.0\.0\/10,/i.test(r) ||
+      /^GEOIP,/i.test(r) ||
+      /^(MATCH|FINAL),/i.test(r),
+  );
+  config.rules.splice(priority < 0 ? config.rules.length : priority, 0, rule);
 
   return config;
 }

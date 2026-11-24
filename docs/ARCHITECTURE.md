@@ -35,7 +35,7 @@ aggregate host registry and no profiles layer.
   inputs. The Darwin partition builds Darwin system and deploy outputs, while
   the NixOS partition builds NixOS system outputs; shared inputs and standalone
   Home outputs stay in the root graph.
-- `overlays/` owns shared package-set extensions. `overlays/default.nix`
+- `packages/` owns shared package-set extensions. `packages/default.nix`
   discovers local overlay files and composes them with upstream overlays;
   `pkgs.unstable` exposes rolling nixpkgs, while `pkgs.latestAgents` exposes
   the daily-updated agent package set for explicit, per-application opt-in.
@@ -172,7 +172,7 @@ behavior is not combined with the Home client package.
 The former `gui/` package group is named `desktop/`. Product boundaries follow
 the user capability rather than a strict GUI/CLI split. Finder preferences,
 archive extraction, and optional DiskTree filesystem usage browsing belong to
-`desktop.files`; DiskTree's macOS release derivation belongs to `overlays/`.
+`desktop.files`; DiskTree's macOS release derivation belongs to `packages/`.
 Keyboard mapping and pointer scrolling tools belong to `desktop.input`; Raycast
 belongs to `desktop.launcher`. `desktop.dock` configures a user's Dock through
 Home Manager, not the Darwin system activation phase. Host-specific

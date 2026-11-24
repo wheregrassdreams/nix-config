@@ -39,8 +39,8 @@ in
     };
 
     home.packages = [
-      pkgs.nodejs
-      pkgs.pnpm
+      pkgs.unstable.nodejs
+      pkgs.unstable.pnpm
 
       # lsp servers
       pkgs.vtsls

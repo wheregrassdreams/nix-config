@@ -5,14 +5,14 @@ the standalone Neovim configuration in `resources/nvim`.
 
 ## Targets
 
-| Target | Flake output |
-| --- | --- |
-| Local MacBook | `darwinConfigurations.macbook` |
-| Remote MacBook | `darwinConfigurations.macbook-remote` |
-| NixOS WSL | `nixosConfigurations.wsl` |
-| MacBook Home Manager | `homeConfigurations.zanelu@macbook` |
+| Target                      | Flake output                             |
+| --------------------------- | ---------------------------------------- |
+| Local MacBook               | `darwinConfigurations.macbook`           |
+| Remote MacBook              | `darwinConfigurations.macbook-remote`    |
+| NixOS WSL                   | `nixosConfigurations.wsl`                |
+| MacBook Home Manager        | `homeConfigurations.zanelu@macbook`      |
 | Remote MacBook Home Manager | `homeConfigurations.zane@macbook-remote` |
-| WSL Home Manager | `homeConfigurations.zane@wsl` |
+| WSL Home Manager            | `homeConfigurations.zane@wsl`            |
 
 ## Everyday use
 

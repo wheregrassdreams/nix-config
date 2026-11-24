@@ -42,6 +42,7 @@
     flake.homeModules."ai.claude"
     flake.homeModules."ai.codex"
     flake.homeModules."ai.opencode"
+    flake.homeModules."ai.dsh-tui"
     flake.homeModules."ai.agent-resources"
 
     flake.homeModules."desktop.browser"
@@ -90,9 +91,7 @@
 
   my = {
     inherit identity;
-    terminal.tmux.inputMethod.command =
-      lib.mkIf config.my.desktop.input.keyboardMapping.enable
-        "${config.my.homebrew.brewPrefix}/bin/im-select";
+    terminal.tmux.inputMethod.command = lib.mkIf config.my.desktop.input.keyboardMapping.enable "${config.my.homebrew.brewPrefix}/bin/im-select";
     ai.codex.remote = {
       host = "macbook.wheregrassdreams.top";
       user = "zane";
@@ -147,7 +146,7 @@
     };
 
     connectivity = {
-      ssh.trzsz.enable = true;
+      ssh.trzsz.enable = false;
       # tailscale = {
       #   host = "homelab.tail50e8c0.ts.net";
       # };
@@ -168,6 +167,7 @@
     };
 
     ai.opencode.cli.enable = false;
+    ai.dsh-tui.enable = true;
 
     desktop = {
 

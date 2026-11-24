@@ -72,6 +72,48 @@ let
     "@koinzhang/store.raycast.browser-tabs:index"
   ];
   dynamicSettings = "${config.xdg.configHome}/vicinae/generated-settings.json";
+  accessibilityReminder = "${config.xdg.stateHome}/nix-config/vicinae-accessibility-reminder-shown";
+  ensureVicinaeImports = pkgs.writeText "ensure-vicinae-imports.py" ''
+    import os
+    import re
+    import sys
+    import tempfile
+    from pathlib import Path
+
+    path = Path(sys.argv[1])
+    required = ["home-manager.json", "generated-settings.json"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = path.read_text() if path.exists() else "{}\n"
+
+    imports = re.search(r'(?m)^[ \t]*"imports"[ \t]*:', text)
+    if imports:
+        array = re.search(r'(?s)"imports"[ \t]*:[ \t]*\[(.*?)\]', text[imports.start():])
+        if not array:
+            raise SystemExit(f"Cannot safely update imports in {path}")
+        existing = re.findall(r'"((?:\\.|[^"\\])*)"', array.group(1))
+        missing = [item for item in required if item not in existing]
+        if missing:
+            raise SystemExit(f"Add these Vicinae imports to {path}: {', '.join(missing)}")
+        raise SystemExit(0)
+
+    opening = re.search(r'(?m)^[ \t]*\{', text)
+    if not opening:
+        raise SystemExit(f"Cannot find the JSON object in {path}")
+    index = text.index("{", opening.start()) + 1
+    block = '\n  "imports": ["home-manager.json", "generated-settings.json"],'
+    updated = text[:index] + block + text[index:]
+
+    mode = path.stat().st_mode & 0o777 if path.exists() else 0o644
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as output:
+            output.write(updated)
+        os.chmod(temporary, mode)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+  '';
 in
 {
   # Release Command+Space from Spotlight so Vicinae can use it as its global shortcut.
@@ -92,17 +134,6 @@ in
       enable = true;
       autoStart = true;
     };
-    settings = {
-      launcher_window.material = "liquid_glass";
-      providers = {
-        "@koinzhang/store.raycast.browser-tabs".entrypoints.index.alias = "tabs";
-        files.entrypoints.search = {
-          alias = "files";
-          shortcut = "control+shift+SPACE";
-        };
-      };
-    };
-    settingOverrides = [ dynamicSettings ];
   };
 
   home.activation.prepareVicinaeApplications = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -113,6 +144,12 @@ in
       ${aliasArgs} \
       ${favoriteArgs}
   '';
+  home.activation.ensureVicinaeConfigImports =
+    lib.hm.dag.entryAfter [ "prepareVicinaeApplications" ]
+      ''
+        $DRY_RUN_CMD ${pkgs.python3}/bin/python3 ${ensureVicinaeImports} \
+          ${lib.escapeShellArg "${config.xdg.configHome}/vicinae/settings.json"}
+      '';
   home.activation.setupLaunchAgents = lib.hm.dag.entryAfter [ "prepareVicinaeApplications" ] (
     lib.mkDefault ""
   );
@@ -120,6 +157,7 @@ in
     lib.hm.dag.entryAfter
       [
         "refreshAppIdentities"
+        "ensureVicinaeConfigImports"
         "setupLaunchAgents"
       ]
       ''
@@ -135,4 +173,16 @@ in
   home.activation.syncVicinaeRaycastExtensions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${extensionSync}/bin/sync-vicinae-raycast-extensions
   '';
+
+  home.activation.remindVicinaeAccessibility =
+    lib.hm.dag.entryAfter [ "configureVicinaeApplications" ]
+      ''
+        if [ ! -e ${lib.escapeShellArg accessibilityReminder} ]; then
+          printf '\nVicinae clipboard paste needs macOS Accessibility permission.\n'
+          printf 'Open System Settings > Privacy & Security > Accessibility. If Vicinae is not listed, click + and add:\n'
+          printf '  %s\n\n' "$HOME/Applications/Home Manager Apps/Vicinae.app"
+          $DRY_RUN_CMD mkdir -p ${lib.escapeShellArg (builtins.dirOf accessibilityReminder)}
+          $DRY_RUN_CMD touch ${lib.escapeShellArg accessibilityReminder}
+        fi
+      '';
 }
