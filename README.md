@@ -75,7 +75,7 @@ home-manager switch --flake .#zanelu@macbook
 1. In Windows PowerShell, install NixOS to E: (change the location if needed):
 
    ```powershell
-   $installer = Join-Path ([System.IO.Path]::GetTempPath()) 'install-nixos-wsl.ps1'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/wheregrassdreams/dotfiles/bootstrap-v1/scripts/install-nixos-wsl.ps1' -OutFile $installer; & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -InstallLocation 'E:\WSL\NixOS'; $status = $LASTEXITCODE; Remove-Item -LiteralPath $installer -Force; exit $status
+   $installer = Join-Path ([System.IO.Path]::GetTempPath()) 'install-nixos-wsl.ps1'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/wheregrassdreams/nix-config/bootstrap-v1/scripts/install-nixos-wsl.ps1' -OutFile $installer; & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer -InstallLocation 'E:\WSL\NixOS'; $status = $LASTEXITCODE; Remove-Item -LiteralPath $installer -Force; exit $status
    ```
 
 2. Open the distribution:
@@ -87,7 +87,7 @@ home-manager switch --flake .#zanelu@macbook
 3. In NixOS, run the versioned bootstrap:
 
    ```bash
-   tmp="$(mktemp)"; curl --proto '=https' --tlsv1.2 -fsSL "https://raw.githubusercontent.com/wheregrassdreams/dotfiles/bootstrap-v1/scripts/bootstrap-nixos-wsl.sh" -o "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
+   tmp="$(mktemp)"; curl --proto '=https' --tlsv1.2 -fsSL "https://raw.githubusercontent.com/wheregrassdreams/nix-config/bootstrap-v1/scripts/bootstrap-nixos-wsl.sh" -o "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
    ```
 
    It temporarily obtains Git through Nix, builds, tests, and switches `.#wsl`,
