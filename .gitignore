@@ -9,7 +9,6 @@ modules/home/dev/projects/lib/project-tools/nix-config-projects
 # build images
 result
 .direnv/
-.pre-commit-config.yaml
 
 # wsl
 nixos.wsl

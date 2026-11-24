@@ -4,24 +4,15 @@
     { pkgs, system, ... }:
     let
       treefmt = inputs.treefmt-nix.lib.evalModule pkgs ../treefmt.nix;
-      preCommit = inputs.pre-commit-hooks.lib.${system}.run {
-        src = ../.;
-        hooks = {
-          check-added-large-files.enable = true;
-          check-merge-conflicts.enable = true;
-          check-symlinks.enable = true;
-          deadnix.enable = true;
-          end-of-file-fixer.enable = true;
-          # nixfmt-rfc-style.enable = true;
-          shellcheck.enable = true;
-          trim-trailing-whitespace.enable = true;
-        };
-      };
     in
     {
       formatter = treefmt.config.build.wrapper;
       packages.nix-fast-build = inputs.nix-fast-build.packages.${system}.default;
 
+      # No git hooks are installed. git-hooks.nix wrote hooks whose interpreter
+      # is a bare /nix/store path; those paths are not GC roots, so a garbage
+      # collection left hooks that fail with "bad interpreter" and block every
+      # commit and push. Run `just fmt` and `just check` explicitly instead.
       devShells.default = pkgs.mkShell {
         packages = with pkgs; [
           age
@@ -30,7 +21,6 @@
           nodejs
           nixd
           # nixfmt-rfc-style
-          pre-commit
           python3
           shellcheck
           shfmt
@@ -38,7 +28,6 @@
           statix
           inputs.nix-fast-build.packages.${system}.default
         ];
-        shellHook = preCommit.shellHook;
       };
     };
 }

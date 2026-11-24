@@ -14,11 +14,6 @@
       };
     };
 
-    pre-commit-hooks = {
-      url = "github:cachix/git-hooks.nix/43b3c1ab9d40fb1dbb008f451988a91e375825e9";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     treefmt-nix = {
       url = "github:numtide/treefmt-nix/790751ff7fd3801feeaf96d7dc416a8d581265ba";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -37,10 +37,6 @@ fmt:
 dev:
     nix develop "{{ repo }}"
 
-# Run the same pre-commit checks as `git commit` for staged files, without creating a commit.
-check-staged:
-    nix develop "{{ repo }}" --command pre-commit run
-
 # Build the system output for the current supported platform without activating it.
 build:
     bash "{{ repo }}/scripts/nix-target.sh" build "{{ repo }}"
