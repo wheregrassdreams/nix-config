@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+peer="${CODEX_REMOTE_PEER:-moon}"
+remote_user="${CODEX_REMOTE_USER:-zane}"
+remote_host="${CODEX_REMOTE_HOST:-}"
+host_key_alias="${CODEX_REMOTE_HOST_KEY_ALIAS:-$peer}"
+local_port=45232
+remote_port=45231
+
+die() {
+  printf 'codex-remote: %s\n' "$*" >&2
+  exit 1
+}
+
+if [[ -n "$remote_host" ]]; then
+  peer_ip="$remote_host"
+  peer="$remote_host"
+else
+  if ! peer_ip="$(
+    tailscale status --json 2>/dev/null \
+      | jq -er --arg peer "$peer" '
+        [
+          .Peer[]
+          | select(.HostName == $peer)
+          | .TailscaleIPs[]?
+          | select(test("^[0-9]+(\\.[0-9]+){3}$"))
+        ][0] // empty
+      '
+  )"; then
+    die "could not find Tailscale peer '$peer'; check that Tailscale is connected"
+  fi
+fi
+
+[[ -n "$peer_ip" ]] || die "peer '$peer' has no Tailscale IPv4 address"
+
+ssh_args=(
+  -N
+  -T
+  -S none
+  -o ControlMaster=no
+  -o BatchMode=yes
+  -o ConnectTimeout=8
+  -o ExitOnForwardFailure=yes
+  -o ServerAliveInterval=30
+  -o ServerAliveCountMax=3
+  -o StrictHostKeyChecking=yes
+  -o "HostKeyAlias=$host_key_alias"
+  -L "127.0.0.1:$local_port:127.0.0.1:$remote_port"
+)
+
+# The destination is intentionally expanded locally; this invocation runs no remote command.
+# shellcheck disable=SC2029
+ssh "${ssh_args[@]}" "$remote_user@$peer_ip" &
+tunnel_pid=$!
+
+cleanup() {
+  kill "$tunnel_pid" 2>/dev/null || true
+  wait "$tunnel_pid" 2>/dev/null || true
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+ready=false
+for _ in {1..40}; do
+  if ! kill -0 "$tunnel_pid" 2>/dev/null; then
+    if wait "$tunnel_pid"; then
+      die "SSH tunnel exited before becoming ready"
+    else
+      die "could not establish SSH tunnel to $peer ($peer_ip)"
+    fi
+  fi
+
+  if curl --noproxy '*' --fail --silent --max-time 1 \
+    "http://127.0.0.1:$local_port/readyz" >/dev/null; then
+    ready=true
+    break
+  fi
+  sleep 0.25
+done
+
+[[ "$ready" == true ]] || die "remote Codex app-server did not become ready on port $remote_port"
+
+printf 'Connected to %s through SSH (127.0.0.1:%s → 127.0.0.1:%s); starting the remote Codex TUI.\n' \
+  "$peer" "$local_port" "$remote_port"
+codex --remote "ws://127.0.0.1:$local_port" "$@"
