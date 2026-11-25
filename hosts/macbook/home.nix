@@ -44,6 +44,7 @@
     flake.homeModules."ai.opencode"
     flake.homeModules."ai.dsh-tui"
     flake.homeModules."ai.agent-resources"
+    flake.homeModules."ai.magpie"
 
     flake.homeModules."desktop.browser"
     flake.homeModules."desktop.agent"
