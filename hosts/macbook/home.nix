@@ -14,6 +14,7 @@
     flake.homeModules."terminal.shell"
     flake.homeModules."terminal.tmux"
     flake.homeModules."terminal.tools"
+    flake.homeModules."terminal.rex"
     flake.homeModules."dev.kubernetes"
     flake.homeModules."dev.ci"
     flake.homeModules."staging.reprise"
@@ -260,6 +261,8 @@
     terminal.tools = {
       media.enable = true;
     };
+
+    terminal.rex.enable = true;
 
     git = {
       lazygit.enable = true;
