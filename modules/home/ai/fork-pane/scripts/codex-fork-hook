@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Codex UserPromptSubmit hook for `$fork <prompt>`.
+#
+# Reads the hook payload from stdin, forks the current thread into a nearby
+# Rex or tmux pane, and blocks the prompt so the main thread spends no turn.
+# Codex asks you to trust a new hook once: open /hooks after installing it.
+
+set -euo pipefail
+
+payload=$(cat)
+session=$(jq -r '.session_id // empty' <<<"$payload")
+cwd=$(jq -r '.cwd // empty' <<<"$payload")
+prompt=$(jq -r '.prompt // empty' <<<"$payload")
+
+[[ $prompt =~ ^[[:space:]]*\$fork([[:space:]]|$) ]] || exit 0
+
+rest=${prompt#*\$fork}
+rest=${rest#"${rest%%[![:space:]]*}"}
+rest=${rest%"${rest##*[![:space:]]}"}
+
+args=(--harness codex --session "$session")
+[[ -z $cwd ]] || args+=(--cwd "$cwd")
+
+run_fork() {
+  if [[ -n $rest ]]; then
+    fork-pane "${args[@]}" -- "$rest"
+  else
+    fork-pane "${args[@]}"
+  fi
+}
+
+if output=$(run_fork 2>&1); then
+  reason="Forked into a new pane beside this one."
+else
+  reason="fork-pane failed: ${output}"
+fi
+
+jq -nc --arg reason "$reason" '{decision: "block", reason: $reason}'
