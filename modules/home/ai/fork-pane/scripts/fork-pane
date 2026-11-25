@@ -1,0 +1,365 @@
+#!/usr/bin/env bash
+
+# Open a forked agent session in a neighbouring Rex or tmux pane.
+#
+# The agent's own fork command creates the session; this command only chooses
+# the pane and launches it there. See README.md in this directory.
+
+set -euo pipefail
+
+prog=${0##*/}
+
+harness=auto
+session_id=${FORK_PANE_SESSION:-}
+target=auto
+block=
+cwd=$PWD
+direction=right
+focus=true
+new_tab=false
+dry_run=false
+custom_cmd=
+prompt=()
+
+usage() {
+  cat <<'EOF'
+usage: fork-pane [options] [-- prompt...]
+       fork-pane install-hook codex
+       fork-pane uninstall-hook codex
+
+Fork the agent session you are in into a nearby Rex or tmux pane.
+
+  --harness auto|codex|dsh  agent to fork (default: detect from the environment)
+  --session ID              Codex thread id, or the DSH session id printed by /fork
+  --block BLOCK             Rex block to split beside (default: detected)
+  --cwd DIR                 working directory the agent recorded (default: $PWD)
+  --target auto|rex|tmux    pane backend (default: detect from the environment)
+  --tab                     open a new tab/window instead of a split
+  --left|--right|--up|--down
+                            split direction (default: right)
+  --bg                      do not focus the new pane
+  --command CMD             run CMD in the pane instead of the fork command
+  --dry-run                 print the plan as JSON and launch nothing
+  -h, --help                show this help
+
+Environment:
+  REX_BLOCK, REX_BIN_DIR    Rex pane and CLI location (set by Rex)
+  TMUX, TMUX_PANE           tmux session and pane (set by tmux)
+  CODEX_THREAD_ID           Codex thread id exported to shell commands
+  DSH_SESSION_ID            DSH session id exported to shell commands
+  FORK_PANE_SESSION         same as --session
+EOF
+}
+
+die() {
+  printf '%s: %s\n' "$prog" "$*" >&2
+  exit 2
+}
+
+hooks_file() {
+  printf '%s/hooks.json' "${CODEX_HOME:-$HOME/.codex}"
+}
+
+codex_hook_command() {
+  local bin
+  bin=$(command -v codex-fork-hook || true)
+  [[ -n $bin ]] || die 'codex-fork-hook is not on PATH; enable my.ai.fork-pane first'
+  printf '%s' "$bin"
+}
+
+install_codex_hook() {
+  local file bin tmp base
+  file=$(hooks_file)
+  bin=$(codex_hook_command)
+  mkdir -p "$(dirname "$file")"
+  if [[ -s $file ]]; then
+    jq -e . "$file" >/dev/null 2>&1 || die "$file is not valid JSON; left unchanged"
+    base=$(cat "$file")
+  else
+    base='{}'
+  fi
+  tmp=$(mktemp "${file}.XXXXXX")
+  # shellcheck disable=SC2016
+  jq --arg cmd "$bin" '
+    .hooks = (.hooks // {}) |
+    .hooks.UserPromptSubmit = (
+      [(.hooks.UserPromptSubmit // [])[]
+        | select(((.hooks // []) | map(.command // "") | map(test("codex-fork-hook")) | any) | not)]
+      + [{"hooks": [{"type": "command", "command": $cmd, "timeout": 60}]}]
+    )
+  ' <<<"$base" >"$tmp"
+  mv "$tmp" "$file"
+  printf 'installed the fork hook in %s\n' "$file"
+  printf 'Restart Codex, open /hooks once, and trust the new hook.\n'
+}
+
+uninstall_codex_hook() {
+  local file tmp base
+  file=$(hooks_file)
+  if [[ ! -s $file ]]; then
+    printf 'no %s; nothing to remove\n' "$file"
+    return 0
+  fi
+  jq -e . "$file" >/dev/null 2>&1 || die "$file is not valid JSON; left unchanged"
+  base=$(cat "$file")
+  tmp=$(mktemp "${file}.XXXXXX")
+  # shellcheck disable=SC2016
+  jq '
+    .hooks = (.hooks // {}) |
+    .hooks.UserPromptSubmit = (
+      [(.hooks.UserPromptSubmit // [])[]
+        | select(((.hooks // []) | map(.command // "") | map(test("codex-fork-hook")) | any) | not)]
+    ) |
+    (if (.hooks.UserPromptSubmit | length) == 0 then del(.hooks.UserPromptSubmit) else . end) |
+    (if (.hooks | length) == 0 then del(.hooks) else . end)
+  ' <<<"$base" >"$tmp"
+  mv "$tmp" "$file"
+  printf 'removed the fork hook from %s\n' "$file"
+}
+
+run_subcommand() {
+  local sub=$1 agent=${2:-codex}
+  [[ $agent == codex ]] || die 'only the codex hook is supported'
+  case $sub in
+    install-hook) install_codex_hook ;;
+    uninstall-hook) uninstall_codex_hook ;;
+  esac
+}
+
+case ${1:-} in
+  install-hook | uninstall-hook)
+    run_subcommand "$@"
+    exit 0
+    ;;
+esac
+
+while (($#)); do
+  case $1 in
+    --harness) harness=${2:?--harness needs a value}; shift 2 ;;
+    --session) session_id=${2:?--session needs a value}; shift 2 ;;
+    --target) target=${2:?--target needs a value}; shift 2 ;;
+    --block) block=${2:?--block needs a value}; shift 2 ;;
+    --cwd) cwd=${2:?--cwd needs a value}; shift 2 ;;
+    --tab) new_tab=true; shift ;;
+    --bg) focus=false; shift ;;
+    --left) direction=left; shift ;;
+    --right) direction=right; shift ;;
+    --up) direction=above; shift ;;
+    --down) direction=below; shift ;;
+    --dry-run) dry_run=true; shift ;;
+    --command) custom_cmd=${2:?--command needs a value}; shift 2 ;;
+    -h | --help) usage; exit 0 ;;
+    --) shift; prompt=("$@"); break ;;
+    -*) die "unknown option: $1" ;;
+    *) prompt=("$@"); break ;;
+  esac
+done
+
+case $harness in
+  auto)
+    if [[ -n ${CODEX_THREAD_ID:-} ]]; then
+      harness=codex
+    elif [[ -n ${DSH_SESSION_ID:-} ]]; then
+      harness=dsh
+    else
+      die 'cannot detect the agent; pass --harness codex or --harness dsh'
+    fi
+    ;;
+  codex | dsh) ;;
+  *) die "unknown harness: $harness" ;;
+esac
+
+case $harness in
+  codex)
+    session_id=${session_id:-${CODEX_THREAD_ID:-}}
+    [[ -n $session_id ]] || die 'codex needs a thread id (--session or CODEX_THREAD_ID)'
+    cmd=(codex fork "$session_id")
+    ((${#prompt[@]} == 0)) || cmd+=("${prompt[@]}")
+    ;;
+  dsh)
+    [[ -n $session_id ]] || die 'dsh needs the fork id printed by /fork (--session)'
+    if [[ -n ${DSH_SESSION_ID:-} && $session_id == "$DSH_SESSION_ID" ]]; then
+      die 'that is the current session; run /fork first and pass the new id'
+    fi
+    cmd=(env "DSH_TUI_RESUME_SESSION=$session_id" dsh --profile "${DSH_PROFILE:-dsh-tui}")
+    if ((${#prompt[@]})); then
+      printf '%s: note: dsh-tui resumes the fork without a prompt\n' "$prog" >&2
+    fi
+    ;;
+esac
+
+[[ -z $custom_cmd ]] || cmd=(sh -c "$custom_cmd")
+
+if [[ $target == auto ]]; then
+  if [[ ${TERM_PROGRAM:-} == rex || -n ${REX_SERVER:-} || -n ${REX_BLOCK:-} ]]; then
+    target=rex
+  elif [[ -n ${TMUX:-} || -n ${TMUX_PANE:-} ]]; then
+    target=tmux
+  else
+    die 'not inside Rex or tmux; pass --target rex or --target tmux'
+  fi
+fi
+[[ $target == rex || $target == tmux ]] || die "unknown target: $target"
+
+print_plan() {
+  local args_json
+  args_json=$(printf '%s\n' "${argv[@]}" | jq -R . | jq -sc .)
+  # shellcheck disable=SC2016
+  jq -nc \
+    --arg target "$target" \
+    --arg harness "$harness" \
+    --arg session "$session_id" \
+    --arg block "${block_id:-}" \
+    --argjson argv "$args_json" \
+    '{target: $target, harness: $harness, session: $session, block: $block, argv: $argv}'
+}
+
+emit_plan() {
+  if [[ $dry_run == true ]]; then
+    print_plan
+    exit 0
+  fi
+  return 0
+}
+
+# --- Rex -------------------------------------------------------------------
+rex_bin=
+rex_resolve() {
+  if [[ -n ${REX_BIN_DIR:-} && -x ${REX_BIN_DIR}/rex ]]; then
+    rex_bin=${REX_BIN_DIR}/rex
+    return
+  fi
+  rex_bin=$(command -v rex || true)
+  [[ -n $rex_bin ]] || die 'rex not found: REX_BIN_DIR is unset and rex is not on PATH'
+}
+
+rex_session_of_block() {
+  local want=$1 sid
+  while IFS= read -r sid; do
+    [[ -n $sid ]] || continue
+    if "$rex_bin" block ls -s "$sid" --json 2>/dev/null |
+      jq -e --arg b "$want" '.blocks[] | select(.block_id == $b)' >/dev/null; then
+      printf '%s' "$sid"
+      return 0
+    fi
+  done < <("$rex_bin" session ls --json 2>/dev/null | jq -r '.sessions[].session_id')
+  return 1
+}
+
+rex_discover_block() {
+  local want_name=$1 want_argv=$2
+  local sid bid info name pcwd pid argv0 best_pid=0 best=
+  while IFS= read -r sid; do
+    [[ -n $sid ]] || continue
+    while IFS= read -r bid; do
+      [[ -n $bid ]] || continue
+      info=$("$rex_bin" block call -s "$sid" -b "$bid" process 2>/dev/null) || continue
+      name=$(jq -r '.foreground.name // empty' <<<"$info")
+      argv0=$(jq -r '.foreground.argv0 // empty' <<<"$info")
+      pcwd=$(jq -r '.foreground.cwd // empty' <<<"$info")
+      pid=$(jq -r '.foreground.pid // 0' <<<"$info")
+      [[ $pcwd == "$cwd" ]] || continue
+      [[ -z $want_name || $name == "$want_name" ]] || continue
+      [[ -z $want_argv || $argv0 == "$want_argv" ]] || continue
+      if ((pid > best_pid)); then
+        best_pid=$pid
+        best="$sid $bid"
+      fi
+    done < <("$rex_bin" block ls -s "$sid" --json 2>/dev/null | jq -r '.blocks[].block_id')
+  done < <("$rex_bin" session ls --json 2>/dev/null | jq -r '.sessions[].session_id')
+  printf '%s' "$best"
+}
+
+rex_launch() {
+  local session=$1 anchor=$2
+  [[ -n $anchor ]] || die 'could not find a Rex pane to split; pass --block'
+  if [[ $new_tab == true ]]; then
+    argv=("$rex_bin" run -s "$session" -c "$cwd" --label Fork --json --focus="$focus" -- "${cmd[@]}")
+  else
+    argv=("$rex_bin" split -s "$session" -b "$anchor" -c "$cwd" --split="$direction" --ratio 50 --focus="$focus" --json -- "${cmd[@]}")
+  fi
+  emit_plan
+  "${argv[@]}"
+}
+
+rex_main() {
+  local session_id_rex
+  rex_resolve
+
+  if [[ -n $block ]]; then
+    block_id=$block
+    session_id_rex=$(rex_session_of_block "$block_id") || die "Rex block not found: $block_id"
+    rex_launch "$session_id_rex" "$block_id"
+    return
+  fi
+
+  if [[ -n ${REX_BLOCK:-} ]]; then
+    if session_id_rex=$(rex_session_of_block "$REX_BLOCK"); then
+      block_id=$REX_BLOCK
+      rex_launch "$session_id_rex" "$block_id"
+      return
+    fi
+    printf '%s: REX_BLOCK is stale; looking for the agent pane by directory\n' "$prog" >&2
+  fi
+
+  local found want_name='' want_argv=''
+  if [[ $harness == codex ]]; then
+    want_name=codex
+  else
+    want_name=node
+    want_argv=dsh
+  fi
+  found=$(rex_discover_block "$want_name" "$want_argv")
+  if [[ -z $found ]]; then
+    die "no $harness pane found in $cwd; pass --block, or start codex with --no-daemon"
+  fi
+  read -r session_id_rex block_id <<<"$found"
+  rex_launch "$session_id_rex" "$block_id"
+}
+
+# --- tmux ------------------------------------------------------------------
+tmux_main() {
+  local tmux_bin pane want
+  tmux_bin=$(command -v tmux || true)
+  [[ -n $tmux_bin ]] || die 'tmux is not on PATH'
+
+  want=codex
+  [[ $harness == dsh ]] && want=node
+
+  pane=${TMUX_PANE:-}
+  if [[ -n $pane ]] && ! "$tmux_bin" display-message -p -t "$pane" '#{pane_id}' >/dev/null 2>&1; then
+    pane=
+  fi
+  if [[ -z $pane ]]; then
+    pane=$(
+      "$tmux_bin" list-panes -a -F '#{pane_id}|#{pane_current_command}|#{pane_current_path}' 2>/dev/null |
+        awk -F'|' -v cwd="$cwd" -v want="$want" '$3 == cwd && $2 == want { print $1 }' |
+        tail -1
+    )
+  fi
+  [[ -n $pane ]] || die "no $harness pane found in $cwd; pass TMUX_PANE or run from that pane"
+
+  if [[ $new_tab == true ]]; then
+    argv=("$tmux_bin" new-window -c "$cwd" -n Fork -- "${cmd[@]}")
+    $focus || argv=("$tmux_bin" new-window -d -c "$cwd" -n Fork -- "${cmd[@]}")
+  else
+    local -a placement=()
+    case $direction in
+      left) placement=(-h -b) ;;
+      right) placement=(-h) ;;
+      above) placement=(-v -b) ;;
+      below) placement=(-v) ;;
+    esac
+    local -a focusflag=()
+    $focus || focusflag=(-d)
+    argv=("$tmux_bin" split-window -t "$pane" "${focusflag[@]}" "${placement[@]}" -c "$cwd" -l 50% -- "${cmd[@]}")
+  fi
+  emit_plan
+  "${argv[@]}"
+}
+
+if [[ $target == rex ]]; then
+  rex_main
+else
+  tmux_main
+fi

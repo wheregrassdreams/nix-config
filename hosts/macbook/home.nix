@@ -43,6 +43,7 @@
     flake.homeModules."ai.codex"
     flake.homeModules."ai.opencode"
     flake.homeModules."ai.dsh-tui"
+    flake.homeModules."ai.fork-pane"
     flake.homeModules."ai.agent-resources"
 
     flake.homeModules."desktop.browser"
@@ -168,6 +169,7 @@
 
     ai.opencode.cli.enable = false;
     ai.dsh-tui.enable = true;
+    ai.fork-pane.enable = true;
 
     desktop = {
 
